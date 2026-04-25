@@ -129,8 +129,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .nav-subitem-actions{display:none;gap:3px;margin-left:auto;}
 .nav-subitem:hover .nav-subitem-actions{display:flex;}
 .sidebar-footer{margin-top:auto;padding:10px 12px;border-top:1px solid var(--border);font-size:8px;color:var(--text3);letter-spacing:.1em;display:flex;align-items:center;gap:8px;}
-.gdrive-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s;}
-.gdrive-dot.connected{background:#4ade80;animation:glowPulse 2s infinite;}
+
 
 /* MAIN */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
@@ -336,13 +335,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
 .theme-btn{background:var(--bg3);border:1px solid var(--border);font-family:var(--font);font-size:9px;color:var(--text2);padding:6px 8px;cursor:pointer;border-radius:1px;text-align:center;letter-spacing:.08em;transition:all .15s;}
 .theme-btn:hover,.theme-btn.active{border-color:var(--accent);color:var(--accent);}
-.gdrive-section{grid-column:1/-1;}
-.gdrive-status{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;}
-.gdrive-status-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0;}
-.gdrive-status-dot.connected{background:#4ade80;animation:glowPulse 2s infinite;}
-.gdrive-info{flex:1;}
-.gdrive-name{font-size:11px;color:var(--text);}
-.gdrive-detail{font-size:9px;color:var(--text3);letter-spacing:.08em;margin-top:2px;}
+
 
 /* SPINNER */
 .spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;}
@@ -411,7 +404,6 @@ select option{background:var(--bg2);}
       <div class="nav-item" onclick="nav('settings')"><div class="nav-dot" style="background:#555"></div>Settings</div>
     </div>
     <div class="sidebar-footer">
-      <div class="gdrive-dot" id="gdrive-dot"></div>
       <span id="sidebar-footer">solo dev</span>
     </div>
   </div>
@@ -511,30 +503,6 @@ select option{background:var(--bg2);}
             <button class="btn accent" onclick="openAddSection()" style="margin-bottom:10px;width:100%;">Add New Section</button>
             <div id="custom-sections-list"></div>
           </div>
-          <!-- GOOGLE DRIVE -->
-          <div class="settings-section gdrive-section">
-            <h3>Google Drive Sync</h3>
-            <div class="gdrive-status" id="gdrive-status-box">
-              <div class="gdrive-status-dot" id="gdrive-status-dot"></div>
-              <div class="gdrive-info">
-                <div class="gdrive-name" id="gdrive-name">Not connected</div>
-                <div class="gdrive-detail" id="gdrive-detail">Connect your Google account to sync all projects and roots automatically.</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-              <button class="btn accent" id="gdrive-connect-btn" onclick="gdriveConnect()">Connect Google Drive</button>
-              <button class="btn" id="gdrive-sync-btn" onclick="gdriveSync()" style="display:none;">Sync Now</button>
-              <button class="btn danger" id="gdrive-disconnect-btn" onclick="gdriveDisconnect()" style="display:none;">Disconnect</button>
-            </div>
-            <div style="font-size:9px;color:var(--text3);line-height:1.7;border-top:1px solid var(--border);padding-top:10px;">
-              <strong style="color:var(--text2);">How it works:</strong> Once connected, the hub saves a <code style="color:var(--accent2);">lms-devhub-backup.json</code> file to your Google Drive. All roots, project data, and custom sections are included. You can sync manually or it syncs automatically on every save.<br><br>
-              <strong style="color:var(--text2);">To restore:</strong> On a new machine, connect Drive and click Restore, or export the file and Import Root on the other machine.
-            </div>
-            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;" id="gdrive-restore-row" style="display:none;">
-              <button class="btn" onclick="gdriveRestore()">Restore from Drive</button>
-              <button class="btn" onclick="gdriveExportAll()">Download Full Backup</button>
-            </div>
-          </div>
           <!-- DATA -->
           <div class="settings-section danger-zone">
             <h3>Data</h3>
@@ -582,7 +550,6 @@ select option{background:var(--bg2);}
 // =====================================================
 const ROOT_SK='lms_roots_v2';
 const SETTINGS_SK='lms_settings_v1';
-const GDRIVE_CLIENT_ID='YOUR_GOOGLE_CLIENT_ID'; // Replace with real OAuth client ID
 const ACCENT_COLORS=['#c8f04a','#4af0c8','#f04a4a','#f0a04a','#a04af0','#4a9af0','#f04ac8','#ffffff'];
 const PHASE_COLORS=['#c8f04a','#4af0c8','#f04a4a','#f0a04a','#a04af0','#4a9af0'];
 
@@ -590,9 +557,6 @@ let roots=[];
 let activeRootId=null;
 let D=null;
 let SETTINGS={theme:'',accent:'#c8f04a',scanlines:false,compact:false};
-let gdriveToken=null;
-let gdriveUser=null;
-let autoSyncTimer=null;
 
 // =====================================================
 // SETTINGS
@@ -624,9 +588,9 @@ function toggleCompact(el){SETTINGS.compact=!SETTINGS.compact;saveSettings();app
 // ROOT MANAGEMENT
 // =====================================================
 function loadRoots(){try{const r=localStorage.getItem(ROOT_SK);if(r)roots=JSON.parse(r);}catch(e){roots=[];}if(!Array.isArray(roots))roots=[];}
-function saveRoots(){try{localStorage.setItem(ROOT_SK,JSON.stringify(roots));}catch(e){}triggerAutoSync();}
+function saveRoots(){try{localStorage.setItem(ROOT_SK,JSON.stringify(roots));}catch(e){}}
 function getRootData(id){const sk='lms_proj_'+id;try{const r=localStorage.getItem(sk);if(r)return JSON.parse(r);}catch(e){}return newProjectData();}
-function saveRootData(id,data){const sk='lms_proj_'+id;try{localStorage.setItem(sk,JSON.stringify(data));}catch(e){}triggerAutoSync();}
+function saveRootData(id,data){const sk='lms_proj_'+id;try{localStorage.setItem(sk,JSON.stringify(data));}catch(e){}}
 
 function newProjectData(){
   return{mainTasks:{},subTasks:{},customPhases:{main:[],sub:[]},folders:[],scripts:[],versions:[],survivors:[],notes:[],lore:[],activity:[],customSections:[]};
@@ -857,127 +821,6 @@ function gdriveExportAll(){
   roots.forEach(r=>{data.data[r.id]=getRootData(r.id);});
   downloadFile(JSON.stringify(data,null,2),'lms-devhub-backup.json','application/json');
   toast('Full backup downloaded');
-}
-
-// =====================================================
-// GOOGLE DRIVE INTEGRATION
-// =====================================================
-const GDRIVE_FILE_NAME='lms-devhub-backup.json';
-const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
-
-function updateGDriveUI(){
-  const dot=document.getElementById('gdrive-dot');
-  const sdot=document.getElementById('gdrive-status-dot');
-  const name=document.getElementById('gdrive-name');
-  const detail=document.getElementById('gdrive-detail');
-  const connectBtn=document.getElementById('gdrive-connect-btn');
-  const syncBtn=document.getElementById('gdrive-sync-btn');
-  const discBtn=document.getElementById('gdrive-disconnect-btn');
-  const restoreRow=document.getElementById('gdrive-restore-row');
-  if(!dot||!connectBtn)return;
-  if(gdriveToken){
-    dot.classList.add('connected');
-    if(sdot)sdot.classList.add('connected');
-    if(name)name.textContent='Connected'+(gdriveUser?' as '+gdriveUser:'');
-    if(detail)detail.textContent='Syncing to Google Drive. Last sync: '+(SETTINGS.lastSync||'never');
-    connectBtn.style.display='none';
-    if(syncBtn)syncBtn.style.display='';
-    if(discBtn)discBtn.style.display='';
-    if(restoreRow)restoreRow.style.display='flex';
-  }else{
-    dot.classList.remove('connected');
-    if(sdot)sdot.classList.remove('connected');
-    if(name)name.textContent='Not connected';
-    if(detail)detail.textContent='Connect your Google account to sync all projects and data.';
-    connectBtn.style.display='';
-    if(syncBtn)syncBtn.style.display='none';
-    if(discBtn)discBtn.style.display='none';
-    if(restoreRow)restoreRow.style.display='none';
-  }
-}
-
-function gdriveConnect(){
-  // Check if Google API is available
-  if(typeof google==='undefined'||!google.accounts){
-    openModal('Google Drive Setup',`
-      <p style="font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:12px;">To enable Google Drive sync, you need to:</p>
-      <ol style="font-size:11px;color:var(--text2);line-height:2;padding-left:16px;">
-        <li>Create a project at <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent6);">console.cloud.google.com</a></li>
-        <li>Enable the Google Drive API</li>
-        <li>Create an OAuth 2.0 Client ID (Web application)</li>
-        <li>Add your site URL to Authorized Origins</li>
-        <li>Replace <code style="color:var(--accent2);">YOUR_GOOGLE_CLIENT_ID</code> at the top of the script with your Client ID</li>
-      </ol>
-      <p style="font-size:10px;color:var(--text3);margin-top:10px;line-height:1.6;">Once configured, all roots, projects, and custom sections will sync to a file called <code style="color:var(--accent2);">${GDRIVE_FILE_NAME}</code> in your Drive. You can share this file between computers for cross-device sync.</p>
-      <div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:var(--radius);font-size:10px;color:var(--text3);">
-        <strong style="color:var(--text2);">For local/Electron use:</strong> You can also Export Full Backup from Settings and manually move the JSON file between machines — it contains everything.
-      </div>
-    `,[{label:'Got It',action:closeModal},{label:'Download Backup Instead',action:()=>{closeModal();gdriveExportAll();}}]);
-    return;
-  }
-  // Real OAuth flow
-  google.accounts.oauth2.initTokenClient({
-    client_id:GDRIVE_CLIENT_ID,
-    scope:GDRIVE_SCOPE,
-    callback:(response)=>{
-      if(response.error){toast('Drive auth failed: '+response.error);return;}
-      gdriveToken=response.access_token;
-      // Get user info
-      fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+gdriveToken}})
-        .then(r=>r.json()).then(info=>{gdriveUser=info.email||'';SETTINGS.gdriveUser=gdriveUser;saveSettings();updateGDriveUI();gdriveSync();toast('Google Drive connected!');})
-        .catch(()=>{updateGDriveUI();toast('Connected to Drive');});
-    }
-  }).requestAccessToken();
-}
-
-function gdriveDisconnect(){gdriveToken=null;gdriveUser=null;SETTINGS.gdriveUser=null;saveSettings();updateGDriveUI();toast('Disconnected from Google Drive');}
-
-async function gdriveSync(){
-  if(!gdriveToken){toast('Not connected to Drive');return;}
-  const backup={roots,data:{}};roots.forEach(r=>{backup.data[r.id]=getRootData(r.id);});
-  const content=JSON.stringify(backup);
-  toast('Syncing...');
-  try{
-    // Check if file exists
-    const listRes=await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}'&spaces=drive`,{headers:{Authorization:'Bearer '+gdriveToken}});
-    const listData=await listRes.json();
-    const fileId=listData.files?.[0]?.id;
-    const meta={name:GDRIVE_FILE_NAME,mimeType:'application/json'};
-    const form=new FormData();
-    form.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));
-    form.append('file',new Blob([content],{type:'application/json'}));
-    const method=fileId?'PATCH':'POST';
-    const url=fileId?`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`:'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    await fetch(url,{method,headers:{Authorization:'Bearer '+gdriveToken},body:form});
-    SETTINGS.lastSync=new Date().toLocaleString();saveSettings();updateGDriveUI();toast('Drive synced');
-  }catch(err){toast('Sync failed: '+err.message);}
-}
-
-async function gdriveRestore(){
-  if(!gdriveToken){toast('Not connected');return;}
-  toast('Restoring from Drive...');
-  try{
-    const listRes=await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}'`,{headers:{Authorization:'Bearer '+gdriveToken}});
-    const listData=await listRes.json();
-    const fileId=listData.files?.[0]?.id;
-    if(!fileId){toast('No backup found in Drive');return;}
-    const res=await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,{headers:{Authorization:'Bearer '+gdriveToken}});
-    const backup=await res.json();
-    if(!backup.roots)throw new Error('Invalid backup');
-    backup.roots.forEach(root=>{
-      const existing=roots.findIndex(r=>r.id===root.id);
-      if(existing>=0)roots[existing]=root;else roots.push(root);
-      if(backup.data?.[root.id])saveRootData(root.id,backup.data[root.id]);
-    });
-    saveRoots();if(D&&activeRootId)D=getRootData(activeRootId);
-    renderRootGrid();toast('Restored from Drive: '+backup.roots.length+' projects');
-  }catch(err){toast('Restore failed: '+err.message);}
-}
-
-function triggerAutoSync(){
-  if(!gdriveToken)return;
-  clearTimeout(autoSyncTimer);
-  autoSyncTimer=setTimeout(gdriveSync,5000);
 }
 
 // =====================================================
@@ -1576,11 +1419,7 @@ function initProject(){
   renderSurvivors();renderNotes();renderLore();
   renderSidebarCustom();
   if(!D.lore||!D.lore.length){D.lore=[{title:'World Backstory',content:''},{title:'Tone Notes',content:''}];save();renderLore();}
-  updateGDriveUI();
 }
-
-// =====================================================
-// BOOT
 // =====================================================
 loadSettings();
 loadRoots();

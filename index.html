@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LMS // Dev Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("i_wDJeagbbeoI3GtJ" );</script>
+
 <style>
+  
 /* ========== THEMES ========== */
 :root {
   --bg:#060608;--bg2:#0c0c10;--bg3:#111118;--bg4:#16161f;
@@ -504,41 +508,48 @@ select option{background:var(--bg2);}
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen" style="display:flex;position:fixed;inset:0;background:var(--bg);z-index:5000;align-items:center;justify-content:center;overflow-y:auto;">
-  <div style="max-width:380px;width:93%;padding:0 20px 40px;text-align:center;">
+  <div style="max-width:400px;width:93%;padding:0 20px 40px;text-align:center;">
     <div style="font-family:var(--vt);font-size:52px;letter-spacing:.12em;line-height:1;background:linear-gradient(135deg,#c8f04a,#4af0c8,#a04af0,#c8f04a);background-size:300% 300%;animation:gradShift 6s ease infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;">LMS</div>
-    <div style="font-size:9px;color:var(--text3);letter-spacing:.3em;text-transform:uppercase;margin-bottom:32px;">Dev Hub — Sign In</div>
+    <div style="font-size:9px;color:var(--text3);letter-spacing:.3em;text-transform:uppercase;margin-bottom:24px;">Dev Hub — Sign In</div>
 
     <div id="login-db-warning" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:10px 14px;margin-bottom:16px;font-size:10px;color:var(--accent3);letter-spacing:.06em;line-height:1.6;">
       ⚠ Database not configured.<br><button onclick="openFirebaseSetup()" style="background:none;border:none;color:var(--accent3);font-family:var(--font);font-size:10px;cursor:pointer;text-decoration:underline;padding:0;margin-top:4px;display:block;width:100%;">Click here to set up Firebase →</button>
     </div>
 
-    <div id="login-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:12px;font-size:10px;color:var(--accent3);letter-spacing:.06em;"></div>
+    <!-- Wrappable body for verification panel swapping -->
+    <div id="login-body-wrap">
+      <div id="login-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:12px;font-size:10px;color:var(--accent3);letter-spacing:.06em;"></div>
 
-    <div id="login-tabs" style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
-      <button id="ltab-login" onclick="switchLoginTab('login')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">Sign In</button>
-      <button id="ltab-create" onclick="switchLoginTab('create')" style="flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">Create Account</button>
-    </div>
+      <div id="login-tabs" style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
+        <button id="ltab-login" onclick="switchLoginTab('login')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">Sign In</button>
+        <button id="ltab-create" onclick="switchLoginTab('create')" style="flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">Create Account</button>
+      </div>
 
-    <!-- Sign In panel -->
-    <div id="lpanel-login" style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME</label>
-      <input id="li-username" class="modal-inp" placeholder="Your username" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('li-password').focus()">
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
-      <input id="li-password" class="modal-inp" type="password" placeholder="Your password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
-      <button onclick="doLogin()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Sign In →</button>
-    </div>
+      <!-- Sign In panel -->
+      <div id="lpanel-login" style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
+        <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME OR EMAIL</label>
+        <input id="li-username" class="modal-inp" placeholder="Username or email" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('li-password').focus()">
+        <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
+        <input id="li-password" class="modal-inp" type="password" placeholder="Your password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="doLogin()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Sign In →</button>
+      </div>
 
-    <!-- Create Account panel -->
-    <div id="lpanel-create" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME</label>
-      <input id="ca-username" class="modal-inp" placeholder="Choose a username" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('ca-password').focus()">
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
-      <input id="ca-password" class="modal-inp" type="password" placeholder="Choose a password" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('ca-password2').focus()">
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">CONFIRM PASSWORD</label>
-      <input id="ca-password2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doCreateAccount()">
-      <button onclick="doCreateAccount()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Create Account →</button>
-      <div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Requires a Firebase DB to be configured. Your account is stored in the shared database.</div>
-    </div>
+      <!-- Create Account panel -->
+      <div id="lpanel-create" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
+        <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME <span style="color:var(--text3);font-size:8px;">(login ID, no spaces)</span></label>
+        <input id="ca-username" class="modal-inp" placeholder="e.g. devslash, xcommand3r" style="margin-bottom:10px;">
+        <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">DISPLAY NAME <span style="color:var(--text3);font-size:8px;">(shown to others)</span></label>
+        <input id="ca-displayname" class="modal-inp" placeholder="e.g. Slash, Dev X" style="margin-bottom:10px;">
+        <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">EMAIL <span style="color:var(--text3);font-size:8px;">(optional)</span></label>
+        <input id="ca-email" class="modal-inp" type="email" placeholder="your@email.com" style="margin-bottom:10px;">
+        <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
+        <input id="ca-password" class="modal-inp" type="password" placeholder="Choose a password" style="margin-bottom:10px;">
+        <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">CONFIRM PASSWORD</label>
+        <input id="ca-password2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:16px;">
+        <button onclick="doCreateAccount()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Create Account →</button>
+        <div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Requires a Firebase DB. Your account is stored in the shared database.</div>
+      </div>
+    </div><!-- end login-body-wrap -->
 
     <div style="margin-top:16px;">
       <button onclick="openFirebaseSetup()" style="background:none;border:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:9px;padding:4px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">⚙ DB Setup</button>
@@ -558,6 +569,7 @@ select option{background:var(--bg2);}
     <button class="rs-btn" onclick="triggerImportRoot()">Import Root</button>
     <button class="rs-btn" onclick="showExportLastManTasks()">Export Starter Template</button>
     <button class="rs-btn" onclick="openRootSettings()">Settings</button>
+    <button class="rs-btn" onclick="openAccountSettings()" style="border-color:var(--accent2);color:var(--accent2);" id="rs-account-btn">⚙ Account</button>
     <button class="rs-btn primary" id="rs-server-btn" onclick="openServerHub()" style="border-color:var(--accent2);color:var(--accent2);">⚡ Server Hub</button>
   </div>
 
@@ -1002,7 +1014,13 @@ function renderRootGrid(){
     srvBar.style.display='block';
     srvSection.style.display='block';
     if(localLabel)localLabel.style.display='flex';
-    document.getElementById('rs-srv-name').textContent=srvState.serverName.toUpperCase()+' as '+srvState.username+(srvState.isHost?' [HOST]':'');
+    const rsIdLabel=srvState.shortId?' · ID: '+srvState.shortId:'';
+    document.getElementById('rs-srv-name').textContent=srvState.serverName.toUpperCase()+' as '+srvState.username+(srvState.isHost?' [HOST]':'')+rsIdLabel;
+    // Show a loading placeholder while async fetch runs
+    const rsGrid=document.getElementById('rs-server-proj-grid');
+    const rsEmpty=document.getElementById('rs-server-proj-empty');
+    if(rsGrid&&!rsGrid.children.length){rsGrid.innerHTML='<div style="font-size:10px;color:var(--text3);padding:16px 0;letter-spacing:.1em;">Loading server projects…</div>';}
+    if(rsEmpty)rsEmpty.style.display='none';
     renderRootServerProjects();
   } else {
     srvBar.style.display='none';
@@ -2344,12 +2362,298 @@ let srvState = {
   activeTab: 'tasks',
   myId: null,
   lastChatTs: 0,
+  shortId: '',
 };
 
 // =====================================================
 // ACCOUNT SYSTEM
 // =====================================================
-let currentUser = null; // {uid, username, isHost (for active server)}
+let currentUser = null; // {uid, username, displayName, email}
+
+// =====================================================
+// EMAIL VERIFICATION SYSTEM
+// =====================================================
+// Uses EmailJS to send real verification codes to the user's email.
+
+async function sendEmailVerification(email, purpose){
+  const code=String(Math.floor(100000+Math.random()*900000));
+  const key=email.replace(/\./g,'_').replace(/@/g,'__at__');
+  const expires=Date.now()+15*60*1000; // 15 min
+  await fbSet('/emailCodes/'+key,{code,expires,purpose,email});
+  // Send via EmailJS
+  //'service_key'_'template_key//
+  const expireTime=new Date(expires).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  try{
+    await emailjs.send('service_q9zwg4r','template_r32426f',{
+      to_email: email,
+      passcode: code,
+      time: expireTime
+    });
+  }catch(err){
+    console.error('EmailJS error:',err);
+    toast('Failed to send verification email. Please try again.');
+    await fbDelete('/emailCodes/'+key);
+    return;
+  }
+  showEmailCodePanel(email, purpose);
+}
+
+function showEmailCodePanel(email, purpose){
+  // Replace the login form with a verification panel
+  const loginBody=document.getElementById('login-body-wrap');
+  loginBody.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:24px;text-align:left;">
+      <div style="font-family:var(--vt);font-size:18px;color:var(--accent2);margin-bottom:6px;letter-spacing:.08em;">VERIFY EMAIL</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:20px;line-height:1.7;">
+        A 6-digit OTP has been sent to <strong style="color:var(--text);">${escHtml(email)}</strong>.<br>
+        <span style="font-size:9px;color:var(--text3);">Check your inbox and enter the code below. Valid for 15 minutes.</span>
+      </div>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:6px;">ENTER OTP</label>
+      <input id="verify-code-inp" class="modal-inp" placeholder="6-digit code" maxlength="6" style="letter-spacing:.2em;font-size:16px;text-align:center;margin-bottom:14px;" onkeydown="if(event.key==='Enter')submitVerifyCode('${escHtml(email)}','${escHtml(purpose)}')">
+      <div id="verify-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
+      <button onclick="submitVerifyCode('${escHtml(email)}','${escHtml(purpose)}')" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Verify →</button>
+      <button onclick="resetLoginScreen()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;margin-top:12px;width:100%;letter-spacing:.06em;">← Back</button>
+    </div>`;
+}
+
+async function submitVerifyCode(email, purpose){
+  const entered=(document.getElementById('verify-code-inp').value||'').trim();
+  const errEl=document.getElementById('verify-error');
+  if(!entered||entered.length!==6){errEl.textContent='Enter the 6-digit code.';errEl.style.display='block';return;}
+  const key=email.replace(/\./g,'_').replace(/@/g,'__at__');
+  const stored=await fbGet('/emailCodes/'+key);
+  if(!stored){errEl.textContent='Code expired or not found. Try again.';errEl.style.display='block';return;}
+  if(Date.now()>stored.expires){errEl.textContent='Code expired. Try again.';errEl.style.display='block';await fbDelete('/emailCodes/'+key);return;}
+  if(stored.code!==entered){errEl.textContent='Wrong code. Try again.';errEl.style.display='block';return;}
+  // Code valid — delete it
+  await fbDelete('/emailCodes/'+key);
+  errEl.style.display='none';
+  if(purpose==='create'&&pendingAccount){
+    const {username,displayName,email:pEmail,password}=pendingAccount;
+    pendingAccount=null;
+    resetLoginScreen();
+    await _finalizeCreateAccount(username,displayName,pEmail,password);
+  } else if(purpose==='link'&&currentUser){
+    // Link email to existing account
+    const uid=currentUser.uid;
+    await fbPatch('/accounts/'+uid,{email:email});
+    await fbSet('/emailIndex/'+email.replace(/\./g,'_').replace(/@/g,'__at__'),uid);
+    currentUser.email=email;
+    localStorage.setItem('lms_session',JSON.stringify(currentUser));
+    resetLoginScreen();
+    toast('Email linked: '+email);
+    closeAccountSettings();
+    renderAccountSettings();
+  }
+}
+
+function resetLoginScreen(){
+  const loginBody=document.getElementById('login-body-wrap');
+  loginBody.innerHTML=`
+    <div id="login-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:12px;font-size:10px;color:var(--accent3);letter-spacing:.06em;"></div>
+    <div id="login-tabs" style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
+      <button id="ltab-login" onclick="switchLoginTab('login')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">Sign In</button>
+      <button id="ltab-create" onclick="switchLoginTab('create')" style="flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">Create Account</button>
+    </div>
+    <div id="lpanel-login" style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME OR EMAIL</label>
+      <input id="li-username" class="modal-inp" placeholder="Username or email" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('li-password').focus()">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
+      <input id="li-password" class="modal-inp" type="password" placeholder="Your password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Sign In →</button>
+    </div>
+    <div id="lpanel-create" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME <span style="color:var(--text3);font-size:8px;">(login ID — no spaces)</span></label>
+      <input id="ca-username" class="modal-inp" placeholder="e.g. devslash, xcommand3r" style="margin-bottom:10px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">DISPLAY NAME <span style="color:var(--text3);font-size:8px;">(shown to others)</span></label>
+      <input id="ca-displayname" class="modal-inp" placeholder="e.g. Slash, Dev X, Commander" style="margin-bottom:10px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">EMAIL <span style="color:var(--text3);font-size:8px;">(optional — enables email sign-in)</span></label>
+      <input id="ca-email" class="modal-inp" type="email" placeholder="your@email.com" style="margin-bottom:10px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
+      <input id="ca-password" class="modal-inp" type="password" placeholder="Choose a password" style="margin-bottom:10px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">CONFIRM PASSWORD</label>
+      <input id="ca-password2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:16px;">
+      <button onclick="doCreateAccount()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Create Account →</button>
+      <div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Requires a Firebase DB. Your account is stored in the shared database.</div>
+    </div>`;
+}
+
+// =====================================================
+// ACCOUNT SETTINGS MODAL
+// =====================================================
+function openAccountSettings(){
+  const modal=document.getElementById('account-settings-modal');
+  if(modal){modal.style.display='flex';renderAccountSettings();return;}
+  // Create modal dynamically
+  const m=document.createElement('div');
+  m.id='account-settings-modal';
+  m.style.cssText='display:flex;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:6000;align-items:center;justify-content:center;overflow-y:auto;';
+  m.innerHTML=`
+    <div style="max-width:420px;width:93%;padding:20px 24px 40px;">
+      <div style="font-family:var(--vt);font-size:32px;color:var(--accent);letter-spacing:.1em;margin-bottom:6px;">ACCOUNT</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.25em;margin-bottom:28px;">PROFILE & SETTINGS</div>
+      <div id="acct-settings-body"></div>
+      <div style="text-align:center;margin-top:20px;">
+        <button onclick="closeAccountSettings()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;">✕ Close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  renderAccountSettings();
+}
+
+function closeAccountSettings(){
+  const m=document.getElementById('account-settings-modal');
+  if(m)m.style.display='none';
+}
+
+function renderAccountSettings(){
+  const el=document.getElementById('acct-settings-body');if(!el||!currentUser)return;
+  el.innerHTML=`
+    <!-- Profile -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;margin-bottom:14px;">
+      <div style="font-size:8px;color:var(--text3);letter-spacing:.22em;margin-bottom:14px;">PROFILE</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+        <div style="width:44px;height:44px;border-radius:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:26px;color:#000;flex-shrink:0;">${escHtml((currentUser.displayName||currentUser.username).charAt(0).toUpperCase())}</div>
+        <div>
+          <div style="font-family:var(--vt);font-size:18px;color:var(--text);">${escHtml(currentUser.displayName||currentUser.username)}</div>
+          <div style="font-size:9px;color:var(--text3);">@${escHtml(currentUser.username)}</div>
+          ${currentUser.email?`<div style="font-size:9px;color:var(--accent2);margin-top:2px;">✉ ${escHtml(currentUser.email)}</div>`:''}
+        </div>
+      </div>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">DISPLAY NAME</label>
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <input id="acct-dispname-inp" class="modal-inp" style="flex:1;margin:0;" value="${escHtml(currentUser.displayName||currentUser.username)}" placeholder="Display name">
+        <button onclick="saveDisplayName()" class="btn accent" style="white-space:nowrap;">Save</button>
+      </div>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">EMAIL ${currentUser.email?'<span style="color:var(--accent);font-size:8px;">✓ LINKED</span>':'<span style="color:var(--text3);font-size:8px;">(not linked)</span>'}</label>
+      ${currentUser.email
+        ? `<div style="font-size:10px;color:var(--text2);margin-bottom:4px;">${escHtml(currentUser.email)}</div>
+           <button onclick="unlinkEmail()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Unlink Email</button>`
+        : `<div style="display:flex;gap:6px;">
+             <input id="acct-email-inp" class="modal-inp" style="flex:1;margin:0;" type="email" placeholder="your@email.com">
+             <button onclick="linkEmail()" class="btn" style="white-space:nowrap;color:var(--accent2);border-color:var(--accent2);">Link</button>
+           </div>`
+      }
+    </div>
+    <!-- Danger zone -->
+    <div style="background:var(--bg2);border:1px solid rgba(240,74,74,.3);border-radius:3px;padding:18px;">
+      <div style="font-size:8px;color:var(--accent3);letter-spacing:.22em;margin-bottom:14px;">DANGER ZONE</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:11px;color:var(--text);margin-bottom:2px;">Delete Account</div>
+          <div style="font-size:9px;color:var(--text3);">Permanently removes your account and all data</div>
+        </div>
+        <button onclick="confirmDeleteAccount()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;white-space:nowrap;">Delete Account</button>
+      </div>
+    </div>`;
+}
+
+async function saveDisplayName(){
+  const val=(document.getElementById('acct-dispname-inp').value||'').trim();
+  if(!val){toast('Display name cannot be empty');return;}
+  await fbPatch('/accounts/'+currentUser.uid,{displayName:val});
+  currentUser.displayName=val;
+  localStorage.setItem('lms_session',JSON.stringify(currentUser));
+  toast('Display name updated: '+val);
+  renderAccountSettings();
+  // Update presence if on server
+  if(srvState.connected&&srvState.myId){
+    await fbPatch('/servers/'+srvState.serverKey+'/members/'+srvState.myId,{name:val});
+    srvState.username=val;
+  }
+}
+
+async function linkEmail(){
+  const email=(document.getElementById('acct-email-inp').value||'').trim().toLowerCase();
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast('Enter a valid email');return;}
+  // Check not taken
+  const accounts=await fbGet('/accounts')||{};
+  const taken=Object.values(accounts).some(a=>a.email&&a.email===email&&a.uid!==currentUser.uid);
+  if(taken){toast('Email already linked to another account');return;}
+  await sendEmailVerification(email,'link');
+  closeAccountSettings();
+  // Show verification on login screen... but we're logged in, so show a modal
+  showLinkVerifyModal(email);
+}
+
+function showLinkVerifyModal(email){
+  let m=document.getElementById('link-verify-modal');
+  if(!m){m=document.createElement('div');m.id='link-verify-modal';m.style.cssText='display:flex;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:7000;align-items:center;justify-content:center;';document.body.appendChild(m);}
+  const key=email.replace(/\./g,'_').replace(/@/g,'__at__');
+  m.style.display='flex';
+  // We can't actually retrieve the code here, so we rely on the fbGet
+  // Show input for code
+  m.innerHTML=`
+    <div style="max-width:380px;width:93%;background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:24px;">
+      <div style="font-family:var(--vt);font-size:22px;color:var(--accent2);margin-bottom:6px;letter-spacing:.08em;">VERIFY EMAIL</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:20px;line-height:1.7;">
+        A 6-digit OTP has been sent to <strong style="color:var(--text);">${escHtml(email)}</strong>.<br>
+        <span style="font-size:9px;color:var(--text3);">Check your inbox and enter the code below. Valid for 15 minutes.</span>
+      </div>
+      <input id="link-verify-inp" class="modal-inp" placeholder="6-digit code" maxlength="6" style="letter-spacing:.2em;font-size:16px;text-align:center;margin-bottom:10px;">
+      <div id="link-verify-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
+      <button onclick="submitLinkVerify('${escHtml(email)}')" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Verify →</button>
+      <button onclick="document.getElementById('link-verify-modal').style.display='none'" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;margin-top:12px;width:100%;letter-spacing:.06em;">Cancel</button>
+    </div>`;
+}
+
+
+async function submitLinkVerify(email){
+  const entered=(document.getElementById('link-verify-inp').value||'').trim();
+  const errEl=document.getElementById('link-verify-error');
+  if(!entered||entered.length!==6){errEl.textContent='Enter the 6-digit code.';errEl.style.display='block';return;}
+  const key=email.replace(/\./g,'_').replace(/@/g,'__at__');
+  const stored=await fbGet('/emailCodes/'+key);
+  if(!stored){errEl.textContent='Code expired.';errEl.style.display='block';return;}
+  if(Date.now()>stored.expires){errEl.textContent='Code expired.';errEl.style.display='block';await fbDelete('/emailCodes/'+key);return;}
+  if(stored.code!==entered){errEl.textContent='Wrong code.';errEl.style.display='block';return;}
+  await fbDelete('/emailCodes/'+key);
+  await fbPatch('/accounts/'+currentUser.uid,{email});
+  await fbSet('/emailIndex/'+email.replace(/\./g,'_').replace(/@/g,'__at__'),currentUser.uid);
+  currentUser.email=email;
+  localStorage.setItem('lms_session',JSON.stringify(currentUser));
+  document.getElementById('link-verify-modal').style.display='none';
+  toast('Email linked: '+email);
+  openAccountSettings();
+}
+
+async function unlinkEmail(){
+  if(!currentUser.email)return;
+  openModal('Unlink Email',`<p style="font-size:11px;color:var(--text2);line-height:1.7;">Remove <strong style="color:var(--accent3);">${escHtml(currentUser.email)}</strong> from your account?</p>`,[
+    {label:'Cancel',action:closeModal},{label:'Unlink',action:async()=>{
+      const key=currentUser.email.replace(/\./g,'_').replace(/@/g,'__at__');
+      await fbDelete('/emailIndex/'+key);
+      await fbPatch('/accounts/'+currentUser.uid,{email:''});
+      currentUser.email='';
+      localStorage.setItem('lms_session',JSON.stringify(currentUser));
+      closeModal();closeAccountSettings();openAccountSettings();
+      toast('Email unlinked');
+    },danger:true}
+  ]);
+}
+
+async function confirmDeleteAccount(){
+  const code=Math.floor(100000+Math.random()*900000)+'';
+  openModal('⚠ Delete Account',`
+    <div style="background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:2px;padding:10px 12px;margin-bottom:14px;font-size:10px;color:var(--accent3);line-height:1.7;">
+      ⚠ This permanently deletes your account <strong>@${escHtml(currentUser.username)}</strong>. You will be signed out. All your account data will be removed. This cannot be undone.
+    </div>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">Type: <strong style="color:var(--accent3);letter-spacing:.1em;">delete ${escHtml(code)}</strong></p>
+    <input class="modal-inp" id="del-acct-inp" placeholder="Type confirmation above..." autocomplete="off">
+  `,[{label:'Cancel',action:closeModal},{label:'Delete My Account',action:async()=>{
+    const typed=(document.getElementById('del-acct-inp').value||'').trim();
+    if(typed!=='delete '+code){toast('Confirmation did not match');closeModal();return;}
+    // Delete account data
+    if(currentUser.email){
+      const key=currentUser.email.replace(/\./g,'_').replace(/@/g,'__at__');
+      await fbDelete('/emailIndex/'+key);
+    }
+    await fbDelete('/accounts/'+currentUser.uid);
+    closeModal();closeAccountSettings();logoutUser();
+    toast('Account deleted. Goodbye.');
+  },danger:true}]);
+}
+
 
 function switchLoginTab(tab){
   document.getElementById('lpanel-login').style.display=tab==='login'?'block':'none';
@@ -2365,28 +2669,35 @@ function showLoginError(msg){
 }
 function hideLoginError(){document.getElementById('login-error').style.display='none';}
 
+let pendingAccount=null;
+let pendingVerifyUid=null; // for email login verification
+
 async function doLogin(){
   if(!getSrvDbUrl()){
     document.getElementById('login-db-warning').style.display='block';
     showLoginError('Please configure a Firebase database first.');return;
   }
-  const username=document.getElementById('li-username').value.trim();
+  const identifier=document.getElementById('li-username').value.trim();
   const password=document.getElementById('li-password').value;
-  if(!username||!password){showLoginError('Fill in all fields.');return;}
+  if(!identifier||!password){showLoginError('Fill in all fields.');return;}
   hideLoginError();
   const passHash=await hashPass(password);
-  // Look up account
   const accounts=await fbGet('/accounts')||{};
-  const entry=Object.values(accounts).find(a=>a.username.toLowerCase()===username.toLowerCase());
+  // Match by username OR email
+  let entry=Object.values(accounts).find(a=>a.username.toLowerCase()===identifier.toLowerCase());
+  if(!entry&&identifier.includes('@')){
+    entry=Object.values(accounts).find(a=>a.email&&a.email===identifier.toLowerCase());
+  }
   if(!entry){showLoginError('Account not found. Create one first.');return;}
   if(entry.passHash!==passHash){showLoginError('Wrong password.');return;}
   // Login success
-  currentUser={uid:entry.uid,username:entry.username};
+  currentUser={uid:entry.uid,username:entry.username,displayName:entry.displayName||entry.username,email:entry.email||''};
   localStorage.setItem('lms_session',JSON.stringify(currentUser));
   document.getElementById('login-screen').style.display='none';
   document.getElementById('root-screen-wrap').style.display='block';
   renderRootGrid();
-  toast('Welcome back, '+entry.username+'!');
+  addLogoutBtn();
+  toast('Welcome back, '+(entry.displayName||entry.username)+'!');
 }
 
 async function doCreateAccount(){
@@ -2395,26 +2706,46 @@ async function doCreateAccount(){
     showLoginError('Please configure a Firebase database first.');return;
   }
   const username=document.getElementById('ca-username').value.trim();
+  const displayName=document.getElementById('ca-displayname').value.trim()||username;
+  const email=document.getElementById('ca-email').value.trim().toLowerCase();
   const password=document.getElementById('ca-password').value;
   const password2=document.getElementById('ca-password2').value;
   if(!username||!password){showLoginError('Fill in all fields.');return;}
   if(password!==password2){showLoginError('Passwords do not match.');return;}
   if(username.length<2){showLoginError('Username must be at least 2 characters.');return;}
+  if(!/^[a-zA-Z0-9_.-]+$/.test(username)){showLoginError('Username can only contain letters, numbers, _ . -');return;}
+  // If email provided, send verification code first
+  if(email){
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){showLoginError('Enter a valid email address.');return;}
+    // Stash pending account data and request verification
+    pendingAccount={username,displayName,email,password};
+    await sendEmailVerification(email,'create');
+    return;
+  }
+  hideLoginError();
+  await _finalizeCreateAccount(username,displayName,email,password);
+}
+
+async function _finalizeCreateAccount(username,displayName,email,password){
   hideLoginError();
   const passHash=await hashPass(password);
-  // Check if username taken
   const accounts=await fbGet('/accounts')||{};
   const taken=Object.values(accounts).some(a=>a.username.toLowerCase()===username.toLowerCase());
   if(taken){showLoginError('Username already taken. Choose another.');return;}
-  // Create account
+  if(email){
+    const emailTaken=Object.values(accounts).some(a=>a.email&&a.email===email.toLowerCase());
+    if(emailTaken){showLoginError('Email already linked to an account.');return;}
+  }
   const uid='uid_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-  await fbSet('/accounts/'+uid,{uid,username,passHash,createdAt:Date.now()});
-  currentUser={uid,username};
+  await fbSet('/accounts/'+uid,{uid,username,displayName:displayName||username,email:email||'',passHash,createdAt:Date.now()});
+  if(email){await fbSet('/emailIndex/'+email.replace(/\./g,'_').replace(/@/g,'__at__'),uid);}
+  currentUser={uid,username,displayName:displayName||username,email:email||''};
   localStorage.setItem('lms_session',JSON.stringify(currentUser));
   document.getElementById('login-screen').style.display='none';
   document.getElementById('root-screen-wrap').style.display='block';
   renderRootGrid();
-  toast('Account created! Welcome, '+username+'!');
+  addLogoutBtn();
+  toast('Account created! Welcome, '+(displayName||username)+'!');
 }
 
 function logoutUser(){
@@ -2424,7 +2755,7 @@ function logoutUser(){
   if(srvState.connected){
     fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
     stopSrvPolling();
-    srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0};
+    srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
   }
   document.getElementById('root-screen-wrap').style.display='none';
   document.getElementById('app-shell').classList.remove('visible');
@@ -2452,10 +2783,15 @@ loadRoots();
   if(session){
     try{
       currentUser=JSON.parse(session);
-      // Quick verify account still exists (non-blocking)
+      // Quick verify account still exists and refresh displayName/email
       if(getSrvDbUrl()){
         const acc=await fbGet('/accounts/'+currentUser.uid);
         if(!acc){currentUser=null;localStorage.removeItem('lms_session');}
+        else{
+          currentUser.displayName=acc.displayName||acc.username;
+          currentUser.email=acc.email||'';
+          localStorage.setItem('lms_session',JSON.stringify(currentUser));
+        }
       }
     }catch(e){currentUser=null;}
   }
@@ -2474,6 +2810,19 @@ loadRoots();
 function hashStr(str){
   let h=5381;for(let i=0;i<str.length;i++)h=(h*33^str.charCodeAt(i))>>>0;
   return'srv_'+h.toString(36);
+}
+
+// Generate a short alphanumeric server ID (e.g. "XK9-4TM")
+function genServerId(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id='';for(let i=0;i<7;i++){if(i===3)id+='-';id+=chars[Math.floor(Math.random()*chars.length)];}
+  return id;
+}
+
+// Find a serverKey from a short server ID
+async function findServerByShortId(shortId){
+  const clean=shortId.toUpperCase().replace(/-/g,'');
+  return await fbGet('/serverIds/'+clean)||null;
 }
 
 // SHA-256 password hash (async)
@@ -2514,16 +2863,45 @@ async function fbDelete(path){
   try{await fetch(getSrvDbUrl()+path+'.json',{method:'DELETE'});return true;}catch(e){return false;}
 }
 
+// ---- JOIN METHOD TOGGLE ----
+function switchJoinMethod(method){
+  const nameFields=document.getElementById('join-name-fields');
+  const idFields=document.getElementById('join-id-fields');
+  const nameBtn=document.getElementById('join-by-name-btn');
+  const idBtn=document.getElementById('join-by-id-btn');
+  const submitBtn=document.getElementById('join-submit-btn');
+  const activeStyle='flex:1;background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent2);font-family:var(--font);font-size:9px;padding:8px;cursor:pointer;letter-spacing:.08em;';
+  const inactiveStyle='flex:1;background:var(--bg3);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:9px;padding:8px;cursor:pointer;letter-spacing:.08em;';
+  if(method==='name'){
+    nameFields.style.display='block';idFields.style.display='none';
+    nameBtn.style.cssText=activeStyle;idBtn.style.cssText=inactiveStyle.replace('border-right:1px solid var(--border);','');
+    submitBtn.textContent='→ Join by Name';submitBtn.onclick=joinServer;
+  } else {
+    nameFields.style.display='none';idFields.style.display='block';
+    idBtn.style.cssText=activeStyle.replace('border-right:1px solid var(--border);','');nameBtn.style.cssText=inactiveStyle;
+    submitBtn.textContent='→ Join by ID';submitBtn.onclick=joinServerById;
+  }
+}
+
+// ---- COPY SERVER ID ----
+function copyServerId(){
+  const id=srvState.shortId;if(!id)return;
+  navigator.clipboard.writeText(id).then(()=>toast('Server ID copied: '+id)).catch(()=>{
+    // Fallback
+    const ta=document.createElement('textarea');ta.value=id;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Server ID copied: '+id);
+  });
+}
+
 // ---- UI helpers ----
 function openServerHub(){
   document.getElementById('server-hub-overlay').style.display='block';
   renderSrvStatus();
   loadRecentServers();
-  // Pre-fill username fields
+  // Show display name in host/join labels
   if(currentUser){
-    const hui=document.getElementById('host-username');const jui=document.getElementById('join-username');
-    if(hui&&!hui.value)hui.value=currentUser.username;
-    if(jui&&!jui.value)jui.value=currentUser.username;
+    const dn=currentUser.displayName||currentUser.username;
+    const hl=document.getElementById('host-as-label');const jl=document.getElementById('join-as-label');
+    if(hl)hl.textContent=dn;if(jl)jl.textContent=dn;
   }
   if(!getSrvDbUrl()){
     const txt=document.getElementById('srv-status-txt');
@@ -2557,7 +2935,8 @@ function renderSrvStatus(){
   if(srvState.connected){
     dot.style.background='var(--accent2)';
     dot.style.boxShadow='0 0 8px var(--accent2)';
-    txt.textContent='Connected to: '+srvState.serverName+' as '+srvState.username+(srvState.isHost?' [HOST]':'');
+    const idLabel=srvState.shortId?' · ID: '+srvState.shortId:'';
+    txt.textContent='Connected to: '+srvState.serverName+' as '+srvState.username+(srvState.isHost?' [HOST]':'')+idLabel;
     discBtn.style.display='inline-block';
     lobbyPanel.style.display='none';
     activePanel.style.display='block';
@@ -2574,10 +2953,8 @@ function renderSrvStatus(){
 // ---- HOST ----
 async function hostServer(){
   if(!getSrvDbUrl()){openFirebaseSetup();return;}
-  // Pre-fill username from logged in account
-  const usernameInp=document.getElementById('host-username');
-  if(currentUser&&!usernameInp.value.trim())usernameInp.value=currentUser.username;
-  const username=usernameInp.value.trim();
+  // Use display name from account
+  const username=currentUser?(currentUser.displayName||currentUser.username):(document.getElementById('host-username')?.value.trim()||'Host');
   const serverName=document.getElementById('host-servername').value.trim();
   const pass=document.getElementById('host-password').value;
   const pass2=document.getElementById('host-password2').value;
@@ -2597,14 +2974,18 @@ async function hostServer(){
 
   const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
   const now=Date.now();
+  const shortId=genServerId();
+  const shortIdClean=shortId.replace(/-/g,'');
 
   // Create server
-  await fbSet('/servers/'+serverKey+'/meta',{name:serverName,passHash,createdAt:now,hostId:myId});
+  await fbSet('/servers/'+serverKey+'/meta',{name:serverName,passHash,createdAt:now,hostId:myId,shortId:shortId});
   await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:now,isHost:true,uid:myId});
   await fbSet('/servers/'+serverKey+'/projects',{});
+  // Store reverse-lookup index for short ID joining
+  await fbSet('/serverIds/'+shortIdClean,serverKey);
 
   // Save state
-  srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null};
+  srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null,shortId:shortId};
   saveRecentServer(serverName,pass);
   startSrvHeartbeat();
   renderSrvStatus();
@@ -2618,13 +2999,11 @@ async function hostServer(){
 // ---- JOIN ----
 async function joinServer(){
   if(!getSrvDbUrl()){openFirebaseSetup();return;}
-  // Pre-fill username from logged in account
-  const usernameInp=document.getElementById('join-username');
-  if(currentUser&&!usernameInp.value.trim())usernameInp.value=currentUser.username;
-  const username=usernameInp.value.trim();
+  // Use display name from account — no need to enter name manually
+  const username=currentUser?(currentUser.displayName||currentUser.username):'Member';
   const serverName=document.getElementById('join-servername').value.trim();
   const pass=document.getElementById('join-password').value;
-  if(!username||!serverName||!pass){toast('Fill all fields');return;}
+  if(!serverName||!pass){toast('Fill all fields');return;}
 
   toast('Connecting…');
   const serverKey=hashStr(serverName.toLowerCase());
@@ -2635,15 +3014,49 @@ async function joinServer(){
   if(meta.passHash!==passHash){toast('Wrong password');return;}
 
   const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
-  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost:false,uid:myId});
+  // Restore host privileges if this user created the server
+  const isHost=!!(meta.hostId && meta.hostId===myId);
+  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost,uid:myId});
 
-  srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost:false,myId,activeProjId:null};
+  srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||''};
   saveRecentServer(serverName,pass);
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
-  toast('Joined server: '+meta.name);
+  toast('Joined server: '+meta.name+(isHost?' [HOST]':''));
   // Close hub, go back to root screen with server projects visible
+  closeServerHub();
+  renderRootGrid();
+}
+
+// ---- JOIN BY SERVER ID ----
+async function joinServerById(){
+  if(!getSrvDbUrl()){openFirebaseSetup();return;}
+  const username=currentUser?(currentUser.displayName||currentUser.username):'Member';
+  const shortIdRaw=document.getElementById('join-server-id').value.trim();
+  const pass=document.getElementById('join-password').value;
+  if(!shortIdRaw||!pass){toast('Fill all fields');return;}
+
+  toast('Looking up server ID…');
+  const shortIdClean=shortIdRaw.toUpperCase().replace(/-/g,'').replace(/[^A-Z0-9]/g,'');
+  const serverKey=await findServerByShortId(shortIdClean);
+  if(!serverKey){toast('Server ID not found');return;}
+
+  const passHash=await hashPass(pass);
+  const meta=await fbGet('/servers/'+serverKey+'/meta');
+  if(!meta){toast('Server not found');return;}
+  if(meta.passHash!==passHash){toast('Wrong password');return;}
+
+  const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
+  const isHost=!!(meta.hostId && meta.hostId===myId);
+  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost,uid:myId});
+
+  srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||shortIdRaw};
+  saveRecentServer(meta.name,pass);
+  startSrvHeartbeat();
+  renderSrvStatus();
+  renderActiveServer();
+  toast('Joined server: '+meta.name+(isHost?' [HOST]':''));
   closeServerHub();
   renderRootGrid();
 }
@@ -2708,6 +3121,16 @@ async function renderActiveServer(){
   const countEl=document.getElementById('srv-member-count');
   document.getElementById('srv-active-name').textContent=srvState.serverName.toUpperCase();
   countEl.textContent=onlineMembers.length+' online';
+  // Show delete server button only for host
+  const delSrvBtn=document.getElementById('srv-delete-server-btn');
+  if(delSrvBtn)delSrvBtn.style.display=srvState.isHost?'inline-block':'none';
+  // Show server ID if available
+  const idWrap=document.getElementById('srv-active-id-wrap');
+  const idEl=document.getElementById('srv-active-id');
+  if(srvState.shortId&&idWrap&&idEl){
+    idWrap.style.display='flex';
+    idEl.textContent=srvState.shortId;
+  } else if(idWrap){idWrap.style.display='none';}
 
   memberEl.innerHTML=onlineMembers.map(([id,m])=>
     `<div class="srv-member-badge${id===srvState.myId?' you':''}">${escHtml(m.name)}${m.isHost?' ⚡':''}</div>`
@@ -2747,6 +3170,34 @@ async function renderActiveServer(){
 async function clearHostNotifs(){
   await fbDelete('/servers/'+srvState.serverKey+'/hostNotifications');
   renderActiveServer();
+}
+
+async function confirmDeleteServer(){
+  if(!srvState.isHost){toast('Only the host can delete this server');return;}
+  const code=Math.floor(100000+Math.random()*900000)+'';
+  openModal('⚠ Delete Server',`
+    <div style="background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:2px;padding:10px 12px;margin-bottom:14px;font-size:10px;color:var(--accent3);line-height:1.7;letter-spacing:.04em;">
+      ⚠ This will permanently delete <strong>${escHtml(srvState.serverName)}</strong> and ALL projects, members, and data inside it. This cannot be undone.
+    </div>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">To confirm, type: <strong style="color:var(--accent3);letter-spacing:.1em;">delete ${escHtml(code)}</strong></p>
+    <input class="modal-inp" id="del-srv-inp" placeholder="Type the confirmation above..." autocomplete="off">
+  `,[{label:'Cancel',action:closeModal},{label:'Delete Server Forever',action:async()=>{
+    const typed=(document.getElementById('del-srv-inp').value||'').trim();
+    if(typed!=='delete '+code){toast('Confirmation did not match — cancelled');closeModal();return;}
+    toast('Deleting server…');
+    // Remove shortId reverse-index
+    if(srvState.shortId){
+      const clean=srvState.shortId.replace(/-/g,'');
+      await fbDelete('/serverIds/'+clean);
+    }
+    await fbDelete('/servers/'+srvState.serverKey);
+    closeModal();
+    stopSrvPolling();
+    srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
+    closeServerHub();
+    renderRootGrid();
+    toast('Server deleted');
+  },danger:true}]);
 }
 
 function renderSrvProjectsList(projects){
@@ -4117,6 +4568,11 @@ document.addEventListener('keydown', function(e){
         <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
           <div style="font-family:var(--vt);font-size:18px;color:var(--accent2);" id="srv-active-name">SERVER</div>
           <div id="srv-member-count" style="font-size:9px;color:var(--text3);letter-spacing:.1em;margin-left:auto;"></div>
+          <div id="srv-active-id-wrap" style="display:none;align-items:center;gap:6px;">
+            <span style="font-size:8px;color:var(--text3);letter-spacing:.15em;">ID:</span>
+            <span id="srv-active-id" style="font-family:var(--vt);font-size:14px;color:var(--accent4);letter-spacing:.12em;"></span>
+            <button onclick="copyServerId()" title="Copy Server ID" style="background:none;border:1px solid var(--accent4);color:var(--accent4);font-family:var(--font);font-size:8px;padding:2px 7px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Copy</button>
+          </div>
         </div>
         <!-- Members list -->
         <div style="padding:10px 14px;border-bottom:1px solid var(--border);">
@@ -4132,8 +4588,9 @@ document.addEventListener('keydown', function(e){
           <div id="srv-projects-list"></div>
         </div>
       </div>
-      <div style="text-align:center;">
+      <div style="text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         <button onclick="disconnectServer()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">Leave Server</button>
+        <button id="srv-delete-server-btn" onclick="confirmDeleteServer()" style="display:none;background:none;border:1px solid rgba(240,74,74,.5);color:var(--accent3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">🗑 Delete Server</button>
       </div>
     </div>
 
@@ -4148,8 +4605,7 @@ document.addEventListener('keydown', function(e){
       <div id="srv-panel-host">
         <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;">
           <div style="font-family:var(--vt);font-size:16px;color:var(--accent);margin-bottom:14px;letter-spacing:.08em;">CREATE A SERVER</div>
-          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">YOUR DISPLAY NAME</label>
-          <input id="host-username" class="modal-inp" placeholder="e.g. Slash, DevX, Commander" style="margin-bottom:10px;">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:12px;padding:6px 10px;background:var(--bg3);border-radius:2px;border:1px solid var(--border);">Hosting as <strong style="color:var(--accent);" id="host-as-label">you</strong></div>
           <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER NAME</label>
           <input id="host-servername" class="modal-inp" placeholder="e.g. Project Chimera, The Lab" style="margin-bottom:10px;">
           <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER PASSWORD</label>
@@ -4163,15 +4619,27 @@ document.addEventListener('keydown', function(e){
 
       <!-- JOIN tab -->
       <div id="srv-panel-join" style="display:none;">
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;margin-bottom:12px;">
           <div style="font-family:var(--vt);font-size:16px;color:var(--accent2);margin-bottom:14px;letter-spacing:.08em;">JOIN A SERVER</div>
-          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">YOUR DISPLAY NAME</label>
-          <input id="join-username" class="modal-inp" placeholder="e.g. Slash, DevX, Commander" style="margin-bottom:10px;">
-          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER NAME</label>
-          <input id="join-servername" class="modal-inp" placeholder="Server name from host" style="margin-bottom:10px;">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:12px;padding:6px 10px;background:var(--bg3);border-radius:2px;border:1px solid var(--border);">Joining as <strong style="color:var(--accent2);" id="join-as-label">you</strong></div>
+          <!-- Join method toggle -->
+          <div style="display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);border-radius:2px;overflow:hidden;">
+            <button id="join-by-name-btn" onclick="switchJoinMethod('name')" style="flex:1;background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent2);font-family:var(--font);font-size:9px;padding:8px;cursor:pointer;letter-spacing:.08em;">By Name</button>
+            <button id="join-by-id-btn" onclick="switchJoinMethod('id')" style="flex:1;background:var(--bg3);border:none;color:var(--text3);font-family:var(--font);font-size:9px;padding:8px;cursor:pointer;letter-spacing:.08em;">By Server ID</button>
+          </div>
+          <!-- Join by name -->
+          <div id="join-name-fields">
+            <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER NAME</label>
+            <input id="join-servername" class="modal-inp" placeholder="Server name from host" style="margin-bottom:10px;">
+          </div>
+          <!-- Join by ID -->
+          <div id="join-id-fields" style="display:none;">
+            <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER ID <span style="color:var(--accent4);">(e.g. XK9-4TM)</span></label>
+            <input id="join-server-id" class="modal-inp" placeholder="Paste Server ID here" style="margin-bottom:10px;font-family:var(--vt);font-size:15px;letter-spacing:.15em;">
+          </div>
           <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">PASSWORD</label>
           <input id="join-password" class="modal-inp" type="password" placeholder="Server password" style="margin-bottom:16px;">
-          <button onclick="joinServer()" class="btn" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;color:var(--accent2);border-color:var(--accent2);">→ Join Server</button>
+          <button id="join-submit-btn" onclick="joinServer()" class="btn" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;color:var(--accent2);border-color:var(--accent2);">→ Join by Name</button>
         </div>
       </div>
 

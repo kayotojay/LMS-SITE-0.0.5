@@ -348,6 +348,147 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .drop-zone{border:1px dashed var(--border2);padding:16px;text-align:center;font-size:11px;color:var(--text3);letter-spacing:.1em;cursor:pointer;transition:all .2s;border-radius:var(--radius);margin-bottom:8px;}
 .drop-zone:hover{border-color:var(--accent);color:var(--accent);}
 
+
+/* ========== ANALYTICS PAGE ========== */
+.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.an-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;position:relative;overflow:hidden;}
+.an-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c,#c8f04a),transparent);opacity:.5;}
+.an-val{font-family:var(--vt);font-size:28px;line-height:1;color:var(--c,#c8f04a);}
+.an-lbl{font-size:9px;color:var(--text3);letter-spacing:.12em;margin-top:3px;}
+.an-sub{font-size:9px;color:var(--text2);margin-top:4px;}
+.session-list{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;}
+.session-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:1px;}
+.session-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+.session-proj{font-size:11px;color:var(--text);flex:1;}
+.session-dur{font-size:10px;color:var(--accent2);flex-shrink:0;font-family:var(--vt);font-size:14px;}
+.session-date{font-size:9px;color:var(--text3);flex-shrink:0;}
+.heatmap-grid{display:grid;grid-template-columns:repeat(52,1fr);gap:2px;margin:8px 0;}
+.heatmap-cell{height:10px;border-radius:1px;background:var(--border);transition:background .2s;}
+.heatmap-cell[data-v="1"]{background:rgba(200,240,74,.25);}
+.heatmap-cell[data-v="2"]{background:rgba(200,240,74,.5);}
+.heatmap-cell[data-v="3"]{background:rgba(200,240,74,.75);}
+.heatmap-cell[data-v="4"]{background:#c8f04a;}
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:80px;padding-bottom:2px;}
+.bar-col{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;}
+.bar-fill{width:100%;background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:1px 1px 0 0;transition:height .4s;min-height:1px;}
+.bar-lbl{font-size:7px;color:var(--text3);margin-top:3px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.timer-display{font-family:var(--vt);font-size:42px;color:var(--accent);letter-spacing:.1em;text-align:center;padding:16px 0;}
+.timer-running{color:var(--accent2);animation:glowPulse 1s ease infinite;}
+.timer-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+/* ========== SCENE TREE ========== */
+.scene-layout{display:flex;gap:0;height:calc(100vh - 90px);overflow:hidden;}
+.scene-panel{background:var(--bg2);border:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.scene-panel-header{padding:8px 10px;border-bottom:1px solid var(--border);font-size:9px;color:var(--text3);letter-spacing:.18em;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.scene-panel-header span{flex:1;}
+.scene-panel-hbtn{background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:2px 7px;cursor:pointer;border-radius:1px;transition:all .15s;letter-spacing:.06em;}
+.scene-panel-hbtn:hover{color:var(--accent);border-color:var(--accent);}
+/* File manager panel */
+.scene-files-panel{width:200px;border-right:1px solid var(--border);}
+.scene-file-tree{flex:1;overflow-y:auto;padding:4px 0;}
+.sft-folder{cursor:pointer;user-select:none;}
+.sft-folder-hdr{display:flex;align-items:center;gap:5px;padding:4px 8px;font-size:11px;color:var(--text2);transition:background .15s;}
+.sft-folder-hdr:hover{background:var(--bg3);}
+.sft-folder-hdr.active{color:var(--accent);background:var(--bg3);}
+.sft-arr{font-size:9px;color:var(--text3);transition:transform .15s;flex-shrink:0;}
+.sft-arr.open{transform:rotate(90deg);}
+.sft-folder-icon{font-size:11px;flex-shrink:0;}
+.sft-folder-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sft-folder-children{padding-left:14px;display:none;}
+.sft-folder-children.open{display:block;}
+.sft-scene{display:flex;align-items:center;gap:5px;padding:3px 8px;cursor:pointer;font-size:10px;color:var(--text3);transition:all .15s;border-left:2px solid transparent;}
+.sft-scene:hover{background:var(--bg3);color:var(--text2);}
+.sft-scene.active-scene{color:var(--accent);border-left-color:var(--accent);background:var(--bg3);}
+.sft-scene-icon{font-size:10px;flex-shrink:0;}
+/* Scene tree panel */
+.scene-tree-panel{width:240px;border-right:1px solid var(--border);}
+.scene-tree{flex:1;overflow-y:auto;padding:4px 0;}
+.st-node{cursor:pointer;user-select:none;}
+.st-node-row{display:flex;align-items:center;gap:4px;padding:3px 6px;border-left:2px solid transparent;transition:all .15s;position:relative;}
+.st-node-row:hover{background:var(--bg3);}
+.st-node-row.selected{background:var(--bg3);border-left-color:var(--accent);}
+.st-node-arr{font-size:9px;color:var(--text3);width:10px;flex-shrink:0;transition:transform .15s;}
+.st-node-arr.open{transform:rotate(90deg);}
+.st-node-arr.leaf{opacity:0;pointer-events:none;}
+.st-node-icon{font-size:12px;flex-shrink:0;}
+.st-node-name{font-size:11px;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.st-node-name.has-script::after{content:'📜';font-size:8px;margin-left:4px;opacity:.7;}
+.st-node-id{font-size:9px;color:var(--text3);flex-shrink:0;}
+.st-node-children{display:none;}
+.st-node-children.open{display:block;}
+/* Inspector panel */
+.scene-inspector-panel{flex:1;min-width:0;}
+.inspector-body{flex:1;overflow-y:auto;padding:10px;}
+.insp-section{margin-bottom:12px;}
+.insp-section-title{font-size:8px;color:var(--text3);letter-spacing:.2em;text-transform:uppercase;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.insp-row{display:flex;align-items:center;gap:8px;padding:3px 0;}
+.insp-key{font-size:10px;color:var(--text3);width:90px;flex-shrink:0;letter-spacing:.04em;}
+.insp-val{flex:1;min-width:0;}
+.insp-inp{width:100%;background:var(--inp-bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:3px 6px;outline:none;border-radius:1px;}
+.insp-inp:focus{border-color:var(--border2);}
+.insp-toggle{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text);}
+.insp-check{width:12px;height:12px;border:1px solid var(--border2);background:var(--inp-bg);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:1px;}
+.insp-check.on{border-color:var(--accent);background:var(--accent);}
+.insp-check.on::after{content:'✓';color:#080808;font-size:9px;}
+.script-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--accent5);padding:3px 8px;border:1px solid var(--accent5);border-radius:1px;cursor:pointer;transition:all .15s;}
+.script-badge:hover{background:rgba(160,74,240,.1);}
+.no-sel-msg{font-size:11px;color:var(--text3);text-align:center;padding:40px 20px;letter-spacing:.05em;line-height:1.8;}
+/* Node type colors */
+.nt-node2d{color:#4af0c8;}
+.nt-sprite{color:#f0a04a;}
+.nt-body{color:#f04a4a;}
+.nt-area{color:#a04af0;}
+.nt-label{color:#4a9af0;}
+.nt-button{color:#f04ac8;}
+.nt-collision{color:#f0f04a;}
+.nt-audio{color:#4af04a;}
+.nt-anim{color:#f04a7a;}
+.nt-camera{color:#aaaaff;}
+.nt-root{color:#c8f04a;}
+.nt-ctrl{color:#aaf0f0;}
+.nt-timer{color:#f0c84a;}
+
+/* ========== SCENE TITLE EMPTY STATE ========== */
+.scene-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text3);}
+.scene-empty-title{font-family:var(--vt);font-size:24px;color:var(--text2);}
+
+/* ========== GAME DESIGN DOC ========== */
+.gdd-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+.gdd-sec-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg3);border-bottom:1px solid var(--border);cursor:pointer;}
+.gdd-sec-title{font-size:11px;color:var(--text);flex:1;font-family:var(--font);letter-spacing:.05em;}
+.gdd-sec-body{padding:10px 12px;}
+.gdd-textarea{width:100%;background:var(--inp-bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:8px;outline:none;resize:vertical;min-height:80px;line-height:1.6;border-radius:1px;}
+.gdd-textarea:focus{border-color:var(--border2);}
+
+/* ========== ASSET TRACKER ========== */
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;}
+.asset-card{background:var(--bg2);border:1px solid var(--border);padding:10px 12px;border-radius:var(--radius);}
+.asset-type-badge{font-size:8px;padding:1px 5px;border-radius:1px;letter-spacing:.1em;display:inline-block;margin-bottom:5px;}
+.asset-name{font-size:11px;color:var(--text);margin-bottom:4px;}
+.asset-status{font-size:9px;color:var(--text3);}
+.asset-status.done{color:var(--accent);}
+.asset-status.wip{color:var(--accent4);}
+.asset-status.todo{color:var(--text3);}
+
+/* ========== BUG TRACKER ========== */
+.bug-list{display:flex;flex-direction:column;gap:6px;}
+.bug-card{background:var(--bg2);border:1px solid var(--border);padding:10px 12px;border-radius:var(--radius);border-left:3px solid var(--sev,#888);}
+.bug-card.resolved{opacity:.5;}
+.bug-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.bug-sev{font-size:8px;padding:1px 6px;border-radius:1px;letter-spacing:.1em;border:1px solid currentColor;}
+.bug-id{font-size:9px;color:var(--text3);}
+.bug-title{font-size:11px;color:var(--text);flex:1;}
+.bug-desc{font-size:10px;color:var(--text2);line-height:1.5;}
+.bug-meta{font-size:9px;color:var(--text3);margin-top:4px;}
+
+/* ========== MISC NEW STYLES ========== */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}.analytics-grid{grid-template-columns:1fr 1fr;}}
+.accent-text{color:var(--accent);}
+.section-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.inline-lbl{font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;}
+.pill{display:inline-block;font-size:8px;padding:2px 7px;border-radius:10px;letter-spacing:.08em;border:1px solid currentColor;}
+
 input[type=range]{accent-color:var(--accent);width:100%;}
 select option{background:var(--bg2);}
 @media(max-width:700px){.phase-grid{grid-template-columns:1fr;}.stat-grid{grid-template-columns:1fr 1fr;}.notes-grid{grid-template-columns:1fr;}.settings-grid{grid-template-columns:1fr;}}
@@ -393,6 +534,20 @@ select option{background:var(--bg2);}
       <div class="nav-item" onclick="nav('sub-tasks')"><div class="nav-dot" style="background:#777"></div>Sub Phases</div>
       <div class="nav-item" onclick="nav('vault')"><div class="nav-dot" style="background:#a04af0"></div>Script Vault</div>
       <div class="nav-item" onclick="nav('versions')"><div class="nav-dot" style="background:#4a9af0"></div>Versions</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Build Analytics</div>
+      <div class="nav-item" onclick="nav('analytics')"><div class="nav-dot" style="background:#c8f04a"></div>Dev Time Tracker</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Scene Editor</div>
+      <div class="nav-item" onclick="nav('scene-tree')"><div class="nav-dot" style="background:#4af0c8"></div>Scene Tree</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Design</div>
+      <div class="nav-item" onclick="nav('gdd')"><div class="nav-dot" style="background:#a04af0"></div>Game Design Doc</div>
+      <div class="nav-item" onclick="nav('assets')"><div class="nav-dot" style="background:#f0a04a"></div>Asset Tracker</div>
+      <div class="nav-item" onclick="nav('bugs')"><div class="nav-dot" style="background:#f04a4a"></div>Bug Tracker</div>
     </div>
     <!-- Custom sections injected here by renderSidebarCustom() -->
     <div id="custom-nav-sections"></div>
@@ -522,6 +677,127 @@ select option{background:var(--bg2);}
         </div>
       </div>
 
+
+      <!-- ANALYTICS PAGE -->
+      <div class="page" id="page-analytics">
+        <div class="section-hdr"><span class="section-title">ANALYTICS</span><span class="section-sub">dev time tracker</span></div>
+        <div class="toolbar">
+          <button class="btn accent" id="timer-start-btn" onclick="timerToggle()">Start Session</button>
+          <button class="btn" onclick="openLogSession()">Log Manual Session</button>
+          <button class="btn" onclick="clearAllSessions()">Clear Log</button>
+        </div>
+        <div class="timer-display" id="an-timer-display">00:00:00</div>
+        <div class="analytics-grid">
+          <div class="an-card" style="--c:#c8f04a"><div class="an-val" id="an-total-time">0h</div><div class="an-lbl">Total Dev Time</div><div class="an-sub" id="an-total-sub">all sessions</div></div>
+          <div class="an-card" style="--c:#4af0c8"><div class="an-val" id="an-today">0h</div><div class="an-lbl">Today</div><div class="an-sub" id="an-today-sub">0 sessions</div></div>
+          <div class="an-card" style="--c:#a04af0"><div class="an-val" id="an-week">0h</div><div class="an-lbl">This Week</div><div class="an-sub" id="an-week-sub">0 sessions</div></div>
+          <div class="an-card" style="--c:#f0a04a"><div class="an-val" id="an-avg">0h</div><div class="an-lbl">Avg Session</div><div class="an-sub" id="an-streak">0 day streak</div></div>
+        </div>
+        <div class="two-col">
+          <div class="section-card">
+            <div class="section-hdr" style="margin-bottom:10px;"><span class="section-title" style="font-size:14px">Weekly Hours</span></div>
+            <div class="bar-chart" id="an-bar-chart"></div>
+          </div>
+          <div class="section-card">
+            <div class="section-hdr" style="margin-bottom:10px;"><span class="section-title" style="font-size:14px">52-Week Heatmap</span></div>
+            <div class="heatmap-grid" id="an-heatmap"></div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-hdr" style="margin-bottom:10px;"><span class="section-title" style="font-size:14px">Session History</span></div>
+          <div class="session-list" id="an-session-list"></div>
+        </div>
+      </div>
+
+      <!-- SCENE TREE PAGE -->
+      <div class="page" id="page-scene-tree">
+        <div class="section-hdr"><span class="section-title">SCENE TREE</span><span class="section-sub">godot-style node hierarchy</span></div>
+        <div class="toolbar">
+          <button class="btn accent" onclick="openNewSceneModal()">New Scene</button>
+          <button class="btn" onclick="openNewFolderModal()">New Folder</button>
+          <button class="btn" id="st-add-node-btn" onclick="openAddNodeModal()" disabled style="opacity:.4;">Add Node</button>
+          <button class="btn" id="st-del-node-btn" onclick="deleteSelectedNode()" style="color:var(--accent3);opacity:.4;" disabled>Remove Node</button>
+          <button class="btn" onclick="exportSceneTree()">Export</button>
+        </div>
+        <div class="scene-layout">
+          <!-- File manager / scene list -->
+          <div class="scene-panel scene-files-panel">
+            <div class="scene-panel-header"><span>SCENES</span><button class="scene-panel-hbtn" onclick="openNewSceneModal()">+</button></div>
+            <div class="scene-file-tree" id="scene-file-tree"></div>
+          </div>
+          <!-- Scene hierarchy tree -->
+          <div class="scene-panel scene-tree-panel">
+            <div class="scene-panel-header"><span id="st-panel-title">NODE TREE</span><button class="scene-panel-hbtn" onclick="openAddNodeModal()">+</button></div>
+            <div class="scene-tree" id="scene-node-tree"></div>
+          </div>
+          <!-- Inspector -->
+          <div class="scene-panel scene-inspector-panel">
+            <div class="scene-panel-header"><span>INSPECTOR</span></div>
+            <div class="inspector-body" id="inspector-body">
+              <div class="no-sel-msg">Select a node<br>to view &amp; edit properties</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME DESIGN DOC PAGE -->
+      <div class="page" id="page-gdd">
+        <div class="section-hdr"><span class="section-title">GAME DESIGN DOC</span><span class="section-sub">gdd &amp; concept docs</span></div>
+        <div class="toolbar">
+          <button class="btn accent" onclick="addGDDSection()">Add Section</button>
+          <button class="btn" onclick="exportGDD()">Export GDD</button>
+        </div>
+        <div id="gdd-sections-list"></div>
+      </div>
+
+      <!-- ASSET TRACKER PAGE -->
+      <div class="page" id="page-assets">
+        <div class="section-hdr"><span class="section-title">ASSET TRACKER</span><span class="section-sub">sprites, audio, models, fx</span></div>
+        <div class="toolbar">
+          <button class="btn accent" onclick="openAddAsset()">Add Asset</button>
+          <select class="add-inp" id="asset-filter" onchange="renderAssets()" style="max-width:140px;">
+            <option value="all">All Types</option>
+            <option value="sprite">Sprite</option>
+            <option value="audio">Audio</option>
+            <option value="model">3D Model</option>
+            <option value="fx">VFX / Shader</option>
+            <option value="anim">Animation</option>
+            <option value="ui">UI Element</option>
+            <option value="tileset">Tileset</option>
+            <option value="font">Font</option>
+          </select>
+          <select class="add-inp" id="asset-status-filter" onchange="renderAssets()" style="max-width:120px;">
+            <option value="all">All Status</option>
+            <option value="todo">To Do</option>
+            <option value="wip">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="asset-grid" id="asset-grid"></div>
+      </div>
+
+      <!-- BUG TRACKER PAGE -->
+      <div class="page" id="page-bugs">
+        <div class="section-hdr"><span class="section-title">BUG TRACKER</span><span class="section-sub">issues &amp; fixes</span></div>
+        <div class="toolbar">
+          <button class="btn accent" onclick="openAddBug()">Report Bug</button>
+          <select class="add-inp" id="bug-filter" onchange="renderBugs()" style="max-width:130px;">
+            <option value="all">All Severity</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <select class="add-inp" id="bug-status-filter" onchange="renderBugs()" style="max-width:130px;">
+            <option value="all">All Status</option>
+            <option value="open">Open</option>
+            <option value="inprogress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+        <div class="bug-list" id="bug-list"></div>
+      </div>
+
       <!-- CUSTOM PAGES injected dynamically -->
 
     </div>
@@ -593,7 +869,7 @@ function getRootData(id){const sk='lms_proj_'+id;try{const r=localStorage.getIte
 function saveRootData(id,data){const sk='lms_proj_'+id;try{localStorage.setItem(sk,JSON.stringify(data));}catch(e){}}
 
 function newProjectData(){
-  return{mainTasks:{},subTasks:{},customPhases:{main:[],sub:[]},folders:[],scripts:[],versions:[],survivors:[],notes:[],lore:[],activity:[],customSections:[]};
+  return{mainTasks:{},subTasks:{},customPhases:{main:[],sub:[]},folders:[],scripts:[],versions:[],survivors:[],notes:[],lore:[],activity:[],customSections:[],sessions:[],scenes:[],sceneFolders:[],gddSections:[],assets:[],bugs:[]};
 }
 
 function calcProgress(data,phases){
@@ -1294,20 +1570,25 @@ function nav(page){
   document.querySelectorAll('.nav-item,.nav-subitem').forEach(n=>n.classList.remove('active'));
   let pageEl=document.getElementById('page-'+page);
   if(!pageEl&&page.startsWith('custom_')){
-    const parts=page.split('_');const secId=parts[1];const subId=parts[2];
+    const pfx='custom_';const rest=page.slice(pfx.length);const subMark=rest.lastIndexOf('_sub_');const secId=subMark>=0?rest.slice(0,subMark):rest;const subId=subMark>=0?rest.slice(subMark+1):null;
     if(secId&&subId)pageEl=getOrCreateCustomPage(page,secId,subId);
   }
   if(pageEl)pageEl.classList.add('active');
   const navEl=document.querySelector(`[onclick="nav('${page}')"]`)||document.getElementById('navitem-'+page);
   if(navEl)navEl.classList.add('active');
-  const titleMap={'dash':'Dashboard','main-tasks':'Main Phases','sub-tasks':'Sub Phases','vault':'Script Vault','versions':'Versions','settings':'Settings'};
+  const titleMap={'dash':'Dashboard','main-tasks':'Main Phases','sub-tasks':'Sub Phases','vault':'Script Vault','versions':'Versions','settings':'Settings','analytics':'Dev Time Tracker','scene-tree':'Scene Tree','gdd':'Game Design Doc','assets':'Asset Tracker','bugs':'Bug Tracker'};
   let title=titleMap[page]||'';
   if(!title&&page.startsWith('custom_')){
-    const parts=page.split('_');const sec=D?.customSections?.find(s=>s.id===parts[1]);const sub=sec?.subsections?.find(s=>s.id===parts[2]);
+    const pfx2='custom_';const rest2=page.slice(pfx2.length);const subMk2=rest2.lastIndexOf('_sub_');const _secId2=subMk2>=0?rest2.slice(0,subMk2):rest2;const _subId2=subMk2>=0?rest2.slice(subMk2+1):null;const sec=D?.customSections?.find(s=>s.id===_secId2);const sub=sec?.subsections?.find(s=>s.id===_subId2);
     title=(sub?.name||'Custom')+' — '+(sec?.name||'');
   }
   document.getElementById('page-title').textContent=title||page;
   if(page==='settings'){renderCustomSectionsList();updateGDriveUI();}
+  if(page==='analytics')renderAnalytics();
+  if(page==='scene-tree'){renderSceneFileTree();renderNodeTree();renderInspector();}
+  if(page==='gdd')renderGDD();
+  if(page==='assets')renderAssets();
+  if(page==='bugs')renderBugs();
 }
 
 // =====================================================
@@ -1418,8 +1699,795 @@ function initProject(){
   renderFolders();renderScripts();renderVersions();
   renderSurvivors();renderNotes();renderLore();
   renderSidebarCustom();
+  // Ensure new data keys exist
+  if(!D.sessions)D.sessions=[];
+  if(!D.scenes)D.scenes=[];
+  if(!D.sceneFolders)D.sceneFolders=[];
+  if(!D.gddSections)D.gddSections=[];
+  if(!D.assets)D.assets=[];
+  if(!D.bugs)D.bugs=[];
+  renderAnalytics();
+  renderSceneFileTree();
+  renderNodeTree();
+  renderGDD();
+  renderAssets();
+  renderBugs();
   if(!D.lore||!D.lore.length){D.lore=[{title:'World Backstory',content:''},{title:'Tone Notes',content:''}];save();renderLore();}
 }
+
+// =====================================================
+// ANALYTICS / TIME TRACKER
+// =====================================================
+let timerInterval=null,timerStart=null,timerRunning=false;
+
+function timerToggle(){
+  if(timerRunning){
+    clearInterval(timerInterval);timerRunning=false;
+    const dur=Math.floor((Date.now()-timerStart)/1000);
+    if(dur>10){
+      if(!D.sessions)D.sessions=[];
+      D.sessions.push({id:'ses_'+Date.now(),start:timerStart,duration:dur,date:new Date().toLocaleDateString(),ts:new Date().toLocaleString()});
+      save();logActivity('Session: '+fmtDur(dur),'#c8f04a');
+    }
+    document.getElementById('timer-start-btn').textContent='Start Session';
+    document.getElementById('an-timer-display').className='timer-display';
+    document.getElementById('an-timer-display').textContent='00:00:00';
+    timerStart=null;renderAnalytics();
+  } else {
+    timerRunning=true;timerStart=Date.now();
+    document.getElementById('timer-start-btn').textContent='Stop Session';
+    document.getElementById('an-timer-display').className='timer-display timer-running';
+    timerInterval=setInterval(()=>{
+      const sec=Math.floor((Date.now()-timerStart)/1000);
+      document.getElementById('an-timer-display').textContent=fmtSec(sec);
+    },1000);
+  }
+}
+
+function fmtSec(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
+function fmtDur(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);if(h>0)return`${h}h ${m}m`;return`${m}m`;}
+
+function openLogSession(){
+  openModal('Log Manual Session',`
+    <label class="modal-label">Date</label>
+    <input class="modal-inp" id="ms-date" type="date" value="${new Date().toISOString().slice(0,10)}">
+    <label class="modal-label">Hours</label>
+    <input class="modal-inp" id="ms-hours" type="number" min="0" max="24" step="0.5" placeholder="e.g. 2.5">
+    <label class="modal-label">Minutes</label>
+    <input class="modal-inp" id="ms-mins" type="number" min="0" max="59" step="5" placeholder="e.g. 30">
+    <label class="modal-label">Notes</label>
+    <input class="modal-inp" id="ms-note" placeholder="What did you work on?">
+  `,[{label:'Cancel',action:closeModal},{label:'Log',action:()=>{
+    const h=parseFloat(document.getElementById('ms-hours').value)||0;
+    const m=parseInt(document.getElementById('ms-mins').value)||0;
+    const dur=Math.round(h*3600+m*60);
+    if(!dur)return;
+    const dateStr=document.getElementById('ms-date').value||new Date().toLocaleDateString();
+    const note=document.getElementById('ms-note').value;
+    if(!D.sessions)D.sessions=[];
+    const ds=new Date(dateStr);
+    D.sessions.push({id:'ses_'+Date.now(),start:ds.getTime(),duration:dur,date:ds.toLocaleDateString(),ts:ds.toLocaleDateString(),note});
+    save();closeModal();renderAnalytics();toast('Session logged: '+fmtDur(dur));
+  },accent:true}]);
+}
+
+function clearAllSessions(){
+  openModal('Clear Session Log',`<p style="font-size:11px;color:var(--text2);">Delete all recorded sessions for this project? This cannot be undone.</p>`,[
+    {label:'Cancel',action:closeModal},{label:'Clear All',action:()=>{D.sessions=[];save();closeModal();renderAnalytics();toast('Sessions cleared');},danger:true}
+  ]);
+}
+
+function renderAnalytics(){
+  if(!document.getElementById('page-analytics'))return;
+  if(!D||!D.sessions)return;
+  const sessions=D.sessions;
+  const totalSec=sessions.reduce((a,s)=>a+s.duration,0);
+  const now=new Date();
+  const todayStr=now.toLocaleDateString();
+  const todaySessions=sessions.filter(s=>s.date===todayStr);
+  const todaySec=todaySessions.reduce((a,s)=>a+s.duration,0);
+  // week
+  const weekStart=new Date(now);weekStart.setDate(now.getDate()-now.getDay());weekStart.setHours(0,0,0,0);
+  const weekSessions=sessions.filter(s=>new Date(s.start)>=weekStart);
+  const weekSec=weekSessions.reduce((a,s)=>a+s.duration,0);
+  const avgSec=sessions.length?Math.round(totalSec/sessions.length):0;
+  // streak
+  let streak=0;const d=new Date();
+  while(true){const ds=d.toLocaleDateString();if(!sessions.some(s=>s.date===ds))break;streak++;d.setDate(d.getDate()-1);}
+  const el=id=>document.getElementById(id);
+  if(el('an-total-time'))el('an-total-time').textContent=totalSec>=3600?`${Math.floor(totalSec/3600)}h`:`${Math.floor(totalSec/60)}m`;
+  if(el('an-total-sub'))el('an-total-sub').textContent=sessions.length+' sessions total';
+  if(el('an-today'))el('an-today').textContent=todaySec>=3600?`${Math.floor(todaySec/3600)}h`:`${Math.floor(todaySec/60)}m`;
+  if(el('an-today-sub'))el('an-today-sub').textContent=todaySessions.length+' sessions';
+  if(el('an-week'))el('an-week').textContent=weekSec>=3600?`${Math.floor(weekSec/3600)}h`:`${Math.floor(weekSec/60)}m`;
+  if(el('an-week-sub'))el('an-week-sub').textContent=weekSessions.length+' sessions';
+  if(el('an-avg'))el('an-avg').textContent=avgSec>=3600?`${Math.floor(avgSec/3600)}h`:`${Math.floor(avgSec/60)}m`;
+  if(el('an-streak'))el('an-streak').textContent=streak+' day streak';
+  renderBarChart(sessions);
+  renderHeatmap(sessions);
+  renderSessionList(sessions);
+}
+
+function renderBarChart(sessions){
+  const el=document.getElementById('an-bar-chart');if(!el)return;
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const now=new Date();const buckets=Array(7).fill(0);
+  sessions.forEach(s=>{const d=new Date(s.start);const diff=Math.floor((now-d)/86400000);if(diff<7){const di=(now.getDay()-diff+7)%7;buckets[di]+=s.duration;}});
+  const maxSec=Math.max(...buckets,1);
+  el.innerHTML='';
+  for(let i=0;i<7;i++){
+    const di=(now.getDay()-6+i+7)%7;
+    const col=document.createElement('div');col.className='bar-col';
+    const fill=document.createElement('div');fill.className='bar-fill';
+    fill.style.height=Math.round(buckets[di]/maxSec*70)+'px';
+    const lbl=document.createElement('div');lbl.className='bar-lbl';lbl.textContent=days[di];
+    col.appendChild(fill);col.appendChild(lbl);el.appendChild(col);
+  }
+}
+
+function renderHeatmap(sessions){
+  const el=document.getElementById('an-heatmap');if(!el)return;
+  const map={};sessions.forEach(s=>{const d=new Date(s.start);const k=d.toDateString();map[k]=(map[k]||0)+s.duration;});
+  el.innerHTML='';
+  const now=new Date();
+  for(let i=363;i>=0;i--){
+    const d=new Date(now);d.setDate(d.getDate()-i);
+    const sec=map[d.toDateString()]||0;
+    let v=0;if(sec>0)v=1;if(sec>3600)v=2;if(sec>7200)v=3;if(sec>14400)v=4;
+    const cell=document.createElement('div');cell.className='heatmap-cell';cell.setAttribute('data-v',v);
+    cell.title=d.toLocaleDateString()+': '+fmtDur(sec);
+    el.appendChild(cell);
+  }
+}
+
+function renderSessionList(sessions){
+  const el=document.getElementById('an-session-list');if(!el)return;
+  if(!sessions.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);">No sessions recorded. Click Start Session to begin tracking.</div>';return;}
+  el.innerHTML='';
+  sessions.slice().reverse().slice(0,30).forEach(s=>{
+    const row=document.createElement('div');row.className='session-row';
+    row.innerHTML=`<div class="session-dot"></div><span class="session-proj">${escHtml(s.note||'Dev session')}</span><span class="session-dur">${fmtDur(s.duration)}</span><span class="session-date">${s.date}</span><button class="xbtn" onclick="deleteSession('${s.id}')">x</button>`;
+    el.appendChild(row);
+  });
+}
+
+function deleteSession(id){if(!D.sessions)return;D.sessions=D.sessions.filter(s=>s.id!==id);save();renderAnalytics();}
+
+// =====================================================
+// SCENE TREE SYSTEM (Godot-style)
+// =====================================================
+let activeSceneId=null,selectedNodeId=null;
+
+const NODE_TYPES=[
+  {type:'Node2D',icon:'🟢',cls:'nt-node2d'},
+  {type:'Sprite2D',icon:'🖼',cls:'nt-sprite'},
+  {type:'AnimatedSprite2D',icon:'🎞',cls:'nt-anim'},
+  {type:'StaticBody2D',icon:'🧱',cls:'nt-body'},
+  {type:'RigidBody2D',icon:'⚙',cls:'nt-body'},
+  {type:'CharacterBody2D',icon:'🚶',cls:'nt-body'},
+  {type:'Area2D',icon:'🔵',cls:'nt-area'},
+  {type:'CollisionShape2D',icon:'🔷',cls:'nt-collision'},
+  {type:'CollisionPolygon2D',icon:'🔹',cls:'nt-collision'},
+  {type:'Label',icon:'🔤',cls:'nt-label'},
+  {type:'Button',icon:'🔲',cls:'nt-button'},
+  {type:'TextureButton',icon:'🖱',cls:'nt-button'},
+  {type:'Panel',icon:'▭',cls:'nt-ctrl'},
+  {type:'HBoxContainer',icon:'⊞',cls:'nt-ctrl'},
+  {type:'VBoxContainer',icon:'⊟',cls:'nt-ctrl'},
+  {type:'Control',icon:'🖥',cls:'nt-ctrl'},
+  {type:'Camera2D',icon:'📷',cls:'nt-camera'},
+  {type:'AudioStreamPlayer',icon:'🔊',cls:'nt-audio'},
+  {type:'AudioStreamPlayer2D',icon:'🔈',cls:'nt-audio'},
+  {type:'AnimationPlayer',icon:'▶',cls:'nt-anim'},
+  {type:'Timer',icon:'⏱',cls:'nt-timer'},
+  {type:'Node',icon:'⭕',cls:'nt-root'},
+  {type:'Node3D',icon:'📦',cls:'nt-node2d'},
+  {type:'MeshInstance3D',icon:'🔺',cls:'nt-sprite'},
+  {type:'DirectionalLight3D',icon:'💡',cls:'nt-camera'},
+  {type:'Camera3D',icon:'📹',cls:'nt-camera'},
+];
+
+function getNodeTypeDef(type){return NODE_TYPES.find(t=>t.type===type)||{type,icon:'⭕',cls:'nt-root'};}
+
+function defaultNodeProps(type){
+  const base={visible:true,process_mode:'inherit',groups:[],script:null};
+  if(type.includes('2D')||type==='Node2D'){return{...base,position:{x:0,y:0},rotation:0,scale:{x:1,y:1},z_index:0};}
+  if(type==='Label')return{...base,text:'Label',font_size:16,h_align:'left'};
+  if(type==='Button'||type==='TextureButton')return{...base,text:'Button',disabled:false};
+  if(type==='AudioStreamPlayer'||type==='AudioStreamPlayer2D')return{...base,autoplay:false,volume_db:0,pitch_scale:1};
+  if(type==='Timer')return{...base,wait_time:1,one_shot:false,autostart:false};
+  if(type==='Camera2D')return{...base,current:false,zoom:{x:1,y:1}};
+  return base;
+}
+
+function makeNode(type,name,parentId){
+  return{id:'nd_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),type,name:name||type,parentId:parentId||null,children:[],collapsed:false,props:defaultNodeProps(type),script:null};
+}
+
+function makeScene(name,rootType){
+  const root=makeNode(rootType||'Node2D','Root',null);
+  return{id:'sc_'+Date.now(),name:name||'New Scene',rootId:root.id,nodes:{[root.id]:root},folderId:null};
+}
+
+function openNewSceneModal(){
+  const typeOpts=NODE_TYPES.map(t=>`<option value="${t.type}">${t.icon} ${t.type}</option>`).join('');
+  openModal('New Scene',`
+    <label class="modal-label">Scene Name</label>
+    <input class="modal-inp" id="ns-name" placeholder="e.g. GameWorld, PlayerScene, HUD">
+    <label class="modal-label">Root Node Type</label>
+    <select class="modal-select" id="ns-root-type">${typeOpts}</select>
+    <label class="modal-label">Save in Folder (optional)</label>
+    <select class="modal-select" id="ns-folder">
+      <option value="">Root (no folder)</option>
+      ${(D.sceneFolders||[]).map(f=>`<option value="${f.id}">${escHtml(f.name)}</option>`).join('')}
+    </select>
+  `,[{label:'Cancel',action:closeModal},{label:'Create',action:()=>{
+    const name=document.getElementById('ns-name').value.trim();if(!name)return;
+    const rootType=document.getElementById('ns-root-type').value;
+    const folderId=document.getElementById('ns-folder').value||null;
+    const scene=makeScene(name,rootType);
+    scene.folderId=folderId;
+    if(!D.scenes)D.scenes=[];
+    D.scenes.push(scene);
+    save();closeModal();
+    renderSceneFileTree();
+    setActiveScene(scene.id);
+    toast('Scene created: '+name);
+  },accent:true}]);
+}
+
+function openNewFolderModal(){
+  const parentOpts=`<option value="">Root</option>`+(D.sceneFolders||[]).map(f=>`<option value="${f.id}">${escHtml(f.name)}</option>`).join('');
+  openModal('New Scene Folder',`
+    <label class="modal-label">Folder Name</label>
+    <input class="modal-inp" id="nf-name" placeholder="e.g. Levels, UI, Characters">
+    <label class="modal-label">Parent Folder</label>
+    <select class="modal-select" id="nf-parent">${parentOpts}</select>
+  `,[{label:'Cancel',action:closeModal},{label:'Create',action:()=>{
+    const name=document.getElementById('nf-name').value.trim();if(!name)return;
+    const parentId=document.getElementById('nf-parent').value||null;
+    if(!D.sceneFolders)D.sceneFolders=[];
+    D.sceneFolders.push({id:'sf_'+Date.now(),name,parentId,collapsed:false});
+    save();closeModal();renderSceneFileTree();toast('Folder created: '+name);
+  },accent:true}]);
+}
+
+function renderSceneFileTree(){
+  const el=document.getElementById('scene-file-tree');if(!el)return;
+  if(!D){el.innerHTML='';return;}
+  if(!D.scenes)D.scenes=[];if(!D.sceneFolders)D.sceneFolders=[];
+  el.innerHTML='';
+  // Build tree: folders then loose scenes
+  function renderFolder(parentId,depth){
+    const folders=(D.sceneFolders||[]).filter(f=>(f.parentId||null)===(parentId||null));
+    const scenes=(D.scenes||[]).filter(s=>(s.folderId||null)===(parentId||null));
+    folders.forEach(folder=>{
+      const div=document.createElement('div');div.className='sft-folder';
+      const hdr=document.createElement('div');hdr.className='sft-folder-hdr';
+      hdr.style.paddingLeft=(depth*12+8)+'px';
+      const arr=document.createElement('span');arr.className='sft-arr'+(folder.collapsed?'':' open');arr.textContent='▶';
+      const icon=document.createElement('span');icon.className='sft-folder-icon';icon.textContent='📁';
+      const name=document.createElement('span');name.className='sft-folder-name';name.textContent=folder.name;
+      const del=document.createElement('button');del.className='nav-tiny-btn';del.textContent='×';del.title='Delete folder';
+      del.onclick=e=>{e.stopPropagation();deleteSceneFolder(folder.id);};
+      hdr.appendChild(arr);hdr.appendChild(icon);hdr.appendChild(name);hdr.appendChild(del);
+      const children=document.createElement('div');children.className='sft-folder-children'+(folder.collapsed?'':' open');
+      hdr.onclick=()=>{folder.collapsed=!folder.collapsed;arr.classList.toggle('open',!folder.collapsed);children.classList.toggle('open',!folder.collapsed);save();};
+      renderFolder(folder.id,depth+1);// recurse before appending (wrong)
+      el.appendChild(div);div.appendChild(hdr);div.appendChild(children);
+      // Fill children container
+      const subFolders=(D.sceneFolders||[]).filter(f=>(f.parentId||null)===folder.id);
+      const subScenes=(D.scenes||[]).filter(s=>(s.folderId||null)===folder.id);
+      subFolders.forEach(sf=>{buildFolderItem(sf,depth+1,children);});
+      subScenes.forEach(sc=>{children.appendChild(buildSceneItem(sc,depth+1));});
+    });
+    scenes.forEach(sc=>{el.appendChild(buildSceneItem(sc,depth));});
+  }
+  renderFolder(null,0);
+}
+
+function buildFolderItem(folder,depth,container){
+  const div=document.createElement('div');div.className='sft-folder';
+  const hdr=document.createElement('div');hdr.className='sft-folder-hdr';
+  hdr.style.paddingLeft=(depth*12+8)+'px';
+  const arr=document.createElement('span');arr.className='sft-arr'+(folder.collapsed?'':' open');arr.textContent='▶';
+  const icon=document.createElement('span');icon.className='sft-folder-icon';icon.textContent='📁';
+  const name=document.createElement('span');name.className='sft-folder-name';name.textContent=folder.name;
+  const del=document.createElement('button');del.className='nav-tiny-btn';del.textContent='×';
+  del.onclick=e=>{e.stopPropagation();deleteSceneFolder(folder.id);};
+  hdr.appendChild(arr);hdr.appendChild(icon);hdr.appendChild(name);hdr.appendChild(del);
+  const children=document.createElement('div');children.className='sft-folder-children'+(folder.collapsed?'':' open');
+  hdr.onclick=()=>{folder.collapsed=!folder.collapsed;arr.classList.toggle('open',!folder.collapsed);children.classList.toggle('open',!folder.collapsed);save();};
+  div.appendChild(hdr);div.appendChild(children);
+  const subFolders=(D.sceneFolders||[]).filter(f=>(f.parentId||null)===folder.id);
+  const subScenes=(D.scenes||[]).filter(s=>(s.folderId||null)===folder.id);
+  subFolders.forEach(sf=>buildFolderItem(sf,depth+1,children));
+  subScenes.forEach(sc=>children.appendChild(buildSceneItem(sc,depth+1)));
+  container.appendChild(div);
+}
+
+function buildSceneItem(scene,depth){
+  const rootNode=scene.nodes?.[scene.rootId];
+  const def=rootNode?getNodeTypeDef(rootNode.type):{icon:'📄',cls:'nt-root'};
+  const item=document.createElement('div');item.className='sft-scene'+(activeSceneId===scene.id?' active-scene':'');
+  item.style.paddingLeft=(depth*12+8)+'px';
+  item.innerHTML=`<span class="sft-scene-icon ${def.cls}">${def.icon}</span><span style="flex:1;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(scene.name)}</span><button class="nav-tiny-btn" onclick="event.stopPropagation();renameScene('${scene.id}')" title="Rename">✎</button><button class="nav-tiny-btn" onclick="event.stopPropagation();deleteScene('${scene.id}')" title="Delete">×</button>`;
+  item.onclick=()=>setActiveScene(scene.id);
+  return item;
+}
+
+function deleteSceneFolder(id){
+  if(!confirm){}
+  D.sceneFolders=(D.sceneFolders||[]).filter(f=>f.id!==id);
+  // Move scenes to root
+  (D.scenes||[]).forEach(s=>{if(s.folderId===id)s.folderId=null;});
+  save();renderSceneFileTree();toast('Folder deleted');
+}
+
+function renameScene(id){
+  const scene=(D.scenes||[]).find(s=>s.id===id);if(!scene)return;
+  openModal('Rename Scene',`<input class="modal-inp" id="ren-name" value="${escHtml(scene.name)}">`,[
+    {label:'Cancel',action:closeModal},{label:'Rename',action:()=>{scene.name=document.getElementById('ren-name').value.trim()||scene.name;save();renderSceneFileTree();closeModal();toast('Renamed');},accent:true}
+  ]);
+}
+
+function deleteScene(id){
+  openModal('Delete Scene',`<p style="font-size:11px;color:var(--text2);">Delete this scene and all its nodes?</p>`,[
+    {label:'Cancel',action:closeModal},{label:'Delete',action:()=>{D.scenes=(D.scenes||[]).filter(s=>s.id!==id);if(activeSceneId===id){activeSceneId=null;selectedNodeId=null;}save();closeModal();renderSceneFileTree();renderNodeTree();renderInspector();toast('Scene deleted');},danger:true}
+  ]);
+}
+
+function setActiveScene(sceneId){
+  activeSceneId=sceneId;selectedNodeId=null;
+  renderSceneFileTree();renderNodeTree();renderInspector();
+  const scene=(D.scenes||[]).find(s=>s.id===sceneId);
+  const titleEl=document.getElementById('st-panel-title');
+  if(titleEl)titleEl.textContent=(scene?scene.name:'NODE TREE').toUpperCase();
+  const addBtn=document.getElementById('st-add-node-btn');
+  const delBtn=document.getElementById('st-del-node-btn');
+  if(addBtn){addBtn.disabled=false;addBtn.style.opacity='1';}
+  if(delBtn){delBtn.disabled=true;delBtn.style.opacity='.4';}
+}
+
+function getActiveScene(){return(D.scenes||[]).find(s=>s.id===activeSceneId)||null;}
+
+function renderNodeTree(){
+  const el=document.getElementById('scene-node-tree');if(!el)return;
+  const scene=getActiveScene();
+  if(!scene){el.innerHTML='<div class="no-sel-msg" style="padding:20px;font-size:10px;">No scene selected.<br>Create or select a scene.</div>';return;}
+  el.innerHTML='';
+  function buildNode(nodeId,depth){
+    const node=scene.nodes[nodeId];if(!node)return;
+    const def=getNodeTypeDef(node.type);
+    const wrapper=document.createElement('div');wrapper.className='st-node';
+    const row=document.createElement('div');row.className='st-node-row'+(selectedNodeId===nodeId?' selected':'');
+    row.style.paddingLeft=(depth*14+6)+'px';
+    const hasChildren=node.children&&node.children.length>0;
+    const arr=document.createElement('span');arr.className='st-node-arr'+(hasChildren?'':' leaf')+((!node.collapsed&&hasChildren)?' open':'');
+    arr.textContent='▶';
+    const ico=document.createElement('span');ico.className='st-node-icon '+def.cls;ico.textContent=def.icon;
+    const nm=document.createElement('span');nm.className='st-node-name'+(node.script?' has-script':'');nm.textContent=node.name;
+    const nid=document.createElement('span');nid.className='st-node-id';nid.textContent=node.props?.node_id||'';
+    row.appendChild(arr);row.appendChild(ico);row.appendChild(nm);row.appendChild(nid);
+    row.onclick=()=>selectNode(nodeId);
+    if(hasChildren){
+      arr.onclick=e=>{e.stopPropagation();node.collapsed=!node.collapsed;save();renderNodeTree();};
+    }
+    wrapper.appendChild(row);
+    if(hasChildren&&!node.collapsed){
+      const children=document.createElement('div');children.className='st-node-children open';
+      node.children.forEach(cid=>buildNode(cid,depth+1,children));
+      wrapper.appendChild(children);
+      node.children.forEach(cid=>{const cn=buildNode(cid,depth+1);if(cn)children.appendChild(cn);});
+    }
+    return wrapper;
+  }
+  // Rebuild using return pattern
+  el.innerHTML='';
+  function buildNodeEl(nodeId,depth){
+    const node=scene.nodes[nodeId];if(!node)return null;
+    const def=getNodeTypeDef(node.type);
+    const wrapper=document.createElement('div');wrapper.className='st-node';
+    const row=document.createElement('div');row.className='st-node-row'+(selectedNodeId===nodeId?' selected':'');
+    row.style.paddingLeft=(depth*14+6)+'px';
+    const hasChildren=node.children&&node.children.length>0;
+    const arr=document.createElement('span');arr.className='st-node-arr'+(hasChildren?((!node.collapsed)?' open':''):' leaf');
+    arr.textContent='▶';
+    const ico=document.createElement('span');ico.className='st-node-icon '+def.cls;ico.textContent=def.icon;
+    const nm=document.createElement('span');nm.className='st-node-name'+(node.script?' has-script':'');nm.textContent=node.name;
+    const nid=document.createElement('span');nid.className='st-node-id';nid.style.fontSize='8px';nid.style.color='var(--text3)';nid.textContent=node.props?.node_id?'#'+node.props.node_id:'';
+    row.appendChild(arr);row.appendChild(ico);row.appendChild(nm);row.appendChild(nid);
+    row.onclick=e=>{e.stopPropagation();selectNode(nodeId);};
+    if(hasChildren){arr.onclick=e=>{e.stopPropagation();node.collapsed=!node.collapsed;save();renderNodeTree();};}
+    wrapper.appendChild(row);
+    if(hasChildren&&!node.collapsed){
+      node.children.forEach(cid=>{const cn=buildNodeEl(cid,depth+1);if(cn)wrapper.appendChild(cn);});
+    }
+    return wrapper;
+  }
+  const rootEl=buildNodeEl(scene.rootId,0);
+  if(rootEl)el.appendChild(rootEl);
+}
+
+function selectNode(nodeId){
+  selectedNodeId=nodeId;
+  renderNodeTree();renderInspector();
+  const delBtn=document.getElementById('st-del-node-btn');
+  const scene=getActiveScene();
+  if(delBtn){const isRoot=scene&&nodeId===scene.rootId;delBtn.disabled=!!isRoot;delBtn.style.opacity=isRoot?'.4':'1';}
+}
+
+function renderInspector(){
+  const el=document.getElementById('inspector-body');if(!el)return;
+  const scene=getActiveScene();
+  if(!scene||!selectedNodeId){el.innerHTML='<div class="no-sel-msg">Select a node<br>to view &amp; edit properties</div>';return;}
+  const node=scene.nodes[selectedNodeId];if(!node){el.innerHTML='<div class="no-sel-msg">Node not found</div>';return;}
+  const def=getNodeTypeDef(node.type);
+  function inp(label,key,type='text',extraAttrs=''){
+    const val=key.split('.').reduce((o,k)=>o&&o[k],node.props)??'';
+    return `<div class="insp-row"><span class="insp-key">${label}</span><div class="insp-val"><input class="insp-inp" type="${type}" value="${escHtml(String(val))}" ${extraAttrs} onchange="setNodeProp('${key}',this.value)"></div></div>`;
+  }
+  function chk(label,key){
+    const val=key.split('.').reduce((o,k)=>o&&o[k],node.props)??false;
+    return `<div class="insp-row"><span class="insp-key">${label}</span><div class="insp-val"><div class="insp-check${val?' on':''}" onclick="toggleNodeProp('${key}',this)">${val?'✓':''}</div></div></div>`;
+  }
+  let propsHtml='';
+  // Common
+  propsHtml+=`<div class="insp-section"><div class="insp-section-title">Node</div>`;
+  propsHtml+=`<div class="insp-row"><span class="insp-key">Name</span><div class="insp-val"><input class="insp-inp" value="${escHtml(node.name)}" onchange="setNodeName(this.value)"></div></div>`;
+  propsHtml+=`<div class="insp-row"><span class="insp-key">Type</span><div class="insp-val"><span style="font-size:10px;color:var(--text2);">${def.icon} ${escHtml(node.type)}</span></div></div>`;
+  propsHtml+=`<div class="insp-row"><span class="insp-key">Node ID</span><div class="insp-val"><input class="insp-inp" placeholder="e.g. player, enemy_01" value="${escHtml(node.props?.node_id||'')}" onchange="setNodeProp('node_id',this.value)"></div></div>`;
+  propsHtml+=chk('Visible','visible');
+  propsHtml+=`</div>`;
+  // Transform
+  if(node.props?.position!==undefined){
+    propsHtml+=`<div class="insp-section"><div class="insp-section-title">Transform</div>`;
+    propsHtml+=`<div class="insp-row"><span class="insp-key">Position X</span><div class="insp-val"><input class="insp-inp" type="number" value="${node.props.position?.x??0}" onchange="setNodeProp('position.x',parseFloat(this.value))"></div></div>`;
+    propsHtml+=`<div class="insp-row"><span class="insp-key">Position Y</span><div class="insp-val"><input class="insp-inp" type="number" value="${node.props.position?.y??0}" onchange="setNodeProp('position.y',parseFloat(this.value))"></div></div>`;
+    if(node.props.rotation!==undefined)propsHtml+=`<div class="insp-row"><span class="insp-key">Rotation</span><div class="insp-val"><input class="insp-inp" type="number" step="0.01" value="${node.props.rotation??0}" onchange="setNodeProp('rotation',parseFloat(this.value))"></div></div>`;
+    if(node.props.scale)propsHtml+=`<div class="insp-row"><span class="insp-key">Scale X</span><div class="insp-val"><input class="insp-inp" type="number" step="0.01" value="${node.props.scale?.x??1}" onchange="setNodeProp('scale.x',parseFloat(this.value))"></div></div><div class="insp-row"><span class="insp-key">Scale Y</span><div class="insp-val"><input class="insp-inp" type="number" step="0.01" value="${node.props.scale?.y??1}" onchange="setNodeProp('scale.y',parseFloat(this.value))"></div></div>`;
+    if(node.props.z_index!==undefined)propsHtml+=`<div class="insp-row"><span class="insp-key">Z-Index</span><div class="insp-val"><input class="insp-inp" type="number" value="${node.props.z_index??0}" onchange="setNodeProp('z_index',parseInt(this.value))"></div></div>`;
+    propsHtml+=`</div>`;
+  }
+  // Type-specific
+  if(node.type==='Label'){
+    propsHtml+=`<div class="insp-section"><div class="insp-section-title">Label</div>`;
+    propsHtml+=inp('Text','text');propsHtml+=inp('Font Size','font_size','number');propsHtml+=`</div>`;
+  }
+  if(node.type==='Button'||node.type==='TextureButton'){
+    propsHtml+=`<div class="insp-section"><div class="insp-section-title">Button</div>`;
+    propsHtml+=inp('Text','text');propsHtml+=chk('Disabled','disabled');propsHtml+=`</div>`;
+  }
+  if(node.type.includes('AudioStream')){
+    propsHtml+=`<div class="insp-section"><div class="insp-section-title">Audio</div>`;
+    propsHtml+=chk('Autoplay','autoplay');propsHtml+=inp('Volume dB','volume_db','number');propsHtml+=inp('Pitch Scale','pitch_scale','number');propsHtml+=`</div>`;
+  }
+  if(node.type==='Timer'){
+    propsHtml+=`<div class="insp-section"><div class="insp-section-title">Timer</div>`;
+    propsHtml+=inp('Wait Time','wait_time','number');propsHtml+=chk('One Shot','one_shot');propsHtml+=chk('Autostart','autostart');propsHtml+=`</div>`;
+  }
+  if(node.type==='Camera2D'){
+    propsHtml+=`<div class="insp-section"><div class="insp-section-title">Camera</div>`;
+    propsHtml+=chk('Current','current');propsHtml+=inp('Zoom X','zoom.x','number');propsHtml+=inp('Zoom Y','zoom.y','number');propsHtml+=`</div>`;
+  }
+  // Script section
+  propsHtml+=`<div class="insp-section"><div class="insp-section-title">Script</div>`;
+  if(node.script){
+    propsHtml+=`<div class="insp-row"><span class="insp-key">Attached</span><div class="insp-val"><div class="script-badge" onclick="openNodeScript('${selectedNodeId}')">📜 ${escHtml(node.script.name||'script.gd')}</div></div></div>`;
+    propsHtml+=`<div class="insp-row"><span class="insp-key"></span><div class="insp-val"><button class="btn" style="font-size:9px;" onclick="openNodeScript('${selectedNodeId}')">Edit Script</button> <button class="btn danger" style="font-size:9px;" onclick="detachScript('${selectedNodeId}')">Detach</button></div></div>`;
+  } else {
+    propsHtml+=`<div class="insp-row"><span class="insp-key">No script</span><div class="insp-val"><button class="btn accent" style="font-size:9px;" onclick="attachScript('${selectedNodeId}')">Attach Script</button></div></div>`;
+  }
+  propsHtml+=`</div>`;
+  // Groups
+  propsHtml+=`<div class="insp-section"><div class="insp-section-title">Groups</div>`;
+  propsHtml+=`<div id="insp-groups">`+(node.props.groups||[]).map((g,i)=>`<span class="pill" style="color:var(--accent2);border-color:var(--accent2);margin:2px;">${escHtml(g)} <span onclick="removeGroup(${i})" style="cursor:pointer;color:var(--accent3);margin-left:3px;">×</span></span>`).join('')+`</div>`;
+  propsHtml+=`<div class="insp-row" style="margin-top:6px;"><input class="insp-inp" id="group-inp" placeholder="Add group..." style="margin-right:4px;"><button class="btn" style="font-size:9px;" onclick="addGroup()">Add</button></div>`;
+  propsHtml+=`</div>`;
+  // Notes
+  propsHtml+=`<div class="insp-section"><div class="insp-section-title">Notes</div>`;
+  propsHtml+=`<textarea class="insp-inp" style="min-height:60px;resize:vertical;width:100%;font-size:10px;" placeholder="Designer notes..." onchange="setNodeProp('_notes',this.value)">${escHtml(node.props?._notes||'')}</textarea>`;
+  propsHtml+=`</div>`;
+  el.innerHTML=propsHtml;
+}
+
+function setNodeProp(keyPath,value){
+  const scene=getActiveScene();if(!scene||!selectedNodeId)return;
+  const node=scene.nodes[selectedNodeId];if(!node)return;
+  const keys=keyPath.split('.');
+  let obj=node.props;
+  for(let i=0;i<keys.length-1;i++){if(!obj[keys[i]])obj[keys[i]]={};obj=obj[keys[i]];}
+  obj[keys[keys.length-1]]=value;
+  save();renderNodeTree();
+}
+
+function toggleNodeProp(keyPath,el){
+  const scene=getActiveScene();if(!scene||!selectedNodeId)return;
+  const node=scene.nodes[selectedNodeId];if(!node)return;
+  const keys=keyPath.split('.');let obj=node.props;
+  for(let i=0;i<keys.length-1;i++){if(!obj[keys[i]])obj[keys[i]]={};obj=obj[keys[i]];}
+  const cur=obj[keys[keys.length-1]];obj[keys[keys.length-1]]=!cur;
+  el.classList.toggle('on',!cur);el.textContent=!cur?'✓':'';
+  save();
+}
+
+function setNodeName(val){
+  const scene=getActiveScene();if(!scene||!selectedNodeId)return;
+  const node=scene.nodes[selectedNodeId];if(!node)return;
+  node.name=val||node.name;save();renderNodeTree();
+}
+
+function addGroup(){
+  const inp=document.getElementById('group-inp');if(!inp)return;
+  const g=inp.value.trim();if(!g)return;
+  const scene=getActiveScene();if(!scene||!selectedNodeId)return;
+  const node=scene.nodes[selectedNodeId];if(!node)return;
+  if(!node.props.groups)node.props.groups=[];
+  if(!node.props.groups.includes(g))node.props.groups.push(g);
+  inp.value='';save();renderInspector();
+}
+
+function removeGroup(i){
+  const scene=getActiveScene();if(!scene||!selectedNodeId)return;
+  const node=scene.nodes[selectedNodeId];if(!node||!node.props.groups)return;
+  node.props.groups.splice(i,1);save();renderInspector();
+}
+
+function openAddNodeModal(){
+  const scene=getActiveScene();if(!scene)return;
+  const parentOpts=Object.values(scene.nodes).map(n=>`<option value="${n.id}"${n.id===selectedNodeId?' selected':''}>${escHtml(n.name)} (${n.type})</option>`).join('');
+  const typeOpts=NODE_TYPES.map(t=>`<option value="${t.type}">${t.icon} ${t.type}</option>`).join('');
+  openModal('Add Node',`
+    <label class="modal-label">Node Type</label>
+    <select class="modal-select" id="an-type">${typeOpts}</select>
+    <label class="modal-label">Name</label>
+    <input class="modal-inp" id="an-name" placeholder="e.g. Player, Enemy, HUD">
+    <label class="modal-label">Node ID (unique identifier)</label>
+    <input class="modal-inp" id="an-nid" placeholder="e.g. player, button_jump, health_bar">
+    <label class="modal-label">Parent Node</label>
+    <select class="modal-select" id="an-parent">${parentOpts}</select>
+  `,[{label:'Cancel',action:closeModal},{label:'Add Node',action:()=>{
+    const type=document.getElementById('an-type').value;
+    const name=document.getElementById('an-name').value.trim()||type;
+    const nid=document.getElementById('an-nid').value.trim();
+    const parentId=document.getElementById('an-parent').value;
+    const node=makeNode(type,name,parentId);
+    if(nid)node.props.node_id=nid;
+    scene.nodes[node.id]=node;
+    const parent=scene.nodes[parentId];
+    if(parent){if(!parent.children)parent.children=[];parent.children.push(node.id);}
+    save();closeModal();renderNodeTree();selectNode(node.id);toast('Node added: '+name);
+  },accent:true}]);
+}
+
+function deleteSelectedNode(){
+  const scene=getActiveScene();if(!scene||!selectedNodeId)return;
+  if(selectedNodeId===scene.rootId){toast('Cannot delete root node');return;}
+  function deleteNodeRecursive(nodeId){
+    const node=scene.nodes[nodeId];if(!node)return;
+    (node.children||[]).forEach(c=>deleteNodeRecursive(c));
+    delete scene.nodes[nodeId];
+  }
+  // Remove from parent
+  Object.values(scene.nodes).forEach(n=>{if(n.children)n.children=n.children.filter(c=>c!==selectedNodeId);});
+  deleteNodeRecursive(selectedNodeId);
+  selectedNodeId=null;save();renderNodeTree();renderInspector();
+  const delBtn=document.getElementById('st-del-node-btn');if(delBtn){delBtn.disabled=true;delBtn.style.opacity='.4';}
+  toast('Node deleted');
+}
+
+function attachScript(nodeId){
+  const scene=getActiveScene();if(!scene)return;
+  const node=scene.nodes[nodeId];if(!node)return;
+  openModal('Attach Script',`
+    <label class="modal-label">Script Name</label>
+    <input class="modal-inp" id="scr-name" placeholder="e.g. Player.gd, EnemyAI.gd" value="${escHtml(node.name+'.gd')}">
+    <label class="modal-label">Initial Code</label>
+    <textarea class="modal-inp" id="scr-code" style="min-height:120px;font-family:var(--font);font-size:10px;" placeholder="extends ${escHtml(node.type)}
+  
+func _ready():
+  pass
+
+func _process(delta):
+  pass"></textarea>
+  `,[{label:'Cancel',action:closeModal},{label:'Attach',action:()=>{
+    const name=document.getElementById('scr-name').value.trim()||node.name+'.gd';
+    const code=document.getElementById('scr-code').value;
+    node.script={name,code,created:new Date().toLocaleDateString()};
+    save();closeModal();renderInspector();renderNodeTree();toast('Script attached: '+name);
+  },accent:true}]);
+}
+
+function detachScript(nodeId){
+  const scene=getActiveScene();if(!scene)return;
+  const node=scene.nodes[nodeId];if(!node)return;
+  openModal('Detach Script',`<p style="font-size:11px;color:var(--text2);">Detach and remove script from ${escHtml(node.name)}?</p>`,[
+    {label:'Cancel',action:closeModal},{label:'Detach',action:()=>{node.script=null;save();closeModal();renderInspector();renderNodeTree();toast('Script detached');},danger:true}
+  ]);
+}
+
+function openNodeScript(nodeId){
+  const scene=getActiveScene();if(!scene)return;
+  const node=scene.nodes[nodeId];if(!node||!node.script)return;
+  openModal('Script: '+escHtml(node.script.name),`
+    <input class="modal-inp" id="scr-edit-name" value="${escHtml(node.script.name)}">
+    <textarea class="modal-inp" id="scr-edit-code" style="min-height:280px;font-family:var(--font);font-size:10px;color:#9fe1cb;">${escHtml(node.script.code||'')}</textarea>
+  `,[{label:'Cancel',action:closeModal},{label:'Save',action:()=>{
+    node.script.name=document.getElementById('scr-edit-name').value.trim()||node.script.name;
+    node.script.code=document.getElementById('scr-edit-code').value;
+    node.script.modified=new Date().toLocaleDateString();
+    save();closeModal();renderInspector();toast('Script saved');
+  },accent:true}]);
+}
+
+function exportSceneTree(){
+  const scene=getActiveScene();if(!scene){toast('No scene selected');return;}
+  let out='# Scene: '+scene.name+'\n';
+  out+='# Exported: '+new Date().toLocaleString()+'\n\n';
+  function printNode(nodeId,depth){
+    const node=scene.nodes[nodeId];if(!node)return;
+    const pad=' '.repeat(depth*2);
+    out+=pad+'[node name="'+node.name+'" type="'+node.type+'"'+(node.props?.node_id?' id="'+node.props.node_id+'"':'')+']\n';
+    if(node.script)out+=pad+'  script = ExtResource("'+node.script.name+'")\n';
+    (node.children||[]).forEach(c=>printNode(c,depth+1));
+  }
+  printNode(scene.rootId,0);
+  const blob=new Blob([out],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=scene.name.replace(/\s/g,'_')+'.tscn_txt';a.click();
+  toast('Scene exported');
+}
+
+// =====================================================
+// GAME DESIGN DOC
+// =====================================================
+const GDD_DEFAULTS=[
+  'Game Concept','Core Mechanics','Player Experience','Art Direction','Audio Design','Level Design','Progression System','Technical Notes'
+];
+
+function renderGDD(){
+  const el=document.getElementById('gdd-sections-list');if(!el)return;
+  if(!D||!D.gddSections)return;
+  el.innerHTML='';
+  D.gddSections.forEach((sec,i)=>{
+    const div=document.createElement('div');div.className='gdd-section';
+    const hdr=document.createElement('div');hdr.className='gdd-sec-hdr';
+    hdr.innerHTML=`<input class="insp-inp" style="flex:1;border:none;background:none;font-size:11px;color:var(--text);padding:0;" value="${escHtml(sec.title||'')}" onchange="D.gddSections[${i}].title=this.value;save();" placeholder="Section title"><button class="xbtn" onclick="deleteGDDSection(${i})">×</button>`;
+    const body=document.createElement('div');body.className='gdd-sec-body';
+    const ta=document.createElement('textarea');ta.className='gdd-textarea';ta.value=sec.content||'';ta.placeholder='Write your '+( sec.title||'notes')+'...';
+    ta.oninput=()=>{D.gddSections[i].content=ta.value;save();};
+    body.appendChild(ta);div.appendChild(hdr);div.appendChild(body);el.appendChild(div);
+  });
+  if(!D.gddSections.length){
+    el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;">No GDD sections yet. Click Add Section or generate defaults.</div>';
+    const btn=document.createElement('button');btn.className='btn accent';btn.textContent='Generate Default Sections';
+    btn.onclick=()=>{D.gddSections=GDD_DEFAULTS.map(t=>({id:'gdd_'+Date.now()+Math.random(),title:t,content:''}));save();renderGDD();};
+    el.appendChild(btn);
+  }
+}
+
+function addGDDSection(){
+  if(!D.gddSections)D.gddSections=[];
+  D.gddSections.push({id:'gdd_'+Date.now(),title:'New Section',content:''});
+  save();renderGDD();toast('Section added');
+}
+
+function deleteGDDSection(i){D.gddSections.splice(i,1);save();renderGDD();}
+
+function exportGDD(){
+  if(!D.gddSections||!D.gddSections.length){toast('No GDD content');return;}
+  let out='# Game Design Document\n# Project: '+(D.name||'Project')+'\n# '+new Date().toLocaleDateString()+'\n\n';
+  D.gddSections.forEach(s=>{out+='## '+s.title+'\n\n'+(s.content||'(empty)')+'\n\n---\n\n';});
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));a.download='GDD.md';a.click();toast('GDD exported as markdown');
+}
+
+// =====================================================
+// ASSET TRACKER
+// =====================================================
+const ASSET_TYPES={sprite:{label:'Sprite',color:'#4af0c8'},audio:{label:'Audio',color:'#c8f04a'},model:{label:'3D Model',color:'#a04af0'},fx:{label:'VFX/Shader',color:'#f04a4a'},anim:{label:'Animation',color:'#f0a04a'},ui:{label:'UI',color:'#4a9af0'},tileset:{label:'Tileset',color:'#f04ac8'},font:{label:'Font',color:'#aaaaaa'}};
+
+function renderAssets(){
+  const el=document.getElementById('asset-grid');if(!el)return;if(!D||!D.assets)return;
+  const tf=document.getElementById('asset-filter')?.value||'all';
+  const sf=document.getElementById('asset-status-filter')?.value||'all';
+  let assets=D.assets;
+  if(tf!=='all')assets=assets.filter(a=>a.type===tf);
+  if(sf!=='all')assets=assets.filter(a=>a.status===sf);
+  if(!assets.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);grid-column:1/-1;padding:20px 0;">No assets yet. Click Add Asset to start tracking.</div>';return;}
+  el.innerHTML='';
+  assets.forEach((asset,i)=>{
+    const orig_i=D.assets.indexOf(asset);
+    const td=ASSET_TYPES[asset.type]||{label:asset.type,color:'#888'};
+    const card=document.createElement('div');card.className='asset-card';
+    card.innerHTML=`<div class="asset-type-badge" style="background:${td.color}22;color:${td.color};border:1px solid ${td.color}44;">${td.label}</div><div class="asset-name">${escHtml(asset.name)}</div><div class="asset-status ${asset.status}">${asset.status.toUpperCase()}</div>${asset.notes?`<div style="font-size:9px;color:var(--text3);margin-top:4px;line-height:1.4;">${escHtml(asset.notes)}</div>`:''}<div style="display:flex;gap:4px;margin-top:8px;"><button class="btn" style="flex:1;font-size:9px;" onclick="cycleAssetStatus(${orig_i})">Cycle Status</button><button class="btn danger" style="font-size:9px;" onclick="deleteAsset(${orig_i})">×</button></div>`;
+    el.appendChild(card);
+  });
+}
+
+function openAddAsset(){
+  const typeOpts=Object.entries(ASSET_TYPES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  openModal('Add Asset',`
+    <label class="modal-label">Asset Name</label>
+    <input class="modal-inp" id="na-name" placeholder="e.g. player_run.png, jump_sfx.wav">
+    <label class="modal-label">Type</label>
+    <select class="modal-select" id="na-type">${typeOpts}</select>
+    <label class="modal-label">Status</label>
+    <select class="modal-select" id="na-status"><option value="todo">To Do</option><option value="wip">In Progress</option><option value="done">Done</option></select>
+    <label class="modal-label">Notes</label>
+    <input class="modal-inp" id="na-notes" placeholder="Dimensions, source, format...">
+  `,[{label:'Cancel',action:closeModal},{label:'Add',action:()=>{
+    const name=document.getElementById('na-name').value.trim();if(!name)return;
+    if(!D.assets)D.assets=[];
+    D.assets.push({id:'ast_'+Date.now(),name,type:document.getElementById('na-type').value,status:document.getElementById('na-status').value,notes:document.getElementById('na-notes').value});
+    save();closeModal();renderAssets();toast('Asset added: '+name);
+  },accent:true}]);
+}
+
+function cycleAssetStatus(i){
+  const statuses=['todo','wip','done'];
+  const asset=D.assets[i];if(!asset)return;
+  const cur=statuses.indexOf(asset.status);
+  asset.status=statuses[(cur+1)%statuses.length];
+  save();renderAssets();
+}
+
+function deleteAsset(i){D.assets.splice(i,1);save();renderAssets();}
+
+// =====================================================
+// BUG TRACKER
+// =====================================================
+const SEV_COLORS={critical:'#f04a4a',high:'#f0a04a',medium:'#f0f04a',low:'#4a9af0'};
+
+function renderBugs(){
+  const el=document.getElementById('bug-list');if(!el)return;if(!D||!D.bugs)return;
+  const sf=document.getElementById('bug-filter')?.value||'all';
+  const stf=document.getElementById('bug-status-filter')?.value||'all';
+  let bugs=D.bugs;
+  if(sf!=='all')bugs=bugs.filter(b=>b.severity===sf);
+  if(stf!=='all')bugs=bugs.filter(b=>b.status===stf);
+  if(!bugs.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;">No bugs logged! Either youre perfect or haven\'t started testing. 🎉</div>';return;}
+  el.innerHTML='';
+  bugs.forEach(bug=>{
+    const orig_i=D.bugs.indexOf(bug);
+    const sevCol=SEV_COLORS[bug.severity]||'#888';
+    const card=document.createElement('div');card.className='bug-card'+(bug.status==='resolved'?' resolved':'');
+    card.style.setProperty('--sev',sevCol);
+    card.innerHTML=`<div class="bug-top"><span class="bug-sev" style="color:${sevCol};border-color:${sevCol};">${bug.severity.toUpperCase()}</span><span class="bug-id">#${String(orig_i+1).padStart(3,'0')}</span><span class="bug-title">${escHtml(bug.title)}</span><span class="pill" style="color:${bug.status==='resolved'?'var(--accent)':bug.status==='inprogress'?'var(--accent4)':'var(--accent3)'};border-color:currentColor;">${bug.status}</span><button class="xbtn" onclick="deleteBug(${orig_i})">×</button></div>${bug.desc?`<div class="bug-desc">${escHtml(bug.desc)}</div>`:''}<div class="bug-meta">Reported: ${bug.date||'—'} ${bug.scene?'• Scene: '+escHtml(bug.scene):''}</div><div style="display:flex;gap:6px;margin-top:8px;"><button class="btn" style="font-size:9px;" onclick="cycleBugStatus(${orig_i})">${bug.status==='open'?'Mark In Progress':bug.status==='inprogress'?'Mark Resolved':'Reopen'}</button></div>`;
+    el.appendChild(card);
+  });
+}
+
+function openAddBug(){
+  openModal('Report Bug',`
+    <label class="modal-label">Title</label>
+    <input class="modal-inp" id="bg-title" placeholder="Brief description of the bug">
+    <label class="modal-label">Severity</label>
+    <select class="modal-select" id="bg-sev"><option value="low">Low</option><option value="medium">Medium</option><option value="high" selected>High</option><option value="critical">Critical</option></select>
+    <label class="modal-label">Scene / Area</label>
+    <input class="modal-inp" id="bg-scene" placeholder="e.g. PlayerScene, MainMenu">
+    <label class="modal-label">Steps to Reproduce / Description</label>
+    <textarea class="modal-inp" id="bg-desc" style="min-height:90px;resize:vertical;" placeholder="1. Open scene\n2. Run game\n3. See error..."></textarea>
+  `,[{label:'Cancel',action:closeModal},{label:'Report',action:()=>{
+    const title=document.getElementById('bg-title').value.trim();if(!title)return;
+    if(!D.bugs)D.bugs=[];
+    D.bugs.push({id:'bug_'+Date.now(),title,severity:document.getElementById('bg-sev').value,scene:document.getElementById('bg-scene').value.trim(),desc:document.getElementById('bg-desc').value.trim(),status:'open',date:new Date().toLocaleDateString()});
+    save();closeModal();renderBugs();logActivity('Bug reported: '+title,'#f04a4a');toast('Bug reported');
+  },accent:true}]);
+}
+
+function cycleBugStatus(i){
+  const bug=D.bugs[i];if(!bug)return;
+  const statuses=['open','inprogress','resolved'];
+  const cur=statuses.indexOf(bug.status);
+  bug.status=statuses[(cur+1)%statuses.length];
+  if(bug.status==='resolved')logActivity('Bug fixed: '+bug.title,'#c8f04a');
+  save();renderBugs();
+}
+
+function deleteBug(i){D.bugs.splice(i,1);save();renderBugs();}
+
+// Also update the updateGDriveUI if it doesn't exist
+function updateGDriveUI(){}
+
 // =====================================================
 loadSettings();
 loadRoots();

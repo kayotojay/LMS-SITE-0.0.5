@@ -44,6 +44,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
+#root-screen-wrap{height:100%;overflow-y:auto;}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12px;}
 
 /* ========== ANIMATIONS ========== */
@@ -56,7 +57,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 /* ========== ROOT SCREEN ========== */
 #root-screen{
   display:flex;flex-direction:column;align-items:center;min-height:100vh;
-  padding:40px 24px 60px;overflow-y:auto;position:relative;
+  padding:40px 24px 60px;overflow-y:visible;position:relative;
   background:radial-gradient(ellipse at 20% 20%,#0d0d1a,var(--bg) 50%),radial-gradient(ellipse at 80% 80%,#0a0a14,var(--bg) 50%);
 }
 [data-theme="light"] #root-screen{background:radial-gradient(ellipse at 20% 20%,#e0e8f0,var(--bg) 60%);}
@@ -469,10 +470,6 @@ select option{background:var(--bg2);}
 @media(max-width:700px){.phase-grid{grid-template-columns:1fr;}.stat-grid{grid-template-columns:1fr 1fr;}.notes-grid{grid-template-columns:1fr;}.settings-grid{grid-template-columns:1fr;}}
 
 /* ========== SERVER HUB ========== */
-.spe-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px 16px;cursor:pointer;letter-spacing:.08em;white-space:nowrap;transition:all .15s;}
-.spe-tab:hover{color:var(--text2);}
-.spe-tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
-.spe-tab-content{animation:fadeUp .2s ease;}
 .srv-proj-card{background:var(--bg2);border:1px solid var(--border);border-radius:2px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .2s;}
 .srv-proj-card:hover{border-color:var(--accent2);}
 .srv-member-badge{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:3px 10px;font-size:9px;color:var(--text2);letter-spacing:.08em;}
@@ -485,12 +482,73 @@ select option{background:var(--bg2);}
 .srv-msg-name{font-size:8px;color:var(--text3);letter-spacing:.1em;margin-bottom:3px;}
 .srv-msg-text{font-size:11px;color:var(--text);}
 .srv-msg-time{font-size:8px;color:var(--text3);margin-top:3px;text-align:right;}
+
+/* ========== SERVER PRESENCE ========== */
+.srv-presence-bar{display:flex;align-items:center;gap:6px;padding:4px 14px;background:var(--bg2);border-bottom:1px solid var(--border);min-height:28px;flex-shrink:0;overflow-x:auto;}
+.srv-presence-member{display:flex;align-items:center;gap:5px;padding:2px 8px;border-radius:10px;border:1px solid var(--border2);font-size:9px;color:var(--text3);letter-spacing:.06em;white-space:nowrap;transition:border-color .2s;}
+.srv-presence-member.online{border-color:var(--accent2);color:var(--accent2);}
+.srv-presence-member.you{border-color:var(--accent);color:var(--accent);}
+.srv-presence-dot{width:5px;height:5px;border-radius:50%;background:var(--border2);flex-shrink:0;}
+.srv-presence-member.online .srv-presence-dot{background:var(--accent2);}
+.srv-presence-member.you .srv-presence-dot{background:var(--accent);}
+.srv-activity-pill{font-size:8px;color:var(--text3);letter-spacing:.04em;padding:1px 5px;background:var(--bg3);border-radius:2px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ========== SERVER CHAT NAV ========== */
+.srv-chat-panel{display:flex;flex-direction:column;height:100%;}
+.srv-chat-msgs{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:4px;}
+.srv-chat-inp-row{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--border);flex-shrink:0;}
+@keyframes actPulse{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
 </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:flex;position:fixed;inset:0;background:var(--bg);z-index:5000;align-items:center;justify-content:center;overflow-y:auto;">
+  <div style="max-width:380px;width:93%;padding:0 20px 40px;text-align:center;">
+    <div style="font-family:var(--vt);font-size:52px;letter-spacing:.12em;line-height:1;background:linear-gradient(135deg,#c8f04a,#4af0c8,#a04af0,#c8f04a);background-size:300% 300%;animation:gradShift 6s ease infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;">LMS</div>
+    <div style="font-size:9px;color:var(--text3);letter-spacing:.3em;text-transform:uppercase;margin-bottom:32px;">Dev Hub — Sign In</div>
+
+    <div id="login-db-warning" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:10px 14px;margin-bottom:16px;font-size:10px;color:var(--accent3);letter-spacing:.06em;line-height:1.6;">
+      ⚠ Database not configured.<br><button onclick="openFirebaseSetup()" style="background:none;border:none;color:var(--accent3);font-family:var(--font);font-size:10px;cursor:pointer;text-decoration:underline;padding:0;margin-top:4px;display:block;width:100%;">Click here to set up Firebase →</button>
+    </div>
+
+    <div id="login-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:12px;font-size:10px;color:var(--accent3);letter-spacing:.06em;"></div>
+
+    <div id="login-tabs" style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
+      <button id="ltab-login" onclick="switchLoginTab('login')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">Sign In</button>
+      <button id="ltab-create" onclick="switchLoginTab('create')" style="flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">Create Account</button>
+    </div>
+
+    <!-- Sign In panel -->
+    <div id="lpanel-login" style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME</label>
+      <input id="li-username" class="modal-inp" placeholder="Your username" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('li-password').focus()">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
+      <input id="li-password" class="modal-inp" type="password" placeholder="Your password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Sign In →</button>
+    </div>
+
+    <!-- Create Account panel -->
+    <div id="lpanel-create" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME</label>
+      <input id="ca-username" class="modal-inp" placeholder="Choose a username" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('ca-password').focus()">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
+      <input id="ca-password" class="modal-inp" type="password" placeholder="Choose a password" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('ca-password2').focus()">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">CONFIRM PASSWORD</label>
+      <input id="ca-password2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doCreateAccount()">
+      <button onclick="doCreateAccount()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Create Account →</button>
+      <div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Requires a Firebase DB to be configured. Your account is stored in the shared database.</div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <button onclick="openFirebaseSetup()" style="background:none;border:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:9px;padding:4px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">⚙ DB Setup</button>
+    </div>
+  </div>
+</div>
+
 <!-- ROOT SCREEN -->
-<div id="root-screen">
+<div id="root-screen-wrap" style="height:100%;overflow-y:auto;display:none;">
+<div id="root-screen" style="min-height:100%;overflow-y:visible;">
   <div class="rs-header">
     <div class="rs-logo">LMS</div>
     <div class="rs-sub">Dev Hub &mdash; Project Roots</div>
@@ -500,13 +558,51 @@ select option{background:var(--bg2);}
     <button class="rs-btn" onclick="triggerImportRoot()">Import Root</button>
     <button class="rs-btn" onclick="showExportLastManTasks()">Export Starter Template</button>
     <button class="rs-btn" onclick="openRootSettings()">Settings</button>
-    <button class="rs-btn primary" onclick="openServerHub()" style="border-color:var(--accent2);color:var(--accent2);"> Server Hub</button>
+    <button class="rs-btn primary" id="rs-server-btn" onclick="openServerHub()" style="border-color:var(--accent2);color:var(--accent2);">⚡ Server Hub</button>
   </div>
-  <div class="root-grid" id="root-grid"></div>
+
+  <!-- SERVER STATUS BAR — only shown when connected -->
+  <div id="rs-server-bar" style="display:none;width:100%;max-width:960px;margin-bottom:16px;position:relative;z-index:1;animation:fadeUp .3s ease both;">
+    <div style="background:var(--bg2);border:1px solid var(--accent2);border-radius:3px;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2);flex-shrink:0;animation:glowPulse 2s infinite;"></div>
+      <div style="flex:1;">
+        <span style="font-size:11px;color:var(--accent2);letter-spacing:.08em;" id="rs-srv-name">SERVER</span>
+        <span style="font-size:9px;color:var(--text3);letter-spacing:.1em;margin-left:10px;" id="rs-srv-members"></span>
+      </div>
+      <div id="rs-srv-presence" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+      <button onclick="openServerHub()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">Hub ⚡</button>
+      <button onclick="disconnectServer();renderRootGrid();" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Leave</button>
+    </div>
+  </div>
+
+  <!-- SERVER PROJECTS SECTION — shown when connected, live cards just like solo -->
+  <div id="rs-server-projects-section" style="display:none;width:100%;max-width:960px;position:relative;z-index:1;margin-bottom:28px;animation:fadeUp .4s .05s ease both;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="font-size:9px;color:var(--accent2);letter-spacing:.25em;text-transform:uppercase;">Live Server Projects</div>
+      <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--accent2),transparent);opacity:.25;"></div>
+      <button onclick="openCreateServerProject()" style="background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:9px;padding:4px 14px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">+ New Server Project</button>
+    </div>
+    <div class="root-grid" id="rs-server-proj-grid" style="margin-bottom:0;"></div>
+    <div id="rs-server-proj-empty" style="display:none;text-align:center;padding:24px;background:var(--bg2);border:1px dashed var(--border2);border-radius:3px;">
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.15em;margin-bottom:10px;">No server projects yet</div>
+      <button onclick="openCreateServerProject()" class="rs-btn primary" style="border-color:var(--accent2);color:var(--accent2);">Create First Server Project</button>
+    </div>
+  </div>
+
+  <!-- LOCAL PROJECTS SECTION -->
+  <div id="rs-local-section" style="width:100%;max-width:960px;position:relative;z-index:1;">
+    <div id="rs-local-label" style="display:none;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.25em;text-transform:uppercase;">Local Projects</div>
+      <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--text3),transparent);opacity:.2;"></div>
+    </div>
+    <div class="root-grid" id="root-grid"></div>
+  </div>
+
   <div class="empty-root-state" id="empty-state" style="display:none;">
     <p>No projects yet. Create a root to get started.</p>
     <button class="rs-btn primary" onclick="openCreateRoot()">Create First Project</button>
   </div>
+</div>
 </div>
 
 <!-- APP SHELL -->
@@ -550,6 +646,11 @@ select option{background:var(--bg2);}
       <div class="nav-item" onclick="triggerImportTasks()"><div class="nav-dot" style="background:#555"></div>Import Tasks</div>
       <div class="nav-item" onclick="nav('settings')"><div class="nav-dot" style="background:#555"></div>Settings</div>
     </div>
+    <!-- Server-only nav — hidden when solo -->
+    <div class="nav-section" id="solo-server-nav" style="display:none;">
+      <div class="nav-label" style="color:var(--accent2);">Server</div>
+      <div class="nav-item" onclick="nav('chat')"><div class="nav-dot" style="background:var(--accent2);animation:glowPulse 2s infinite;"></div>Team Chat</div>
+    </div>
     <div class="sidebar-footer">
       <span id="sidebar-footer">solo dev</span>
     </div>
@@ -559,10 +660,15 @@ select option{background:var(--bg2);}
     <div class="topbar">
       <span class="topbar-title" id="page-title">Dashboard</span>
       <div class="topbar-right">
+        <span id="solo-live-badge" style="display:none;font-size:8px;color:var(--accent2);letter-spacing:.12em;padding:2px 8px;border:1px solid var(--accent2);border-radius:10px;animation:glowPulse 2s infinite;">LIVE</span>
         <button class="topbar-icon-btn" onclick="nav('settings')" title="Settings">Settings</button>
         <div class="status-dot"></div>
         <span class="status-txt" id="overall-pct">0%</span>
       </div>
+    </div>
+    <!-- Server presence bar — only shown in server mode -->
+    <div class="srv-presence-bar" id="solo-presence-bar" style="display:none;">
+      <span style="font-size:8px;color:var(--text3);letter-spacing:.15em;flex-shrink:0;">ONLINE:</span>
     </div>
     <div class="content" id="main-content">
 
@@ -783,6 +889,16 @@ select option{background:var(--bg2);}
         <div class="bug-list" id="bug-list"></div>
       </div>
 
+      <!-- TEAM CHAT — server only, injected into solo shell -->
+      <div class="page" id="page-chat" style="display:none;flex-direction:column;height:calc(100vh - 90px);">
+        <div class="section-hdr" style="flex-shrink:0;"><span class="section-title" style="color:var(--accent2);">TEAM CHAT</span><span class="section-sub">server communication</span></div>
+        <div id="solo-chat-msgs" class="srv-chat-msgs" style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:2px;min-height:0;"></div>
+        <div class="srv-chat-inp-row" style="padding:10px 0 0;flex-shrink:0;">
+          <input id="solo-chat-inp" class="add-inp" placeholder="Message the team…" style="flex:1;" onkeydown="if(event.key==='Enter')sendSoloSrvMsg()">
+          <button onclick="sendSoloSrvMsg()" class="add-btn">Send</button>
+        </div>
+      </div>
+
       <!-- CUSTOM PAGES injected dynamically -->
 
     </div>
@@ -877,6 +993,23 @@ function renderRootGrid(){
   const grid=document.getElementById('root-grid');
   const empty=document.getElementById('empty-state');
   grid.innerHTML='';
+
+  // Update server section visibility
+  const srvBar=document.getElementById('rs-server-bar');
+  const srvSection=document.getElementById('rs-server-projects-section');
+  const localLabel=document.getElementById('rs-local-label');
+  if(srvState.connected){
+    srvBar.style.display='block';
+    srvSection.style.display='block';
+    if(localLabel)localLabel.style.display='flex';
+    document.getElementById('rs-srv-name').textContent=srvState.serverName.toUpperCase()+' as '+srvState.username+(srvState.isHost?' [HOST]':'');
+    renderRootServerProjects();
+  } else {
+    srvBar.style.display='none';
+    srvSection.style.display='none';
+    if(localLabel)localLabel.style.display='none';
+  }
+
   if(!roots.length){empty.style.display='block';return;}
   empty.style.display='none';
   roots.forEach(root=>{
@@ -888,6 +1021,7 @@ function renderRootGrid(){
     card.className='root-card';
     card.style.setProperty('--card-color',col);
     card.style.setProperty('--card-glow',`rgba(${hexToRgb(col)},.05)`);
+    const hostBtn=srvState.connected&&srvState.isHost?`<button class="rc-action-btn" style="color:var(--accent2);border-color:var(--accent2);margin-right:auto;" onclick="event.stopPropagation();hostExistingProjectOnServer('${root.id}')">⚡ Host on Server</button>`:'';
     card.innerHTML=`
       <div class="rc-top">
         <div class="rc-icon" style="background:linear-gradient(135deg,${col}40,${col}10);color:${col};">${(root.name||'P').charAt(0).toUpperCase()}</div>
@@ -902,6 +1036,7 @@ function renderRootGrid(){
       <div class="rc-prog"><div class="rc-prog-bar"><div class="rc-prog-fill" style="width:${prog.pct}%;background:${col}"></div></div><div class="rc-prog-txt">${prog.pct}% complete</div></div>
       <div class="rc-date">Created ${root.created||'—'}</div>
       <div class="rc-actions">
+        ${hostBtn}
         <button class="rc-action-btn" onclick="event.stopPropagation();exportRoot('${root.id}')">Export</button>
         <button class="rc-action-btn" onclick="event.stopPropagation();confirmDeleteRoot('${root.id}')">Delete</button>
       </div>`;
@@ -957,18 +1092,60 @@ function openRoot(id){
   document.getElementById('proj-logo-sub').textContent=(root?.engine||'dev')+' — '+(root?.genre||'game');
   document.getElementById('sidebar-footer').textContent=(root?.engine||'solo dev');
   document.getElementById('dash-sub').textContent=escHtml(root?.name?.toLowerCase()||'project overview');
-  document.getElementById('root-screen').style.display='none';
+  document.getElementById('root-screen-wrap').style.display='none';
   document.getElementById('app-shell').classList.add('visible');
   initProject();
 }
 
 function goHome(){
+  // Clean up server state if we were in a server project
+  if(srvState.activeProjId){
+    if(srvState._soloSyncInterval)clearInterval(srvState._soloSyncInterval);
+    srvState._soloSyncInterval=null;
+    if(srvState.connected&&srvState.serverKey&&srvState.myId){
+      fbPatch('/servers/'+srvState.serverKey+'/members/'+srvState.myId,{activity:null,inProject:null});
+    }
+    srvState.activeProjId=null;
+    // Reset server UI in solo shell
+    document.getElementById('solo-live-badge').style.display='none';
+    document.getElementById('solo-server-nav').style.display='none';
+    document.getElementById('solo-presence-bar').style.display='none';
+  }
   document.getElementById('app-shell').classList.remove('visible');
-  document.getElementById('root-screen').style.display='flex';
+  document.getElementById('root-screen-wrap').style.display='block';
   activeRootId=null;D=null;renderRootGrid();
 }
 
-function save(){if(!activeRootId||!D)return;saveRootData(activeRootId,D);}
+function save(){
+  if(!D)return;
+  if(srvState.activeProjId){
+    // Server mode — serialize D to Firebase format
+    const fbData={
+      folders:D.folders||[],
+      scripts:D.scripts||[],
+      sessions:D.sessions||[],
+      scenes:D.scenes||[],
+      sceneFolders:D.sceneFolders||[],
+      gddSections:D.gddSections||[],
+      assets:D.assets||[],
+      lore:D.lore||[],
+      activity:D.activity||[],
+      survivors:D.survivors||[],
+      phases:D.customPhases||{main:[],sub:[]},
+      phaseData:D.mainTasks||{}
+    };
+    // Convert arrays to objects for Firebase (versions, bugs)
+    const versions={};(D.versions||[]).forEach(v=>{versions[v.id||'v_'+Date.now()]=v;});
+    fbData.versions=versions;
+    const bugs={};(D.bugs||[]).forEach(b=>{bugs[b.id||'bug_'+Date.now()]=b;});
+    fbData.bugs=bugs;
+    const notes={};(D.notes||[]).forEach((n,i)=>{notes['n_'+i]={title:n.title||'Note',content:n.content||''};});
+    fbData.notes=notes;
+    fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId, fbData);
+  } else {
+    if(activeRootId) saveRootData(activeRootId,D);
+  }
+}
 
 function openRootSettings(){
   // Open the hub settings modal
@@ -1212,7 +1389,10 @@ function nav(page){
     const pfx='custom_';const rest=page.slice(pfx.length);const subMark=rest.lastIndexOf('_sub_');const secId=subMark>=0?rest.slice(0,subMark):rest;const subId=subMark>=0?rest.slice(subMark+1):null;
     if(secId&&subId)pageEl=getOrCreateCustomPage(page,secId,subId);
   }
-  if(pageEl)pageEl.classList.add('active');
+  if(pageEl){
+    if(page==='chat'){pageEl.style.display='flex';pageEl.classList.add('active');}
+    else{pageEl.style.display='';pageEl.classList.add('active');}
+  }
   const navEl=document.querySelector(`[onclick="nav('${page}')"]`)||document.getElementById('navitem-'+page);
   if(navEl)navEl.classList.add('active');
   const titleMap={'dash':'Dashboard','main-tasks':'Main Phases','sub-tasks':'Sub Phases','vault':'Script Vault','versions':'Versions','settings':'Settings','analytics':'Dev Time Tracker','scene-tree':'Scene Tree','gdd':'Game Design Doc','assets':'Asset Tracker','bugs':'Bug Tracker'};
@@ -1228,6 +1408,12 @@ function nav(page){
   if(page==='gdd')renderGDD();
   if(page==='assets')renderAssets();
   if(page==='bugs')renderBugs();
+  if(page==='chat'){
+    const chatPage=document.getElementById('page-chat');
+    if(chatPage){chatPage.style.display='flex';chatPage.classList.add('active');}
+    renderSoloChat();
+    srvBroadcastActivity('team chat');
+  }
 }
 
 // =====================================================
@@ -1322,6 +1508,14 @@ function confirmClearProject(){
     {label:'Cancel',action:closeModal},{label:'Clear Everything',action:()=>{D=newProjectData();save();closeModal();initProject();toast('Project cleared');},danger:true}
   ]);
 }
+function renderCustomSectionsList(){
+  // Custom sections list in settings — stub to prevent crash
+  const el=document.getElementById('custom-sections-list');
+  if(!el)return;
+  if(!D?.customSections?.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);">No custom sections yet.</div>';return;}
+  el.innerHTML=D.customSections.map((s,i)=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text);">${escHtml(s.name)}</div>`).join('');
+}
+
 function escHtml(str){if(!str)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // =====================================================
@@ -2126,17 +2320,8 @@ function deleteBug(i){D.bugs.splice(i,1);save();renderBugs();}
 function updateGDriveUI(){}
 
 // =====================================================
-loadSettings();
-loadRoots();
-renderRootGrid();
-
-// =====================================================
 // SERVER HUB — Real-time collaboration via Firebase RTDB
 // =====================================================
-// Uses Firebase Realtime Database (free, no signup needed via REST)
-// Server data lives at: https://lmsdevhub-default-rtdb.firebaseio.com/servers/{serverKey}
-// This gives genuine real-time multi-user sync via polling + REST
-
 // Firebase DB URL — set once, stored in localStorage
 let SRV_DB_URL = localStorage.getItem('lms_firebase_url') || '';
 
@@ -2149,7 +2334,7 @@ function setSrvDbUrl(url){
 }
 let srvState = {
   connected: false,
-  serverKey: null,   // firebase key (hashed server name)
+  serverKey: null,
   serverName: null,
   username: null,
   isHost: false,
@@ -2157,9 +2342,133 @@ let srvState = {
   chatPollInterval: null,
   activeProjId: null,
   activeTab: 'tasks',
-  myId: null,        // unique session ID
+  myId: null,
   lastChatTs: 0,
 };
+
+// =====================================================
+// ACCOUNT SYSTEM
+// =====================================================
+let currentUser = null; // {uid, username, isHost (for active server)}
+
+function switchLoginTab(tab){
+  document.getElementById('lpanel-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('lpanel-create').style.display=tab==='create'?'block':'none';
+  const loginStyle='flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
+  const inactiveStyle='flex:1;background:var(--bg2);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
+  document.getElementById('ltab-login').style.cssText=tab==='login'?loginStyle:inactiveStyle;
+  document.getElementById('ltab-create').style.cssText=tab==='create'?loginStyle.replace('border-right:1px solid var(--border);',''):inactiveStyle.replace('border-right:1px solid var(--border);','');
+}
+
+function showLoginError(msg){
+  const el=document.getElementById('login-error');el.textContent=msg;el.style.display='block';
+}
+function hideLoginError(){document.getElementById('login-error').style.display='none';}
+
+async function doLogin(){
+  if(!getSrvDbUrl()){
+    document.getElementById('login-db-warning').style.display='block';
+    showLoginError('Please configure a Firebase database first.');return;
+  }
+  const username=document.getElementById('li-username').value.trim();
+  const password=document.getElementById('li-password').value;
+  if(!username||!password){showLoginError('Fill in all fields.');return;}
+  hideLoginError();
+  const passHash=await hashPass(password);
+  // Look up account
+  const accounts=await fbGet('/accounts')||{};
+  const entry=Object.values(accounts).find(a=>a.username.toLowerCase()===username.toLowerCase());
+  if(!entry){showLoginError('Account not found. Create one first.');return;}
+  if(entry.passHash!==passHash){showLoginError('Wrong password.');return;}
+  // Login success
+  currentUser={uid:entry.uid,username:entry.username};
+  localStorage.setItem('lms_session',JSON.stringify(currentUser));
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('root-screen-wrap').style.display='block';
+  renderRootGrid();
+  toast('Welcome back, '+entry.username+'!');
+}
+
+async function doCreateAccount(){
+  if(!getSrvDbUrl()){
+    document.getElementById('login-db-warning').style.display='block';
+    showLoginError('Please configure a Firebase database first.');return;
+  }
+  const username=document.getElementById('ca-username').value.trim();
+  const password=document.getElementById('ca-password').value;
+  const password2=document.getElementById('ca-password2').value;
+  if(!username||!password){showLoginError('Fill in all fields.');return;}
+  if(password!==password2){showLoginError('Passwords do not match.');return;}
+  if(username.length<2){showLoginError('Username must be at least 2 characters.');return;}
+  hideLoginError();
+  const passHash=await hashPass(password);
+  // Check if username taken
+  const accounts=await fbGet('/accounts')||{};
+  const taken=Object.values(accounts).some(a=>a.username.toLowerCase()===username.toLowerCase());
+  if(taken){showLoginError('Username already taken. Choose another.');return;}
+  // Create account
+  const uid='uid_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  await fbSet('/accounts/'+uid,{uid,username,passHash,createdAt:Date.now()});
+  currentUser={uid,username};
+  localStorage.setItem('lms_session',JSON.stringify(currentUser));
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('root-screen-wrap').style.display='block';
+  renderRootGrid();
+  toast('Account created! Welcome, '+username+'!');
+}
+
+function logoutUser(){
+  currentUser=null;
+  localStorage.removeItem('lms_session');
+  // Disconnect server if connected
+  if(srvState.connected){
+    fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
+    stopSrvPolling();
+    srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0};
+  }
+  document.getElementById('root-screen-wrap').style.display='none';
+  document.getElementById('app-shell').classList.remove('visible');
+  document.getElementById('login-screen').style.display='flex';
+}
+
+// Add logout button to root screen header actions (called after DOM ready)
+function addLogoutBtn(){
+  const actions=document.querySelector('.rs-actions');
+  if(!actions||document.getElementById('logout-btn'))return;
+  const btn=document.createElement('button');
+  btn.id='logout-btn';btn.className='rs-btn';
+  btn.onclick=()=>{if(confirm('Sign out of your account?'))logoutUser();};
+  btn.style.borderColor='var(--accent3)';btn.style.color='var(--accent3)';
+  btn.textContent='Sign Out';
+  actions.appendChild(btn);
+}
+
+// =====================================================
+loadSettings();
+loadRoots();
+// Restore session or show login
+(async function initApp(){
+  const session=localStorage.getItem('lms_session');
+  if(session){
+    try{
+      currentUser=JSON.parse(session);
+      // Quick verify account still exists (non-blocking)
+      if(getSrvDbUrl()){
+        const acc=await fbGet('/accounts/'+currentUser.uid);
+        if(!acc){currentUser=null;localStorage.removeItem('lms_session');}
+      }
+    }catch(e){currentUser=null;}
+  }
+  if(currentUser){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('root-screen-wrap').style.display='block';
+    renderRootGrid();
+    addLogoutBtn();
+  } else {
+    document.getElementById('login-screen').style.display='flex';
+    if(!getSrvDbUrl()){document.getElementById('login-db-warning').style.display='block';}
+  }
+})();
 
 // Simple hash for server name → firebase key
 function hashStr(str){
@@ -2210,8 +2519,13 @@ function openServerHub(){
   document.getElementById('server-hub-overlay').style.display='block';
   renderSrvStatus();
   loadRecentServers();
+  // Pre-fill username fields
+  if(currentUser){
+    const hui=document.getElementById('host-username');const jui=document.getElementById('join-username');
+    if(hui&&!hui.value)hui.value=currentUser.username;
+    if(jui&&!jui.value)jui.value=currentUser.username;
+  }
   if(!getSrvDbUrl()){
-    // Show hint in status bar, open setup after brief delay
     const txt=document.getElementById('srv-status-txt');
     if(txt)txt.textContent='⚠ Database not configured — click DB Setup to get started';
     setTimeout(()=>openFirebaseSetup(), 400);
@@ -2260,7 +2574,10 @@ function renderSrvStatus(){
 // ---- HOST ----
 async function hostServer(){
   if(!getSrvDbUrl()){openFirebaseSetup();return;}
-  const username=document.getElementById('host-username').value.trim();
+  // Pre-fill username from logged in account
+  const usernameInp=document.getElementById('host-username');
+  if(currentUser&&!usernameInp.value.trim())usernameInp.value=currentUser.username;
+  const username=usernameInp.value.trim();
   const serverName=document.getElementById('host-servername').value.trim();
   const pass=document.getElementById('host-password').value;
   const pass2=document.getElementById('host-password2').value;
@@ -2278,12 +2595,12 @@ async function hostServer(){
     return;
   }
 
-  const myId='user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
   const now=Date.now();
 
   // Create server
   await fbSet('/servers/'+serverKey+'/meta',{name:serverName,passHash,createdAt:now,hostId:myId});
-  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:now,isHost:true});
+  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:now,isHost:true,uid:myId});
   await fbSet('/servers/'+serverKey+'/projects',{});
 
   // Save state
@@ -2293,12 +2610,18 @@ async function hostServer(){
   renderSrvStatus();
   renderActiveServer();
   toast('Server launched: '+serverName);
+  // Close hub, go back to root screen with server projects visible
+  closeServerHub();
+  renderRootGrid();
 }
 
 // ---- JOIN ----
 async function joinServer(){
   if(!getSrvDbUrl()){openFirebaseSetup();return;}
-  const username=document.getElementById('join-username').value.trim();
+  // Pre-fill username from logged in account
+  const usernameInp=document.getElementById('join-username');
+  if(currentUser&&!usernameInp.value.trim())usernameInp.value=currentUser.username;
+  const username=usernameInp.value.trim();
   const serverName=document.getElementById('join-servername').value.trim();
   const pass=document.getElementById('join-password').value;
   if(!username||!serverName||!pass){toast('Fill all fields');return;}
@@ -2311,8 +2634,8 @@ async function joinServer(){
   if(!meta){toast('Server not found');return;}
   if(meta.passHash!==passHash){toast('Wrong password');return;}
 
-  const myId='user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost:false});
+  const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
+  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost:false,uid:myId});
 
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost:false,myId,activeProjId:null};
   saveRecentServer(serverName,pass);
@@ -2320,6 +2643,9 @@ async function joinServer(){
   renderSrvStatus();
   renderActiveServer();
   toast('Joined server: '+meta.name);
+  // Close hub, go back to root screen with server projects visible
+  closeServerHub();
+  renderRootGrid();
 }
 
 // ---- DISCONNECT ----
@@ -2333,22 +2659,32 @@ async function disconnectServer(){
   document.getElementById('srv-active-panel').style.display='none';
   document.getElementById('srv-lobby-panel').style.display='block';
   toast('Left server');
+  renderRootGrid();
 }
 
 // ---- HEARTBEAT ----
 function startSrvHeartbeat(){
   stopSrvPolling();
-  // Heartbeat: update lastSeen every 15s so others see us online
   srvState.pollInterval=setInterval(async()=>{
     if(!srvState.connected)return;
+    // Keep presence alive
     await fbPatch('/servers/'+srvState.serverKey+'/members/'+srvState.myId,{lastSeen:Date.now()});
-    // Refresh active server view if hub is open
+    // Refresh hub if open
     if(document.getElementById('server-hub-overlay').style.display!=='none'){
       renderActiveServer();
     }
-    // Refresh project editor if open
-    if(document.getElementById('srv-proj-editor').style.display!=='none'){
-      await syncProjData();
+    // Refresh root screen server section if visible
+    if(document.getElementById('root-screen-wrap').style.display!=='none'&&srvState.connected){
+      renderRootServerProjects();
+    }
+    // Refresh solo presence bar if in a server project
+    if(srvState.activeProjId&&document.getElementById('app-shell').classList.contains('visible')){
+      updateSoloPresenceBar();
+    }
+    // Refresh solo shell if in server project
+    if(srvState.activeProjId&&document.getElementById('app-shell').classList.contains('visible')){
+      // Auto-refresh chat if on chat page
+      if(document.getElementById('page-chat')?.classList.contains('active')) renderSoloChat();
     }
   },5000);
 }
@@ -2380,6 +2716,37 @@ async function renderActiveServer(){
   // Load projects
   const projects=await fbGet('/servers/'+srvState.serverKey+'/projects')||{};
   renderSrvProjectsList(projects);
+
+  // Host: show deletion notifications
+  if(srvState.isHost){
+    const notifs=await fbGet('/servers/'+srvState.serverKey+'/hostNotifications')||{};
+    const notifList=Object.entries(notifs).map(([k,v])=>({...v,_key:k})).filter(n=>!n.seen).sort((a,b)=>b.ts-a.ts);
+    let notifEl=document.getElementById('srv-host-notifs');
+    if(!notifEl){
+      notifEl=document.createElement('div');notifEl.id='srv-host-notifs';
+      const projPanel=document.getElementById('srv-active-panel');
+      if(projPanel)projPanel.insertBefore(notifEl,projPanel.firstChild);
+    }
+    if(notifList.length){
+      notifEl.innerHTML=`<div style="background:rgba(240,160,74,.06);border:1px solid rgba(240,160,74,.3);border-radius:3px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:8px;color:var(--accent4);letter-spacing:.2em;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+          ⚠ HOST ALERTS — MEMBER DELETIONS
+          <button onclick="clearHostNotifs()" style="margin-left:auto;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:1px 7px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Clear All</button>
+        </div>
+        ${notifList.map(n=>`<div style="padding:5px 0;border-bottom:1px solid rgba(240,160,74,.15);font-size:10px;color:var(--text2);">
+          <span style="color:var(--accent3);">${escHtml(n.by)}</span> deleted ${escHtml(n.what)} in <span style="color:var(--accent2);">${escHtml(n.projectName)}</span>
+          <span style="color:var(--text3);font-size:9px;margin-left:8px;">${new Date(n.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+        </div>`).join('')}
+      </div>`;
+    } else {
+      notifEl.innerHTML='';
+    }
+  }
+}
+
+async function clearHostNotifs(){
+  await fbDelete('/servers/'+srvState.serverKey+'/hostNotifications');
+  renderActiveServer();
 }
 
 function renderSrvProjectsList(projects){
@@ -2402,6 +2769,112 @@ function renderSrvProjectsList(projects){
   `).join('');
 }
 
+// ---- SOLO SHELL TEAM CHAT (server mode) ----
+async function renderSoloChat(){
+  if(!srvState.connected||!srvState.activeProjId)return;
+  const chat=await fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat')||{};
+  const msgs=Object.values(chat).sort((a,b)=>a.ts-b.ts);
+  const el=document.getElementById('solo-chat-msgs');if(!el)return;
+  el.innerHTML=msgs.map(m=>{
+    const mine=m.uid===srvState.myId;
+    return`<div class="srv-msg${mine?' mine':' theirs'}">
+      ${!mine?`<div class="srv-msg-name">${escHtml(m.name)}</div>`:''}
+      <div class="srv-msg-text">${escHtml(m.text)}</div>
+      <div class="srv-msg-time">${new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`;
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+async function sendSoloSrvMsg(){
+  const inp=document.getElementById('solo-chat-inp');if(!inp)return;
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';
+  const id='msg_'+Date.now();
+  await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat/'+id,{id,text,name:srvState.username,uid:srvState.myId,ts:Date.now()});
+  await srvBroadcastActivity('chatting');
+  renderSoloChat();
+}
+
+// ---- RENDER SERVER PROJECTS ON ROOT SCREEN ----
+async function renderRootServerProjects(){
+  if(!srvState.connected)return;
+  const projects=await fbGet('/servers/'+srvState.serverKey+'/projects')||{};
+  const members=await fbGet('/servers/'+srvState.serverKey+'/members')||{};
+  const now=Date.now();
+  const online=Object.entries(members).filter(([id,m])=>(now-m.lastSeen)<30000);
+  const presEl=document.getElementById('rs-srv-presence');
+  if(presEl){
+    presEl.innerHTML=online.map(([id,m])=>`<div style="display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;border:1px solid ${id===srvState.myId?'var(--accent)':'var(--accent2)'};font-size:9px;color:${id===srvState.myId?'var(--accent)':'var(--accent2)'};letter-spacing:.06em;"><div style="width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;"></div>${escHtml(m.name)}${m.isHost?' ⚡':''}</div>`).join('');
+    const cnt=document.getElementById('rs-srv-members');if(cnt)cnt.textContent=online.length+' online';
+  }
+  const grid=document.getElementById('rs-server-proj-grid');
+  const empty=document.getElementById('rs-server-proj-empty');
+  if(!grid)return;
+  const entries=Object.entries(projects);
+  if(!entries.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML='';
+  entries.forEach(([id,proj])=>{
+    const col=proj.color||'#4af0c8';
+    const totalTasks=Object.keys(proj.tasks||{}).length;
+    const doneTasks=Object.values(proj.tasks||{}).filter(t=>t.status==='done').length;
+    const openBugs=Object.values(proj.bugs||{}).filter(b=>b.status!=='resolved').length;
+    const pct=totalTasks?Math.round(doneTasks/totalTasks*100):0;
+    const inProj=online.filter(([uid,m])=>m.inProject===id);
+    const card=document.createElement('div');
+    card.className='root-card';
+    card.style.setProperty('--card-color',col);
+    card.style.setProperty('--card-glow',`rgba(${hexToRgb(col)},.05)`);
+    card.innerHTML=`
+      <div class="rc-top">
+        <div class="rc-icon" style="background:linear-gradient(135deg,${col}40,${col}10);color:${col};">${(proj.name||'P').charAt(0).toUpperCase()}</div>
+        <div class="rc-info">
+          <div class="rc-name">${escHtml(proj.name)}</div>
+          <div class="rc-engine" style="display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--accent2);font-size:8px;padding:1px 5px;border:1px solid var(--accent2);border-radius:1px;letter-spacing:.1em;">LIVE</span>
+            <span>${escHtml(srvState.serverName||'server')}</span>
+          </div>
+        </div>
+      </div>
+      ${inProj.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">${inProj.map(([uid,m])=>`<div style="font-size:8px;padding:1px 6px;border-radius:8px;background:rgba(74,240,200,.1);border:1px solid rgba(74,240,200,.3);color:var(--accent2);">${escHtml(m.name)}</div>`).join('')}</div>`:''}
+      <div class="rc-stats">
+        <div class="rc-stat"><div class="rc-stat-val" style="color:${col}">${doneTasks}</div><div class="rc-stat-lbl">Done</div></div>
+        <div class="rc-stat"><div class="rc-stat-val">${totalTasks}</div><div class="rc-stat-lbl">Tasks</div></div>
+        <div class="rc-stat"><div class="rc-stat-val" style="color:#f04a4a">${openBugs}</div><div class="rc-stat-lbl">Bugs</div></div>
+        <div class="rc-stat"><div class="rc-stat-val" style="color:var(--accent2)">${inProj.length}</div><div class="rc-stat-lbl">Online</div></div>
+      </div>
+      <div class="rc-prog"><div class="rc-prog-bar"><div class="rc-prog-fill" style="width:${pct}%;background:${col}"></div></div><div class="rc-prog-txt">${pct}% complete</div></div>
+      <div class="rc-actions">
+        ${srvState.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();deleteSrvProject('' + id + '')" style="color:var(--accent3);">Delete</button>`:''}
+      </div>`;
+    card.addEventListener('click',()=>openSrvProject(id));
+    grid.appendChild(card);
+  });
+}
+
+// ---- HOST EXISTING LOCAL PROJECT ON SERVER ----
+async function hostExistingProjectOnServer(rootId){
+  if(!srvState.connected||!srvState.isHost){toast('Connect as host first');return;}
+  const root=roots.find(r=>r.id===rootId);
+  if(!root){toast('Project not found');return;}
+  const data=getRootData(rootId);
+  openModal('Host "'+root.name+'" on Server',`
+    <p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:12px;">This will create a server copy of <strong style="color:var(--accent);">${escHtml(root.name)}</strong> on <strong style="color:var(--accent2);">${escHtml(srvState.serverName)}</strong>.<br>Your local project stays untouched.</p>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:10px 12px;font-size:10px;color:var(--text3);">📋 ${(data.scripts||[]).length} scripts · ${(data.bugs||[]).length} bugs · ${(data.assets||[]).length} assets will be copied</div>
+  `,[{label:'Cancel',action:closeModal},{label:'⚡ Host It',action:async()=>{
+    closeModal();
+    toast('Uploading to server…');
+    const id='proj_'+Date.now();
+    const bugs={};(data.bugs||[]).forEach((b,i)=>{bugs[b.id||'bug_'+i]=b;});
+    const proj={id,name:root.name,color:root.color||'#4af0c8',desc:root.engine||'',createdBy:srvState.username,createdAt:Date.now(),tasks:{},notes:{},bugs,versions:{},chat:{},phases:data.customPhases||{main:[],sub:[]},phaseData:{},folders:data.folders||[],scripts:data.scripts||[],sessions:data.sessions||[],scenes:data.scenes||[],sceneFolders:data.sceneFolders||[],gddSections:data.gddSections||[],assets:data.assets||[]};
+    await fbSet('/servers/'+srvState.serverKey+'/projects/'+id,proj);
+    await srvBroadcastActivity('hosted project: '+root.name.substring(0,25));
+    toast('Project live on server!');
+    renderRootGrid();
+  },accent:true}]);
+}
+
 // ---- CREATE SERVER PROJECT ----
 function openCreateServerProject(){
   const colors=['#c8f04a','#4af0c8','#f04a4a','#f0a04a','#a04af0','#4a9af0'];
@@ -2422,47 +2895,117 @@ async function createSrvProject(){
   const color=document.getElementById('sp-color-val').value;
   const desc=document.getElementById('sp-desc').value.trim();
   const id='proj_'+Date.now();
-  const proj={id,name,color,desc,createdBy:srvState.username,createdAt:Date.now(),tasks:{},notes:{},bugs:{},chat:{}};
+  const proj={id,name,color,desc,createdBy:srvState.username,createdAt:Date.now(),tasks:{},notes:{},bugs:{},versions:{},chat:{},phases:{main:[],sub:[]},phaseData:{},folders:[],scripts:[],sessions:[],scenes:[],sceneFolders:[],gddSections:[],assets:[]};
   await fbSet('/servers/'+srvState.serverKey+'/projects/'+id,proj);
   closeModal();
   toast('Project created: '+name);
   renderActiveServer();
+  renderRootGrid();
 }
 
 async function deleteSrvProject(id){
   if(!srvState.isHost){toast('Only the host can delete projects');return;}
-  openModal('Delete Project',`<p style="font-size:11px;color:var(--text2);">Delete this server project and all its data? Cannot be undone.</p>`,[
-    {label:'Cancel',action:closeModal},{label:'Delete',action:async()=>{
-      await fbDelete('/servers/'+srvState.serverKey+'/projects/'+id);
-      closeModal();toast('Project deleted');renderActiveServer();
-    },danger:true}
-  ]);
+  const proj=speProjData&&speProjData.id===id?speProjData:(await fbGet('/servers/'+srvState.serverKey+'/projects/'+id));
+  const projName=proj?.name||'this project';
+  const code=Math.floor(100000+Math.random()*900000)+'';
+  openModal('⚠ Delete Server Project',`
+    <div style="background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:2px;padding:10px 12px;margin-bottom:14px;font-size:10px;color:var(--accent3);line-height:1.7;letter-spacing:.04em;">
+      ⚠ This will permanently delete <strong>${escHtml(projName)}</strong> and ALL its data from the server. This cannot be undone.
+    </div>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">To confirm, type: <strong style="color:var(--accent3);letter-spacing:.1em;">delete ${escHtml(code)}</strong></p>
+    <input class="modal-inp" id="del-confirm-inp" placeholder="Type the confirmation above..." autocomplete="off">
+  `,[{label:'Cancel',action:closeModal},{label:'Delete Forever',action:async()=>{
+    const typed=(document.getElementById('del-confirm-inp').value||'').trim();
+    if(typed!=='delete '+code){toast('Confirmation text did not match — cancelled');closeModal();return;}
+    await fbDelete('/servers/'+srvState.serverKey+'/projects/'+id);
+    // Notify host dashboard
+    await fbPush('/servers/'+srvState.serverKey+'/notifications',{type:'project_deleted',projectName:projName,by:srvState.username,ts:Date.now()});
+    closeModal();toast('Project deleted');renderActiveServer();renderRootGrid();
+  },danger:true}]);
 }
 
 // ---- OPEN PROJECT EDITOR ----
 let speProjData=null;
+let spe_activityLog=[];
 async function openSrvProject(projId){
   if(!srvState.connected)return;
   srvState.activeProjId=projId;
-  srvState.activeTab='tasks';
-  document.getElementById('srv-proj-editor').style.display='block';
   document.getElementById('server-hub-overlay').style.display='none';
-  await syncProjData(true);
-  // Start chat polling
-  if(srvState.chatPollInterval)clearInterval(srvState.chatPollInterval);
-  srvState.chatPollInterval=setInterval(async()=>{
-    if(document.getElementById('spe-tab-chat').style.display!=='none'){
-      await renderSpeChat();
+  document.getElementById('root-screen-wrap').style.display='none';
+
+  // Load project data from Firebase into D
+  toast('Loading project…');
+  const proj=await fbGet('/servers/'+srvState.serverKey+'/projects/'+projId);
+  if(!proj){toast('Project not found');renderRootGrid();document.getElementById('root-screen-wrap').style.display='block';return;}
+
+  // Populate D like a local project
+  activeRootId='srv_'+projId;
+  D={
+    mainTasks:proj.phaseData||{},subTasks:{},
+    customPhases:proj.phases||{main:[],sub:[]},
+    folders:proj.folders||[],scripts:proj.scripts||[],
+    versions:Object.values(proj.versions||{}),
+    survivors:proj.survivors||[],notes:Object.values(proj.notes||{}).map(n=>({title:n.title||'Note',content:n.content||''})),
+    lore:proj.lore||[],activity:proj.activity||[],
+    customSections:[],sessions:proj.sessions||[],
+    scenes:proj.scenes||[],sceneFolders:proj.sceneFolders||[],
+    gddSections:proj.gddSections||[],assets:proj.assets||[],
+    bugs:Object.values(proj.bugs||{}),
+    chat:proj.chat||{}
+  };
+
+  // Show solo app-shell with server branding
+  document.getElementById('proj-logo-title').textContent=(proj.name||'PROJECT').substring(0,14);
+  document.getElementById('proj-logo-sub').textContent=srvState.serverName.toLowerCase()+' · live';
+  document.getElementById('sidebar-footer').textContent='server: '+srvState.serverName.toLowerCase();
+  document.getElementById('dash-sub').textContent=escHtml((proj.name||'project').toLowerCase());
+  document.getElementById('solo-live-badge').style.display='inline-block';
+  document.getElementById('solo-server-nav').style.display='block';
+  document.getElementById('app-shell').classList.add('visible');
+
+  initProject();
+  await srvBroadcastActivity('viewing dashboard');
+  updateSoloPresenceBar();
+
+  // Start periodic sync
+  srvState._soloSyncInterval=setInterval(async()=>{
+    if(!srvState.activeProjId)return;
+    // Merge remote changes into D (non-destructive — only update if remote is newer)
+    const remote=await fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId);
+    if(remote){
+      D.bugs=Object.values(remote.bugs||{});
+      D.versions=Object.values(remote.versions||{});
+      D.notes=Object.values(remote.notes||{}).map(n=>({title:n.title||'Note',content:n.content||''}));
+      D.chat=remote.chat||{};
     }
-  },3000);
+    updateSoloPresenceBar();
+    if(document.getElementById('page-chat').classList.contains('active'))renderSoloChat();
+  },5000);
+}
+
+async function updateSoloPresenceBar(){
+  if(!srvState.connected||!srvState.activeProjId)return;
+  const members=await fbGet('/servers/'+srvState.serverKey+'/members')||{};
+  const now=Date.now();
+  const online=Object.entries(members).filter(([id,m])=>(now-m.lastSeen)<30000);
+  const bar=document.getElementById('solo-presence-bar');
+  if(!bar)return;
+  bar.style.display='flex';
+  // Clear existing member pills (keep the ONLINE: label)
+  while(bar.children.length>1)bar.removeChild(bar.lastChild);
+  online.forEach(([id,m])=>{
+    const isMe=id===srvState.myId;
+    const pill=document.createElement('div');
+    pill.className='srv-presence-member online'+(isMe?' you':'');
+    pill.innerHTML='<div class="srv-presence-dot"></div><span>'+escHtml(m.name)+(m.isHost?' ⚡':'')+'</span>';
+    if(m.activity&&!isMe){const a=document.createElement('span');a.className='srv-activity-pill';a.textContent=m.activity;pill.appendChild(a);}
+    bar.appendChild(pill);
+  });
 }
 
 function closeSrvProjEditor(){
-  document.getElementById('srv-proj-editor').style.display='none';
-  document.getElementById('server-hub-overlay').style.display='block';
-  if(srvState.chatPollInterval)clearInterval(srvState.chatPollInterval);
-  srvState.activeProjId=null;speProjData=null;
-  renderActiveServer();
+  // No longer used — server projects open in solo shell, goHome() handles exit
+  goHome();
 }
 
 async function syncProjData(fullRender=false){
@@ -2473,54 +3016,174 @@ async function syncProjData(fullRender=false){
 
   // Update header
   document.getElementById('spe-title').textContent=proj.name.toUpperCase();
+  document.getElementById('spe-logo-sub').textContent='server · '+srvState.serverName.toLowerCase();
+  document.getElementById('spe-dash-sub').textContent=proj.name.toLowerCase();
 
-  // Online members
+  // Online members + presence bar
   const members=await fbGet('/servers/'+srvState.serverKey+'/members')||{};
   const now=Date.now();
   const online=Object.entries(members).filter(([id,m])=>(now-m.lastSeen)<30000);
-  document.getElementById('spe-online-members').innerHTML=online.map(([id,m])=>
-    `<div title="${escHtml(m.name)}" style="width:22px;height:22px;border-radius:50%;background:var(--bg3);border:1px solid ${id===srvState.myId?'var(--accent2)':'var(--border2)'};display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text2);">${escHtml(m.name[0].toUpperCase())}</div>`
-  ).join('');
+
+  // Update presence bar
+  const presBar=document.getElementById('spe-presence-bar');
+  presBar.innerHTML='<span style="font-size:8px;color:var(--text3);letter-spacing:.15em;flex-shrink:0;">ONLINE:</span>';
+  online.forEach(([id,m])=>{
+    const isMe=id===srvState.myId;
+    const pill=document.createElement('div');
+    pill.className='srv-presence-member online'+(isMe?' you':'');
+    pill.innerHTML=`<div class="srv-presence-dot"></div><span>${escHtml(m.name)}${m.isHost?' ⚡':''}</span>`;
+    if(m.activity&&!isMe){
+      const act=document.createElement('span');act.className='srv-activity-pill';act.textContent=m.activity;pill.appendChild(act);
+    }
+    presBar.appendChild(pill);
+  });
 
   // Sync indicator
   document.getElementById('spe-sync-dot').style.background='var(--accent2)';
-  document.getElementById('spe-sync-txt').textContent='Live';
-  setTimeout(()=>{
-    const dot=document.getElementById('spe-sync-dot');
-    if(dot)dot.style.background='#555';
-  },1500);
+  document.getElementById('spe-sync-txt').textContent='Live · '+online.length+' online';
+  setTimeout(()=>{const dot=document.getElementById('spe-sync-dot');if(dot)dot.style.background='#555';},1500);
 
-  if(fullRender) renderSpeCurrentTab();
+  // Dashboard stats — use phases if available, fall back to flat tasks
+  const phases=[...((proj.phases&&proj.phases.main)||[]),...((proj.phases&&proj.phases.sub)||[])];
+  let totalTasks=0,doneTasks=0;
+  if(phases.length){
+    phases.forEach(ph=>{
+      const saved=(proj.phaseData&&proj.phaseData[ph.id])||{checks:{},custom:[],removed:[]};
+      const removed=saved.removed||[];
+      const custom=saved.custom||[];
+      const allKeys=[...(ph.tasks||[]).map((_,i)=>ph.id+'-t'+i).filter((_,i)=>!removed.includes(i)),...custom.map((_,i)=>ph.id+'-c'+i)];
+      totalTasks+=allKeys.length;
+      doneTasks+=allKeys.filter(k=>(saved.checks||{})[k]).length;
+    });
+  } else {
+    const flatTasks=Object.values(proj.tasks||{});
+    totalTasks=flatTasks.length;
+    doneTasks=flatTasks.filter(t=>t.status==='done').length;
+  }
+  const openBugs=Object.values(proj.bugs||{}).filter(b=>b.status!=='resolved').length;
+  const d=id=>document.getElementById(id);
+  if(d('spe-d-done'))d('spe-d-done').textContent=doneTasks;
+  if(d('spe-d-total'))d('spe-d-total').textContent=totalTasks;
+  if(d('spe-d-bugs'))d('spe-d-bugs').textContent=openBugs;
+  if(d('spe-d-members'))d('spe-d-members').textContent=online.length;
+  const pct=totalTasks?Math.round(doneTasks/totalTasks*100):0;
+  if(d('spe-g-bar'))d('spe-g-bar').style.width=pct+'%';
+  if(d('spe-g-label'))d('spe-g-label').textContent=doneTasks+' / '+totalTasks+' tasks complete';
+
+  // Activity feed — pull member activities and recent changes
+  renderSpeActivityFeed(online,proj);
+
+  if(fullRender)speRenderCurrentPage();
 }
 
-function speSwitchTab(tab){
-  srvState.activeTab=tab;
-  document.querySelectorAll('.spe-tab').forEach(t=>{t.classList.toggle('active',t.dataset.tab===tab);});
-  document.querySelectorAll('.spe-tab-content').forEach(c=>{c.style.display='none';});
-  document.getElementById('spe-tab-'+tab).style.display='block';
-  renderSpeCurrentTab();
+function renderSpeActivityFeed(online,proj){
+  const el=document.getElementById('spe-activity-feed');if(!el)return;
+  const items=[];
+  // Members online now with their activity
+  online.forEach(([id,m])=>{
+    if(m.activity){
+      items.push({dot:'var(--accent2)',title:escHtml(m.name)+' — '+escHtml(m.activity),meta:'right now'+(m.isHost?' · host':'')});
+    }
+  });
+  // Recent task changes
+  Object.values(proj.tasks||{}).filter(t=>t.status==='done').slice(-3).forEach(t=>{
+    items.push({dot:'var(--accent)',title:'Task completed: '+escHtml(t.title),meta:'by '+escHtml(t.assignee||'team')});
+  });
+  Object.values(proj.tasks||{}).filter(t=>t.status==='inprogress').slice(-3).forEach(t=>{
+    items.push({dot:'var(--accent4)',title:'In progress: '+escHtml(t.title),meta:'assigned to '+escHtml(t.assignee||'team')});
+  });
+  // Recent bugs
+  Object.values(proj.bugs||{}).filter(b=>b.status!=='resolved').slice(-2).forEach(b=>{
+    items.push({dot:'var(--accent3)',title:'Bug: '+escHtml(b.title),meta:'reported by '+escHtml(b.reportedBy||'?')+' · '+escHtml(b.severity||'')});
+  });
+  if(!items.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:12px 0;">No activity yet. Start working!</div>';return;}
+  el.innerHTML=items.map(i=>`<div class="tl-item"><div class="tl-dot" style="background:${i.dot};"></div><div class="tl-content"><div class="tl-title">${i.title}</div><div class="tl-meta">${i.meta}</div></div></div>`).join('');
 }
 
-function renderSpeCurrentTab(){
+// ---- SPE NAVIGATION (full mirror of solo nav) ----
+const SPE_TITLE_MAP={
+  dash:'Dashboard','main-tasks':'Main Phases','sub-tasks':'Sub Phases',
+  vault:'Script Vault',versions:'Versions',analytics:'Analytics',
+  'scene-tree':'Scene Tree',gdd:'Game Design Doc',assets:'Asset Tracker',
+  bugs:'Bug Tracker',chat:'Team Chat'
+};
+
+function speNav(page){
+  // Hide all pages
+  document.querySelectorAll('[id^="spe-page-"]').forEach(p=>{
+    p.classList.remove('active');
+    p.style.display='none';
+  });
+  // Deactivate all nav items
+  document.querySelectorAll('[id^="spe-nav-"]').forEach(n=>n.classList.remove('active'));
+
+  const pageEl=document.getElementById('spe-page-'+page);
+  if(pageEl){
+    if(page==='chat'){pageEl.style.display='flex';}
+    else{pageEl.style.display='block';pageEl.classList.add('active');}
+  }
+  const navEl=document.getElementById('spe-nav-'+page);
+  if(navEl)navEl.classList.add('active');
+
+  const title=SPE_TITLE_MAP[page]||page;
+  document.getElementById('spe-page-title').textContent=title;
+  srvState.activeTab=page;
+
+  srvBroadcastActivity('viewing '+title);
+  speRenderCurrentPage();
+}
+
+function speRenderCurrentPage(){
   if(!speProjData)return;
   const tab=srvState.activeTab;
-  if(tab==='tasks')renderSpeTasks();
-  if(tab==='notes')renderSpeNotes();
+  if(tab==='dash')renderSpeDash();
+  if(tab==='main-tasks')speRenderMainPhases();
+  if(tab==='sub-tasks')speRenderSubPhases();
+  if(tab==='vault')speRenderVault();
+  if(tab==='versions')renderSpeVersions();
+  if(tab==='analytics')speRenderAnalytics();
+  if(tab==='scene-tree')speRenderSceneTree();
+  if(tab==='gdd')speRenderGDD();
+  if(tab==='assets')speRenderAssets();
   if(tab==='bugs')renderSpeBugs();
   if(tab==='chat')renderSpeChat();
 }
 
+// Legacy aliases
+function speSwitchTab(tab){speNav(tab);}
+function renderSpeCurrentTab(){speRenderCurrentPage();}
+
+// ---- BROADCAST PRESENCE ACTIVITY ----
+async function srvBroadcastActivity(activity){
+  if(!srvState.connected||!srvState.myId)return;
+  await fbPatch('/servers/'+srvState.serverKey+'/members/'+srvState.myId,{
+    lastSeen:Date.now(),activity:activity||null,inProject:srvState.activeProjId||null
+  });
+}
+
+// ---- NOTIFY HOST OF DELETIONS ----
+async function notifyHostDeletion(what){
+  if(!srvState.connected||!srvState.activeProjId)return;
+  const projName=speProjData?.name||'project';
+  await fbPush('/servers/'+srvState.serverKey+'/hostNotifications',{
+    type:'member_deleted',what,by:srvState.username,projectName:projName,projId:srvState.activeProjId,ts:Date.now(),seen:false
+  });
+}
+
+// ---- DASHBOARD ----
+function renderSpeDash(){
+  // Stats already updated in syncProjData, just re-render activity feed
+  if(speProjData){
+    const members=[];// Will be refreshed by syncProjData
+    renderSpeActivityFeed([],speProjData);
+  }
+}
+
 // ---- TASKS ----
 function renderSpeTasks(){
-  const el=document.getElementById('spe-tab-tasks');
+  const el=document.getElementById('spe-tasks-content');
   const tasks=Object.entries(speProjData.tasks||{});
-  el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:var(--vt);font-size:16px;color:var(--accent);letter-spacing:.08em;">TASKS</div>
-      <button onclick="openAddSrvTask()" class="btn accent" style="font-size:9px;">+ Add Task</button>
-    </div>
-    <div id="spe-tasks-list"></div>
-  `;
+  el.innerHTML=`<div id="spe-tasks-list"></div>`;
   const listEl=document.getElementById('spe-tasks-list');
   if(!tasks.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No tasks yet. Add the first one!</div>';return;}
   
@@ -2558,6 +3221,7 @@ async function addSrvTask(){
   const title=document.getElementById('st-title').value.trim();if(!title)return;
   const task={id:'t_'+Date.now(),title,desc:document.getElementById('st-desc').value.trim(),assignee:document.getElementById('st-assign').value.trim(),status:document.getElementById('st-status').value,createdBy:srvState.username,createdAt:Date.now()};
   await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/tasks/'+task.id,task);
+  await srvBroadcastActivity('added task: '+title.substring(0,30));
   closeModal();await syncProjData(true);toast('Task added');
 }
 
@@ -2566,6 +3230,8 @@ async function cycleSrvTaskStatus(taskId){
   const statuses=['todo','inprogress','done'];
   const next=statuses[(statuses.indexOf(task.status)+1)%statuses.length];
   await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/tasks/'+taskId,{status:next});
+  const label={todo:'working on',inprogress:'working on',done:'completed'};
+  await srvBroadcastActivity((label[next]||'updated')+': '+task.title.substring(0,30));
   await syncProjData(true);
 }
 
@@ -2576,15 +3242,9 @@ async function deleteSrvTask(taskId){
 
 // ---- NOTES ----
 function renderSpeNotes(){
-  const el=document.getElementById('spe-tab-notes');
+  const el=document.getElementById('spe-notes-content');
   const notes=Object.entries(speProjData.notes||{});
-  el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:var(--vt);font-size:16px;color:var(--accent);letter-spacing:.08em;">NOTES</div>
-      <button onclick="addSrvNote()" class="btn accent" style="font-size:9px;">+ Add Note</button>
-    </div>
-    <div id="spe-notes-list"></div>
-  `;
+  el.innerHTML=`<div id="spe-notes-list"></div>`;
   const listEl=document.getElementById('spe-notes-list');
   if(!notes.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No notes yet.</div>';return;}
   listEl.innerHTML=notes.map(([id,note])=>`
@@ -2624,15 +3284,9 @@ async function deleteSrvNote(noteId){
 
 // ---- BUGS ----
 function renderSpeBugs(){
-  const el=document.getElementById('spe-tab-bugs');
+  const el=document.getElementById('spe-bugs-content');
   const bugs=Object.entries(speProjData.bugs||{});
-  el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:var(--vt);font-size:16px;color:var(--accent3);letter-spacing:.08em;">BUG TRACKER</div>
-      <button onclick="openAddSrvBug()" class="btn" style="font-size:9px;color:var(--accent3);border-color:var(--accent3);">+ Report Bug</button>
-    </div>
-    <div id="spe-bugs-list"></div>
-  `;
+  el.innerHTML=`<div id="spe-bugs-list"></div>`;
   const listEl=document.getElementById('spe-bugs-list');
   if(!bugs.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No bugs reported. Either perfect or untested 🎉</div>';return;}
   const sevColors={critical:'#f04a4a',high:'#f0a04a',medium:'#f0f04a',low:'#4a9af0'};
@@ -2667,6 +3321,7 @@ async function addSrvBug(){
   const id='bug_'+Date.now();
   const bug={id,title,severity:document.getElementById('sb-sev').value,desc:document.getElementById('sb-desc').value.trim(),status:'open',reportedBy:srvState.username,date:new Date().toLocaleDateString()};
   await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/bugs/'+id,bug);
+  await srvBroadcastActivity('reported bug: '+title.substring(0,30));
   closeModal();await syncProjData(true);toast('Bug reported');
 }
 
@@ -2683,36 +3338,69 @@ async function deleteSrvBug(bugId){
   await syncProjData(true);toast('Bug removed');
 }
 
+// ---- VERSIONS ----
+function renderSpeVersions(){
+  const el=document.getElementById('spe-versions-content');
+  const versions=Object.entries(speProjData.versions||{}).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+  if(!versions.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No versions logged yet.</div>';return;}
+  el.innerHTML=versions.map(([id,v])=>`
+    <div class="version-card" style="--vc:${escHtml(v.color||'#c8f04a')};">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-family:var(--vt);font-size:18px;color:${escHtml(v.color||'var(--accent)')};">${escHtml(v.tag||'v?')}</span>
+        <span style="font-size:11px;color:var(--text);flex:1;">${escHtml(v.name||'')}</span>
+        <span style="font-size:9px;color:var(--text3);">${escHtml(v.date||'')} · ${escHtml(v.createdBy||'')}</span>
+        <button onclick="deleteSrvVersion('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>
+      </div>
+      ${v.notes?`<div style="font-size:10px;color:var(--text2);line-height:1.5;">${escHtml(v.notes)}</div>`:''}
+    </div>
+  `).join('');
+}
+
+function openAddSrvVersion(){
+  const colors=['#c8f04a','#4af0c8','#f04a4a','#f0a04a','#a04af0','#4a9af0'];
+  openModal('Log Version',`
+    <label class="modal-label">Version Tag</label>
+    <input class="modal-inp" id="sv-tag" placeholder="e.g. v0.1.0, Alpha 2">
+    <label class="modal-label">Name</label>
+    <input class="modal-inp" id="sv-name" placeholder="e.g. First Playable, Bug Fix Pass">
+    <label class="modal-label">Notes</label>
+    <textarea class="modal-inp" id="sv-notes" style="min-height:80px;resize:vertical;" placeholder="What changed in this version?"></textarea>
+    <label class="modal-label">Color</label>
+    <div style="display:flex;gap:6px;margin-bottom:4px;">${colors.map(c=>`<div onclick="this.parentElement.querySelectorAll('div').forEach(x=>x.style.outline='none');this.style.outline='2px solid #fff';document.getElementById('sv-color').value='${c}';" style="width:20px;height:20px;border-radius:50%;background:${c};cursor:pointer;outline:${c==='#c8f04a'?'2px solid #fff':'none'};"></div>`).join('')}</div>
+    <input type="hidden" id="sv-color" value="#c8f04a">
+  `,[{label:'Cancel',action:closeModal},{label:'Log',action:addSrvVersion,accent:true}]);
+}
+
+async function addSrvVersion(){
+  const tag=document.getElementById('sv-tag').value.trim();if(!tag)return;
+  const id='ver_'+Date.now();
+  const ver={id,tag,name:document.getElementById('sv-name').value.trim(),notes:document.getElementById('sv-notes').value.trim(),color:document.getElementById('sv-color').value,createdBy:srvState.username,date:new Date().toLocaleDateString(),createdAt:Date.now()};
+  await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/versions/'+id,ver);
+  await srvBroadcastActivity('logged version '+tag);
+  closeModal();await syncProjData(true);toast('Version logged: '+tag);
+}
+
+async function deleteSrvVersion(id){
+  await fbDelete('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/versions/'+id);
+  await syncProjData(true);toast('Version removed');
+}
+
 // ---- CHAT ----
 async function renderSpeChat(){
-  const el=document.getElementById('spe-tab-chat');
   if(!speProjData)return;
-  
-  // Only rebuild structure once
-  if(!el.querySelector('#spe-chat-msgs')){
-    el.innerHTML=`
-      <div id="spe-chat-msgs" style="height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:8px 0;margin-bottom:12px;border-bottom:1px solid var(--border);"></div>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <input id="spe-chat-inp" class="add-inp" placeholder="Message the team…" style="flex:1;" onkeydown="if(event.key==='Enter')sendSrvMsg()">
-        <button onclick="sendSrvMsg()" class="add-btn">Send</button>
-      </div>
-    `;
-  }
-  
-  // Load messages
   const chat=await fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat')||{};
-  const msgs=Object.values(chat).sort((a,b)=>a.ts-b.ts).slice(-60);
+  const msgs=Object.values(chat).sort((a,b)=>a.ts-b.ts).slice(-80);
   const msgsEl=document.getElementById('spe-chat-msgs');
   if(!msgsEl)return;
+  const wasAtBottom=msgsEl.scrollHeight-msgsEl.scrollTop-msgsEl.clientHeight<40;
   msgsEl.innerHTML=msgs.map(m=>`
     <div class="srv-msg ${m.authorId===srvState.myId?'mine':'theirs'}">
       ${m.authorId!==srvState.myId?`<div class="srv-msg-name">${escHtml(m.author)}</div>`:''}
       <div class="srv-msg-text">${escHtml(m.text)}</div>
-      <div class="srv-msg-time">${new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="srv-msg-time">${new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
     </div>
   `).join('');
-  // Auto-scroll to bottom
-  msgsEl.scrollTop=msgsEl.scrollHeight;
+  if(wasAtBottom||msgs.length<=5)msgsEl.scrollTop=msgsEl.scrollHeight;
 }
 
 async function sendSrvMsg(){
@@ -2723,7 +3411,574 @@ async function sendSrvMsg(){
   await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat/'+id,{
     id,text,author:srvState.username,authorId:srvState.myId,ts:Date.now()
   });
+  await srvBroadcastActivity('chatting');
   await renderSpeChat();
+}
+
+// ---- SPE MAIN PHASES ----
+function speRenderMainPhases(){
+  const proj=speProjData;
+  const phases=(proj.phases&&proj.phases.main)||[];
+  const el=document.getElementById('spe-main-phase-grid');
+  if(!el)return;
+  if(!phases.length){el.innerHTML=`<div style="font-size:11px;color:var(--text3);padding:24px 0;grid-column:1/-1;">No main phases yet. Import a .lmstasks file to get started.</div>`;return;}
+  el.innerHTML=phases.map(ph=>{
+    const saved=(proj.phaseData&&proj.phaseData[ph.id])||{checks:{},custom:[],removed:[]};
+    const tasks=(ph.tasks||[]);
+    const removed=saved.removed||[];
+    const custom=saved.custom||[];
+    const allKeys=[...tasks.map((_,i)=>ph.id+'-t'+i).filter((_,i)=>!removed.includes(i)),...custom.map((_,i)=>ph.id+'-c'+i)];
+    const done=allKeys.filter(k=>saved.checks[k]).length;
+    const pct=allKeys.length?Math.round(done/allKeys.length*100):0;
+    return`<div class="phase-card" style="--ph:${ph.color||'#c8f04a'};--ptc:${ph.tc||'#080808'};">
+      <div class="phase-header"><div class="phase-label">${escHtml(ph.label||'')}</div><div class="phase-title">${escHtml(ph.title||'')}</div></div>
+      <div class="phase-pct">${pct}%</div>
+      <div class="phase-bar"><div class="phase-fill" style="width:${pct}%"></div></div>
+      <div class="phase-tasks">${tasks.filter((_,i)=>!removed.includes(i)).map((t,i)=>{const k=ph.id+'-t'+i;return`<div class="phase-task${saved.checks[k]?' done':''}" onclick="speTogglePhaseTask('${ph.id}','${k}')"><div class="phase-task-dot"></div>${escHtml(t)}</div>`;}).join('')}
+      ${custom.map((t,i)=>{const k=ph.id+'-c'+i;return`<div class="phase-task${saved.checks[k]?' done':''}" onclick="speTogglePhaseTask('${ph.id}','${k}')"><div class="phase-task-dot"></div>${escHtml(t)}</div>`;}).join('')}
+      </div>
+      <div style="margin-top:8px;display:flex;gap:4px;">
+        <button class="btn" style="font-size:9px;flex:1;" onclick="speAddCustomTask('${ph.id}','main')">+ Task</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function speTogglePhaseTask(phaseId,key){
+  const path='/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/phaseData/'+phaseId+'/checks/'+key.replace(/\//g,'__');
+  const cur=((speProjData.phaseData||{})[phaseId]||{checks:{}}).checks||{};
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/phaseData/'+phaseId,{checks:{...cur,[key]:!cur[key]}});
+  await srvBroadcastActivity('updated task in '+phaseId);
+  await syncProjData(true);
+}
+
+async function speAddCustomTask(phaseId,type){
+  openModal('Add Custom Task',`
+    <label class="modal-label">Task Name</label>
+    <input class="modal-inp" id="spe-ct-name" placeholder="Task description…">
+  `,[{label:'Cancel',action:closeModal},{label:'Add',action:async()=>{
+    const name=document.getElementById('spe-ct-name').value.trim();if(!name)return;
+    const existing=((speProjData.phaseData||{})[phaseId]||{}).custom||[];
+    await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/phaseData/'+phaseId,{custom:[...existing,name]});
+    await srvBroadcastActivity('added task to '+phaseId);
+    closeModal();await syncProjData(true);
+  },accent:true}]);
+}
+
+function speImportTasks(){
+  openModal('Import .lmstasks',`
+    <div class="drop-zone" onclick="document.getElementById('spe-import-tasks-file').click()">Click to select .lmstasks file</div>
+    <input type="file" id="spe-import-tasks-file" accept=".lmstasks,.json" style="display:none;" onchange="speHandleTasksImport(this)">
+  `,[{label:'Cancel',action:closeModal}]);
+}
+
+async function speHandleTasksImport(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const blob=JSON.parse(e.target.result);
+      if(blob._type!=='lmstasks')throw new Error('Not a .lmstasks file');
+      await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{
+        phases:{main:blob.main||[],sub:blob.sub||[]}
+      });
+      closeModal();await syncProjData(true);toast('Phases imported: '+blob._name);
+    }catch(err){toast('Import failed: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+// ---- SPE SUB PHASES ----
+function speRenderSubPhases(){
+  const proj=speProjData;
+  const phases=(proj.phases&&proj.phases.sub)||[];
+  const el=document.getElementById('spe-sub-phase-grid');
+  if(!el)return;
+  if(!phases.length){el.innerHTML=`<div style="font-size:11px;color:var(--text3);padding:24px 0;grid-column:1/-1;">No sub phases. Import a .lmstasks file from Main Phases.</div>`;return;}
+  el.innerHTML=phases.map(ph=>{
+    const saved=(proj.phaseData&&proj.phaseData[ph.id])||{checks:{},custom:[],removed:[]};
+    const tasks=(ph.tasks||[]);
+    const custom=saved.custom||[];
+    const allKeys=[...tasks.map((_,i)=>ph.id+'-t'+i),...custom.map((_,i)=>ph.id+'-c'+i)];
+    const done=allKeys.filter(k=>saved.checks[k]).length;
+    const pct=allKeys.length?Math.round(done/allKeys.length*100):0;
+    return`<div class="phase-card" style="--ph:${ph.color||'#555'};--ptc:${ph.tc||'#ddd'};">
+      <div class="phase-header"><div class="phase-label">${escHtml(ph.label||'')}</div><div class="phase-title">${escHtml(ph.title||'')}</div></div>
+      <div class="phase-pct">${pct}%</div>
+      <div class="phase-bar"><div class="phase-fill" style="width:${pct}%"></div></div>
+      <div class="phase-tasks">${tasks.map((t,i)=>{const k=ph.id+'-t'+i;return`<div class="phase-task${saved.checks[k]?' done':''}" onclick="speTogglePhaseTask('${ph.id}','${k}')"><div class="phase-task-dot"></div>${escHtml(t)}</div>`;}).join('')}
+      ${custom.map((t,i)=>{const k=ph.id+'-c'+i;return`<div class="phase-task${saved.checks[k]?' done':''}" onclick="speTogglePhaseTask('${ph.id}','${k}')"><div class="phase-task-dot"></div>${escHtml(t)}</div>`;}).join('')}
+      </div>
+      <div style="margin-top:8px;"><button class="btn" style="font-size:9px;width:100%;" onclick="speAddCustomTask('${ph.id}','sub')">+ Task</button></div>
+    </div>`;
+  }).join('');
+}
+
+// ---- SPE SCRIPT VAULT ----
+let speActiveFolder=null;
+let speActiveScript=null;
+
+function speRenderVault(){
+  const proj=speProjData;
+  const folders=proj.folders||[];
+  const scripts=proj.scripts||[];
+  const el=document.getElementById('spe-folder-list');if(!el)return;
+  if(!folders.length){el.innerHTML='';document.getElementById('spe-script-content').innerHTML='<div style="font-size:11px;color:var(--text3);">No folders yet. Create one to start.</div>';return;}
+  el.innerHTML=folders.map(f=>`
+    <div class="folder-card${speActiveFolder===f.id?' active-folder':''}" onclick="speSelectFolder('${f.id}')">
+      <div class="folder-icon"></div>
+      <div class="folder-name">${escHtml(f.name)}</div>
+      <div class="folder-count">${scripts.filter(s=>s.folder===f.id).length} scripts</div>
+    </div>
+  `).join('');
+  if(speActiveFolder)speRenderScripts(speActiveFolder);
+}
+
+async function speCreateFolder(){
+  const name=document.getElementById('spe-new-folder-inp').value.trim();if(!name)return;
+  const folders=speProjData.folders||[];
+  const id='f_'+Date.now();
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{folders:[...folders,{id,name}]});
+  document.getElementById('spe-new-folder-inp').value='';
+  speActiveFolder=id;
+  await syncProjData(true);
+}
+
+function speSelectFolder(id){
+  speActiveFolder=id;speActiveScript=null;
+  speRenderVault();speRenderScripts(id);
+}
+
+function speRenderScripts(folderId){
+  const scripts=(speProjData.scripts||[]).filter(s=>s.folder===folderId);
+  const el=document.getElementById('spe-script-content');if(!el)return;
+  if(!scripts.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);">No scripts in this folder.</div>';return;}
+  el.innerHTML=`<div class="script-list">${scripts.map(s=>`
+    <div class="script-item${speActiveScript===s.id?' active-script':''}" onclick="speOpenScript('${s.id}')">
+      <div class="script-ver">${escHtml(s.version||'v1.0')}</div>
+      <div class="script-name">${escHtml(s.name)}</div>
+      <div class="script-date">${escHtml(s.date||'')}</div>
+      <button onclick="event.stopPropagation();speDeleteScript('${s.id}')" class="xbtn">×</button>
+    </div>`).join('')}</div>
+  <div id="spe-script-editor" style="margin-top:12px;"></div>`;
+  if(speActiveScript)speOpenScript(speActiveScript);
+}
+
+function speOpenScript(id){
+  speActiveScript=id;
+  const s=(speProjData.scripts||[]).find(x=>x.id===id);if(!s)return;
+  document.querySelectorAll('.script-item').forEach(el=>el.classList.toggle('active-script',el.querySelector('.script-name')&&el.querySelector('.script-name').textContent===s.name));
+  const el=document.getElementById('spe-script-editor');if(!el)return;
+  el.innerHTML=`
+    <div class="editor-area">
+      <input class="editor-inp" value="${escHtml(s.name)}" id="spe-se-name" placeholder="Script name">
+      <input class="editor-inp editor-ver" value="${escHtml(s.version||'v1.0')}" id="spe-se-ver" placeholder="Version">
+      <textarea class="code-area" id="spe-se-code" rows="16">${escHtml(s.code||'')}</textarea>
+      <div class="btn-row">
+        <button class="btn accent" onclick="speSaveScript('${id}')">Save</button>
+        <button class="btn danger" onclick="speDeleteScript('${id}')">Delete</button>
+      </div>
+    </div>`;
+  srvBroadcastActivity('editing: '+s.name.substring(0,28));
+}
+
+async function speSaveScript(id){
+  const scripts=speProjData.scripts||[];
+  const updated=scripts.map(s=>s.id===id?{...s,name:document.getElementById('spe-se-name').value.trim(),version:document.getElementById('spe-se-ver').value.trim(),code:document.getElementById('spe-se-code').value,date:new Date().toLocaleDateString()}:s);
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{scripts:updated});
+  await srvBroadcastActivity('saved script');
+  await syncProjData(true);toast('Script saved');
+}
+
+async function speDeleteScript(id){
+  const s=(speProjData.scripts||[]).find(x=>x.id===id);
+  const scripts=(speProjData.scripts||[]).filter(s=>s.id!==id);
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{scripts});
+  if(!srvState.isHost&&s){await notifyHostDeletion('Script "'+s.name+'"');}
+  speActiveScript=null;await syncProjData(true);toast('Script deleted');
+}
+
+function speOpenNewScript(){
+  if(!speActiveFolder){toast('Select a folder first');return;}
+  // Inline new script — add directly to the script list without a modal
+  const el=document.getElementById('spe-script-content');if(!el)return;
+  // Check if inline form already exists
+  if(document.getElementById('spe-ns-inline'))return;
+  const form=document.createElement('div');
+  form.id='spe-ns-inline';
+  form.style.cssText='background:var(--bg2);border:1px solid var(--accent2);border-radius:2px;padding:10px 12px;margin-top:10px;';
+  form.innerHTML=`
+    <div style="font-size:9px;color:var(--accent2);letter-spacing:.15em;margin-bottom:8px;">NEW SCRIPT</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px;">
+      <input class="add-inp" id="spe-ns-name" placeholder="e.g. Player.gd, GameManager.cs" style="flex:1;">
+      <input class="add-inp" id="spe-ns-ver" placeholder="v1.0" style="width:70px;">
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button class="add-btn" style="color:var(--accent2);border-color:var(--accent2);" onclick="speCreateScriptInline()">Create</button>
+      <button class="add-btn" onclick="document.getElementById('spe-ns-inline').remove()">Cancel</button>
+    </div>`;
+  el.insertBefore(form,el.firstChild);
+  document.getElementById('spe-ns-name').focus();
+  document.getElementById('spe-ns-name').addEventListener('keydown',e=>{if(e.key==='Enter')speCreateScriptInline();if(e.key==='Escape')form.remove();});
+}
+
+async function speCreateScriptInline(){
+  const name=(document.getElementById('spe-ns-name')||{}).value?.trim();if(!name)return;
+  const scripts=speProjData.scripts||[];
+  const id='s_'+Date.now();
+  const s={id,name,version:(document.getElementById('spe-ns-ver')||{}).value?.trim()||'v1.0',folder:speActiveFolder,code:'',date:new Date().toLocaleDateString()};
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{scripts:[...scripts,s]});
+  speActiveScript=id;
+  const form=document.getElementById('spe-ns-inline');if(form)form.remove();
+  await syncProjData(true);
+  toast('Script created');
+}
+
+// ---- SPE ANALYTICS ----
+let speTimerInterval=null;let speTimerStart=null;let speTimerRunning=false;
+
+function speRenderAnalytics(){
+  const proj=speProjData;
+  const sessions=proj.sessions||[];
+  const totalMs=sessions.reduce((a,s)=>a+(s.duration||0),0);
+  const todayStr=new Date().toLocaleDateString();
+  const todayMs=sessions.filter(s=>s.date===todayStr).reduce((a,s)=>a+(s.duration||0),0);
+  const weekStart=Date.now()-7*864e5;
+  const weekMs=sessions.filter(s=>s.ts>weekStart).reduce((a,s)=>a+(s.duration||0),0);
+  const avgMs=sessions.length?totalMs/sessions.length:0;
+  const fmtH=ms=>ms<3600000?(ms/60000).toFixed(1)+'m':(ms/3600000).toFixed(1)+'h';
+  const d=id=>document.getElementById(id);
+  if(d('spe-an-total'))d('spe-an-total').textContent=fmtH(totalMs);
+  if(d('spe-an-today'))d('spe-an-today').textContent=fmtH(todayMs);
+  if(d('spe-an-week'))d('spe-an-week').textContent=fmtH(weekMs);
+  if(d('spe-an-avg'))d('spe-an-avg').textContent=fmtH(avgMs);
+  // Session list
+  const sl=d('spe-an-session-list');
+  if(sl)sl.innerHTML=sessions.slice().reverse().slice(0,20).map(s=>`
+    <div class="session-row">
+      <div class="session-dot"></div>
+      <div class="session-proj">${escHtml(s.label||'Session')} · ${escHtml(s.by||'')}</div>
+      <div class="session-dur">${fmtH(s.duration||0)}</div>
+      <div class="session-date">${escHtml(s.date||'')}</div>
+    </div>`).join('')||'<div style="font-size:11px;color:var(--text3);">No sessions logged.</div>';
+  // Bar chart — last 7 days
+  const bc=d('spe-an-bar-chart');
+  if(bc){
+    const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const now=new Date();
+    const cols=Array.from({length:7},(_,i)=>{
+      const d2=new Date(now);d2.setDate(now.getDate()-6+i);
+      const ds=d2.toLocaleDateString();
+      const ms=sessions.filter(s=>s.date===ds).reduce((a,s)=>a+(s.duration||0),0);
+      return{lbl:days[d2.getDay()],ms};
+    });
+    const maxMs=Math.max(...cols.map(c=>c.ms),1);
+    bc.innerHTML=cols.map(c=>`<div class="bar-col"><div class="bar-fill" style="height:${Math.round(c.ms/maxMs*72)}px;"></div><div class="bar-lbl">${c.lbl}</div></div>`).join('');
+  }
+  // Heatmap
+  const hm=d('spe-an-heatmap');
+  if(hm){
+    const cells=Array.from({length:52*7},(_,i)=>{
+      const d2=new Date();d2.setDate(d2.getDate()-(52*7-1-i));
+      const ds=d2.toLocaleDateString();
+      const ms=sessions.filter(s=>s.date===ds).reduce((a,s)=>a+(s.duration||0),0);
+      const v=ms>14400000?4:ms>7200000?3:ms>1800000?2:ms>0?1:0;
+      return`<div class="heatmap-cell" data-v="${v}" title="${ds}: ${fmtH(ms)}"></div>`;
+    });
+    hm.innerHTML=cells.join('');
+  }
+}
+
+function speTimerToggle(){
+  if(!speTimerRunning){
+    speTimerStart=Date.now();speTimerRunning=true;
+    document.getElementById('spe-timer-start-btn').textContent='Stop Session';
+    document.getElementById('spe-timer-display').classList.add('timer-running');
+    speTimerInterval=setInterval(speUpdateTimerDisplay,1000);
+    srvBroadcastActivity('dev session running');
+  } else {
+    clearInterval(speTimerInterval);speTimerRunning=false;
+    document.getElementById('spe-timer-start-btn').textContent='Start Session';
+    document.getElementById('spe-timer-display').classList.remove('timer-running');
+    const dur=Date.now()-speTimerStart;
+    speLogSession(dur,'Timer Session');
+  }
+}
+
+function speUpdateTimerDisplay(){
+  if(!speTimerStart)return;
+  const ms=Date.now()-speTimerStart;
+  const h=Math.floor(ms/3600000).toString().padStart(2,'0');
+  const m=Math.floor((ms%3600000)/60000).toString().padStart(2,'0');
+  const s=Math.floor((ms%60000)/1000).toString().padStart(2,'0');
+  const el=document.getElementById('spe-timer-display');
+  if(el)el.textContent=`${h}:${m}:${s}`;
+}
+
+async function speLogSession(duration,label){
+  const sessions=speProjData.sessions||[];
+  const session={id:'ses_'+Date.now(),label,duration,date:new Date().toLocaleDateString(),by:srvState.username,ts:Date.now()};
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{sessions:[...sessions,session]});
+  await syncProjData(true);toast('Session logged: '+formatDuration(duration));
+}
+
+function formatDuration(ms){const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return h?`${h}h ${m}m`:`${m}m`;}
+
+function speOpenLogSession(){
+  openModal('Log Manual Session',`
+    <label class="modal-label">Label</label>
+    <input class="modal-inp" id="spe-ls-label" placeholder="e.g. Feature work, Bug fixing">
+    <label class="modal-label">Duration (hours)</label>
+    <input class="modal-inp" id="spe-ls-hrs" type="number" step="0.25" min="0" placeholder="e.g. 1.5">
+  `,[{label:'Cancel',action:closeModal},{label:'Log',action:async()=>{
+    const label=document.getElementById('spe-ls-label').value.trim()||'Manual Session';
+    const hrs=parseFloat(document.getElementById('spe-ls-hrs').value)||0;
+    closeModal();await speLogSession(hrs*3600000,label);
+  },accent:true}]);
+}
+
+async function speClearSessions(){
+  openModal('Clear Sessions?',`<div style="font-size:11px;color:var(--text2);">This will delete all session data for this project. Cannot be undone.</div>`,
+  [{label:'Cancel',action:closeModal},{label:'Clear All',danger:true,action:async()=>{
+    await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{sessions:[]});
+    closeModal();await syncProjData(true);toast('Sessions cleared');
+  }}]);
+}
+
+// ---- SPE SCENE TREE (shared data, mirrors solo UX) ----
+let speSelectedScene=null;let speSelectedNode=null;
+
+function speRenderSceneTree(){
+  speRenderSceneFileTree();speRenderNodeTree();
+}
+
+function speRenderSceneFileTree(){
+  const proj=speProjData;
+  const folders=proj.sceneFolders||[];
+  const scenes=proj.scenes||[];
+  const el=document.getElementById('spe-scene-file-tree');if(!el)return;
+  if(!scenes.length&&!folders.length){el.innerHTML='<div style="font-size:10px;color:var(--text3);padding:12px 8px;">No scenes yet.</div>';return;}
+  // Flat list of scenes for now
+  el.innerHTML=scenes.map(s=>`
+    <div class="sft-scene${speSelectedScene===s.id?' active-scene':''}" onclick="speSelectScene('${s.id}')">
+      <span class="sft-scene-icon">🎬</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(s.name)}</span>
+    </div>`).join('');
+}
+
+function speSelectScene(id){
+  speSelectedScene=id;speSelectedNode=null;
+  speRenderSceneFileTree();speRenderNodeTree();
+  const scene=(speProjData.scenes||[]).find(s=>s.id===id);
+  document.getElementById('spe-st-panel-title').textContent=scene?scene.name.toUpperCase():'NODE TREE';
+  document.getElementById('spe-st-add-btn').disabled=false;document.getElementById('spe-st-add-btn').style.opacity='1';
+  srvBroadcastActivity('scene: '+(scene?scene.name:'?').substring(0,25));
+}
+
+function speRenderNodeTree(){
+  const el=document.getElementById('spe-scene-node-tree');if(!el)return;
+  if(!speSelectedScene){el.innerHTML='<div style="font-size:10px;color:var(--text3);padding:12px 8px;">Select a scene</div>';return;}
+  const scene=(speProjData.scenes||[]).find(s=>s.id===speSelectedScene);
+  if(!scene){el.innerHTML='';return;}
+  const nodes=scene.nodes||[];
+  function renderNode(node,depth){
+    const children=nodes.filter(n=>n.parent===node.id);
+    return`<div class="st-node">
+      <div class="st-node-row${speSelectedNode===node.id?' selected':''}" style="padding-left:${6+depth*14}px;" onclick="speSelectNode('${node.id}')">
+        <div class="st-node-arr${children.length?' open':'leaf'}">▶</div>
+        <div class="st-node-icon">${node.icon||'📦'}</div>
+        <div class="st-node-name${node.script?' has-script':''}">${escHtml(node.name)}</div>
+        <div class="st-node-id">${escHtml(node.type||'Node')}</div>
+      </div>
+      ${children.map(c=>renderNode(c,depth+1)).join('')}
+    </div>`;
+  }
+  const roots=nodes.filter(n=>!n.parent||n.parent==='root');
+  el.innerHTML=roots.map(n=>renderNode(n,0)).join('')||'<div style="font-size:10px;color:var(--text3);padding:12px 8px;">No nodes yet.</div>';
+}
+
+function speSelectNode(id){
+  speSelectedNode=id;
+  speRenderNodeTree();
+  const scene=(speProjData.scenes||[]).find(s=>s.id===speSelectedScene);
+  const node=scene&&(scene.nodes||[]).find(n=>n.id===id);
+  document.getElementById('spe-st-del-btn').disabled=!node;document.getElementById('spe-st-del-btn').style.opacity=node?'1':'.4';
+  const ib=document.getElementById('spe-inspector-body');if(!ib)return;
+  if(!node){ib.innerHTML='<div class="no-sel-msg">Select a node</div>';return;}
+  ib.innerHTML=`
+    <div style="padding:10px 12px;">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:.12em;margin-bottom:10px;">${escHtml(node.type||'Node')}</div>
+      <label class="inline-lbl">Name</label>
+      <input class="editor-inp" value="${escHtml(node.name)}" id="spe-insp-name" style="margin-bottom:8px;">
+      <label class="inline-lbl">Type</label>
+      <input class="editor-inp" value="${escHtml(node.type||'')}" id="spe-insp-type" style="margin-bottom:8px;">
+      <label class="inline-lbl">Script</label>
+      <input class="editor-inp" value="${escHtml(node.script||'')}" id="spe-insp-script" placeholder="res://scripts/MyNode.gd" style="margin-bottom:12px;">
+      <button class="btn accent" style="width:100%;font-size:9px;" onclick="speSaveNode('${id}')">Save Node</button>
+    </div>`;
+}
+
+async function speSaveNode(nodeId){
+  const scenes=JSON.parse(JSON.stringify(speProjData.scenes||[]));
+  const si=scenes.findIndex(s=>s.id===speSelectedScene);if(si<0)return;
+  const ni=scenes[si].nodes.findIndex(n=>n.id===nodeId);if(ni<0)return;
+  scenes[si].nodes[ni]={...scenes[si].nodes[ni],name:document.getElementById('spe-insp-name').value.trim(),type:document.getElementById('spe-insp-type').value.trim(),script:document.getElementById('spe-insp-script').value.trim()};
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{scenes});
+  await srvBroadcastActivity('edited node');
+  await syncProjData(true);toast('Node saved');
+}
+
+function speNewSceneModal(){
+  openModal('New Scene',`
+    <label class="modal-label">Scene Name</label>
+    <input class="modal-inp" id="spe-sc-name" placeholder="e.g. Main, Player, HUD">
+  `,[{label:'Cancel',action:closeModal},{label:'Create',action:async()=>{
+    const name=document.getElementById('spe-sc-name').value.trim();if(!name)return;
+    const scenes=speProjData.scenes||[];
+    const id='sc_'+Date.now();
+    await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{scenes:[...scenes,{id,name,nodes:[]}]});
+    speSelectedScene=id;
+    closeModal();await syncProjData(true);
+  },accent:true}]);
+}
+
+function speNewFolderModal(){toast('Folder support coming soon');}
+
+function speAddNodeModal(){
+  if(!speSelectedScene){toast('Select a scene first');return;}
+  openModal('Add Node',`
+    <label class="modal-label">Node Name</label>
+    <input class="modal-inp" id="spe-nd-name" placeholder="e.g. Player, Camera, HUD">
+    <label class="modal-label">Type</label>
+    <input class="modal-inp" id="spe-nd-type" placeholder="e.g. CharacterBody3D, Node2D">
+    <label class="modal-label">Icon</label>
+    <input class="modal-inp" id="spe-nd-icon" placeholder="emoji e.g. 🎮 🎥 📦" maxlength="4">
+  `,[{label:'Cancel',action:closeModal},{label:'Add',action:async()=>{
+    const name=document.getElementById('spe-nd-name').value.trim();if(!name)return;
+    const scenes=JSON.parse(JSON.stringify(speProjData.scenes||[]));
+    const si=scenes.findIndex(s=>s.id===speSelectedScene);if(si<0)return;
+    const node={id:'nd_'+Date.now(),name,type:document.getElementById('spe-nd-type').value.trim(),icon:document.getElementById('spe-nd-icon').value.trim()||'📦',parent:speSelectedNode||null,script:''};
+    scenes[si].nodes=[...(scenes[si].nodes||[]),node];
+    await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{scenes});
+    await srvBroadcastActivity('added node: '+name);
+    closeModal();await syncProjData(true);
+  },accent:true}]);
+}
+
+async function speDeleteNode(){
+  if(!speSelectedNode||!speSelectedScene)return;
+  const scenes=JSON.parse(JSON.stringify(speProjData.scenes||[]));
+  const si=scenes.findIndex(s=>s.id===speSelectedScene);if(si<0)return;
+  const node=(scenes[si].nodes||[]).find(n=>n.id===speSelectedNode);
+  scenes[si].nodes=(scenes[si].nodes||[]).filter(n=>n.id!==speSelectedNode);
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{scenes});
+  if(!srvState.isHost&&node){await notifyHostDeletion('Scene Node "'+node.name+'"');}
+  speSelectedNode=null;await syncProjData(true);toast('Node removed');
+}
+
+// ---- SPE GDD ----
+function speRenderGDD(){
+  const sections=speProjData.gddSections||[];
+  const el=document.getElementById('spe-gdd-list');if(!el)return;
+  if(!sections.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;">No GDD sections yet. Add one to start writing.</div>';return;}
+  el.innerHTML=sections.map((s,i)=>`
+    <div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <input class="editor-inp" value="${escHtml(s.title||'')}" id="spe-gdd-t${i}" style="font-family:var(--vt);font-size:18px;color:var(--accent);flex:1;background:none;border:none;border-bottom:1px solid var(--border);padding:0 0 4px;" placeholder="Section Title">
+        <button onclick="speDeleteGDDSection(${i})" class="xbtn" style="margin-left:8px;">×</button>
+      </div>
+      <textarea class="notes-area" id="spe-gdd-c${i}" style="min-height:120px;" onblur="speAutoSaveGDD()">${escHtml(s.content||'')}</textarea>
+    </div>`).join('');
+}
+
+async function speAutoSaveGDD(){
+  const sections=(speProjData.gddSections||[]).map((s,i)=>({...s,title:(document.getElementById('spe-gdd-t'+i)||{}).value||s.title,content:(document.getElementById('spe-gdd-c'+i)||{}).value||s.content}));
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{gddSections:sections});
+  await srvBroadcastActivity('editing GDD');
+}
+
+async function speAddGDDSection(){
+  const sections=speProjData.gddSections||[];
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{gddSections:[...sections,{title:'New Section',content:''}]});
+  await syncProjData(true);
+}
+
+async function speDeleteGDDSection(idx){
+  const sec=(speProjData.gddSections||[])[idx];
+  const sections=(speProjData.gddSections||[]).filter((_,i)=>i!==idx);
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{gddSections:sections});
+  if(!srvState.isHost&&sec){await notifyHostDeletion('GDD Section "'+sec.title+'"');}
+  await syncProjData(true);
+}
+
+function speExportGDD(){
+  const sections=speProjData.gddSections||[];
+  const text=sections.map(s=>`# ${s.title}\n\n${s.content}`).join('\n\n---\n\n');
+  const blob=new Blob([text],{type:'text/markdown'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(speProjData.name||'project').replace(/\s+/g,'-').toLowerCase()+'-gdd.md';a.click();
+  toast('GDD exported');
+}
+
+// ---- SPE ASSET TRACKER ----
+function speRenderAssets(){
+  const assets=speProjData.assets||[];
+  const filter=(document.getElementById('spe-asset-filter')||{}).value||'all';
+  const filtered=filter==='all'?assets:assets.filter(a=>a.type===filter);
+  const el=document.getElementById('spe-assets-list');if(!el)return;
+  const statusColors={pending:'#888',inprogress:'#f0a04a',done:'#c8f04a',blocked:'#f04a4a'};
+  if(!filtered.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;">No assets yet.</div>';return;}
+  el.innerHTML=`<div class="survivor-grid">${filtered.map(a=>`
+    <div class="survivor-card">
+      <div class="surv-name">${escHtml(a.name)}</div>
+      <div class="surv-row"><span class="surv-key">Type</span><span class="surv-val">${escHtml(a.type||'')}</span></div>
+      <div class="surv-row"><span class="surv-key">Status</span><span class="tag" style="color:${statusColors[a.status]||'#888'};border-color:${statusColors[a.status]||'#888'};">${a.status||'pending'}</span></div>
+      <div class="surv-row"><span class="surv-key">Assignee</span><span class="surv-val">${escHtml(a.assignee||'—')}</span></div>
+      ${a.notes?`<div style="font-size:10px;color:var(--text2);margin-top:6px;">${escHtml(a.notes)}</div>`:''}
+      <div class="surv-actions">
+        <button class="btn" style="font-size:9px;" onclick="speCycleAsset('${a.id}')">${a.status==='done'?'↺':a.status==='inprogress'?'✓':'→'}</button>
+        <button class="btn danger" style="font-size:9px;" onclick="speDeleteAsset('${a.id}')">×</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function speOpenAddAsset(){
+  openModal('Add Asset',`
+    <label class="modal-label">Name</label>
+    <input class="modal-inp" id="spe-as-name" placeholder="e.g. Player_Walk_Anim.png">
+    <label class="modal-label">Type</label>
+    <select class="modal-select" id="spe-as-type"><option value="sprite">Sprite</option><option value="audio">Audio</option><option value="model">3D Model</option><option value="fx">VFX / Shader</option><option value="ui">UI</option><option value="other">Other</option></select>
+    <label class="modal-label">Assignee</label>
+    <input class="modal-inp" id="spe-as-assign" placeholder="Who's making this?" value="${escHtml(srvState.username)}">
+    <label class="modal-label">Notes</label>
+    <input class="modal-inp" id="spe-as-notes" placeholder="Optional notes…">
+  `,[{label:'Cancel',action:closeModal},{label:'Add',action:async()=>{
+    const name=document.getElementById('spe-as-name').value.trim();if(!name)return;
+    const assets=speProjData.assets||[];
+    const id='as_'+Date.now();
+    const asset={id,name,type:document.getElementById('spe-as-type').value,assignee:document.getElementById('spe-as-assign').value.trim(),notes:document.getElementById('spe-as-notes').value.trim(),status:'pending',createdBy:srvState.username};
+    await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{assets:[...assets,asset]});
+    await srvBroadcastActivity('added asset: '+name.substring(0,25));
+    closeModal();await syncProjData(true);toast('Asset added');
+  },accent:true}]);
+}
+
+async function speCycleAsset(id){
+  const statuses=['pending','inprogress','done'];
+  const assets=(speProjData.assets||[]);
+  const asset=assets.find(a=>a.id===id);if(!asset)return;
+  const next=statuses[(statuses.indexOf(asset.status)+1)%statuses.length];
+  const updated=assets.map(a=>a.id===id?{...a,status:next}:a);
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{assets:updated});
+  await srvBroadcastActivity('asset '+next+': '+asset.name.substring(0,20));
+  await syncProjData(true);
+}
+
+async function speDeleteAsset(id){
+  const a=(speProjData.assets||[]).find(x=>x.id===id);
+  const assets=(speProjData.assets||[]).filter(a=>a.id!==id);
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{assets});
+  if(!srvState.isHost&&a){await notifyHostDeletion('Asset "'+a.name+'"');}
+  await syncProjData(true);toast('Asset removed');
 }
 
 // ---- RECENT SERVERS ----
@@ -2750,9 +4005,21 @@ function loadRecentServers(){
 }
 
 async function quickJoin(name,pass){
+  if(!getSrvDbUrl())return;
+  // Verify server still exists
+  const serverKey=hashStr(name.toLowerCase());
+  const meta=await fbGet('/servers/'+serverKey+'/meta');
+  if(!meta){
+    toast('Server "'+name+'" no longer exists — removed from recents');
+    // Remove from recent servers
+    const recent=JSON.parse(localStorage.getItem('lms_recent_servers')||'[]');
+    localStorage.setItem('lms_recent_servers',JSON.stringify(recent.filter(s=>s.name.toLowerCase()!==name.toLowerCase())));
+    loadRecentServers();
+    return;
+  }
   document.getElementById('join-servername').value=name;
   document.getElementById('join-password').value=pass;
-  const storedUser=localStorage.getItem('lms_last_username')||'';
+  const storedUser=currentUser?currentUser.username:(localStorage.getItem('lms_last_username')||'');
   if(storedUser)document.getElementById('join-username').value=storedUser;
   switchSrvTab('join');
 }
@@ -2817,8 +4084,8 @@ document.addEventListener('keydown', function(e){
   if(e.key === 'Escape'){
     const fbModal = document.getElementById('firebase-setup-modal');
     if(fbModal && fbModal.style.display !== 'none'){ closeFirebaseSetup(); return; }
-    const editor = document.getElementById('srv-proj-editor');
-    if(editor && editor.style.display !== 'none'){ closeSrvProjEditor(); return; }
+    // server project in solo shell — Escape goes home
+    if(srvState.activeProjId&&document.getElementById('app-shell').classList.contains('visible')){ goHome(); return; }
     const hub = document.getElementById('server-hub-overlay');
     if(hub && hub.style.display !== 'none'){ closeServerHub(); return; }
   }
@@ -2917,34 +4184,232 @@ document.addEventListener('keydown', function(e){
   </div>
 </div>
 
-<!-- SERVER PROJECT EDITOR OVERLAY -->
-<div id="srv-proj-editor" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:2100;overflow-y:auto;">
-  <div style="max-width:780px;margin:0 auto;padding:0;">
-    <!-- Topbar -->
-    <div style="height:42px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;position:sticky;top:0;z-index:10;">
-      <button onclick="closeSrvProjEditor()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;padding:0;" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">← Back to Server</button>
-      <span style="color:var(--border2);">|</span>
-      <span id="spe-title" style="font-family:var(--vt);font-size:18px;color:var(--accent2);letter-spacing:.06em;"></span>
-      <div id="spe-sync-indicator" style="margin-left:auto;font-size:9px;color:var(--text3);letter-spacing:.1em;display:flex;align-items:center;gap:6px;">
-        <div id="spe-sync-dot" style="width:6px;height:6px;border-radius:50%;background:#555;"></div>
-        <span id="spe-sync-txt">syncing…</span>
+<!-- SERVER PROJECT EDITOR — Full App Shell Mirror -->
+<div id="srv-proj-editor" style="display:none!important;position:fixed;inset:0;z-index:-1;pointer-events:none;" aria-hidden="true">
+  <div style="display:flex;height:100vh;overflow:hidden;">
+
+    <!-- SIDEBAR — exact mirror of solo sidebar -->
+    <div class="sidebar" id="spe-sidebar">
+      <div class="logo" onclick="closeSrvProjEditor()" title="Back to Projects">
+        <div class="logo-back">← Projects</div>
+        <div class="logo-title" id="spe-title">PROJECT</div>
+        <div class="logo-sub" id="spe-logo-sub">server project</div>
       </div>
-      <div id="spe-online-members" style="display:flex;gap:5px;margin-left:10px;"></div>
+
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <div class="nav-item active" id="spe-nav-dash" onclick="speNav('dash')"><div class="nav-dot" style="background:#c8f04a"></div>Dashboard</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Build</div>
+        <div class="nav-item" id="spe-nav-main-tasks" onclick="speNav('main-tasks')"><div class="nav-dot" style="background:#c8f04a"></div>Main Phases</div>
+        <div class="nav-item" id="spe-nav-sub-tasks" onclick="speNav('sub-tasks')"><div class="nav-dot" style="background:#777"></div>Sub Phases</div>
+        <div class="nav-item" id="spe-nav-vault" onclick="speNav('vault')"><div class="nav-dot" style="background:#a04af0"></div>Script Vault</div>
+        <div class="nav-item" id="spe-nav-versions" onclick="speNav('versions')"><div class="nav-dot" style="background:#4a9af0"></div>Versions</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Build Analytics</div>
+        <div class="nav-item" id="spe-nav-analytics" onclick="speNav('analytics')"><div class="nav-dot" style="background:#c8f04a"></div>Dev Time Tracker</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Scene Editor</div>
+        <div class="nav-item" id="spe-nav-scene-tree" onclick="speNav('scene-tree')"><div class="nav-dot" style="background:#4af0c8"></div>Scene Tree</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Design</div>
+        <div class="nav-item" id="spe-nav-gdd" onclick="speNav('gdd')"><div class="nav-dot" style="background:#a04af0"></div>Game Design Doc</div>
+        <div class="nav-item" id="spe-nav-assets" onclick="speNav('assets')"><div class="nav-dot" style="background:#f0a04a"></div>Asset Tracker</div>
+        <div class="nav-item" id="spe-nav-bugs" onclick="speNav('bugs')"><div class="nav-dot" style="background:#f04a4a"></div>Bug Tracker</div>
+      </div>
+      <!-- SERVER ONLY -->
+      <div class="nav-section">
+        <div class="nav-label">Server</div>
+        <div class="nav-item" id="spe-nav-chat" onclick="speNav('chat')">
+          <div class="nav-dot" style="background:#4af0c8;animation:glowPulse 2s infinite;"></div>Team Chat
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div id="spe-sync-indicator" style="display:flex;align-items:center;gap:6px;font-size:8px;color:var(--text3);letter-spacing:.1em;">
+          <div id="spe-sync-dot" style="width:5px;height:5px;border-radius:50%;background:#555;"></div>
+          <span id="spe-sync-txt">syncing…</span>
+        </div>
+      </div>
     </div>
-    <!-- Tabs -->
-    <div style="background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;">
-      <button class="spe-tab active" onclick="speSwitchTab('tasks')" data-tab="tasks">Tasks</button>
-      <button class="spe-tab" onclick="speSwitchTab('notes')" data-tab="notes">Notes</button>
-      <button class="spe-tab" onclick="speSwitchTab('bugs')" data-tab="bugs">Bug Tracker</button>
-      <button class="spe-tab" onclick="speSwitchTab('chat')" data-tab="chat">💬 Chat</button>
-    </div>
-    <!-- Content -->
-    <div style="padding:16px;">
-      <div id="spe-tab-tasks" class="spe-tab-content"></div>
-      <div id="spe-tab-notes" class="spe-tab-content" style="display:none;"></div>
-      <div id="spe-tab-bugs" class="spe-tab-content" style="display:none;"></div>
-      <div id="spe-tab-chat" class="spe-tab-content" style="display:none;"></div>
-    </div>
+
+    <!-- MAIN AREA -->
+    <div class="main">
+      <div class="topbar">
+        <span class="topbar-title" id="spe-page-title">Dashboard</span>
+        <div class="topbar-right">
+          <div class="status-dot" style="background:var(--accent2);box-shadow:0 0 6px var(--accent2);animation:glowPulse 2s infinite;"></div>
+          <span class="status-txt">server</span>
+        </div>
+      </div>
+
+      <!-- SERVER ONLY: presence bar -->
+      <div class="srv-presence-bar" id="spe-presence-bar">
+        <span style="font-size:8px;color:var(--text3);letter-spacing:.15em;flex-shrink:0;">ONLINE:</span>
+      </div>
+
+      <div class="content" id="spe-main-content">
+
+        <!-- DASHBOARD -->
+        <div class="page active" id="spe-page-dash">
+          <div class="section-hdr"><span class="section-title">DASHBOARD</span><span class="section-sub" id="spe-dash-sub">server project overview</span></div>
+          <div class="stat-grid">
+            <div class="stat-card" style="--c:#c8f04a"><div class="stat-val" id="spe-d-done" style="color:#c8f04a">0</div><div class="stat-label">Tasks Done</div></div>
+            <div class="stat-card" style="--c:#888"><div class="stat-val" id="spe-d-total" style="color:#888">0</div><div class="stat-label">Total Tasks</div></div>
+            <div class="stat-card" style="--c:#f04a4a"><div class="stat-val" id="spe-d-bugs" style="color:#f04a4a">0</div><div class="stat-label">Open Bugs</div></div>
+            <div class="stat-card" style="--c:#4af0c8"><div class="stat-val" id="spe-d-members" style="color:#4af0c8">0</div><div class="stat-label">Online Now</div></div>
+          </div>
+          <div class="g-progress-bar"><div class="g-progress-fill" id="spe-g-bar" style="width:0%"></div></div>
+          <div class="g-progress-label" id="spe-g-label">overall progress</div>
+          <div class="divider"></div>
+          <!-- SERVER ONLY: live activity feed -->
+          <div class="section-hdr"><span class="section-title" style="font-size:16px;">Live Activity</span><span class="section-sub">what the team is doing right now</span></div>
+          <div id="spe-activity-feed" class="timeline"></div>
+        </div>
+
+        <!-- MAIN PHASES -->
+        <div class="page" id="spe-page-main-tasks">
+          <div class="section-hdr"><span class="section-title">MAIN PHASES</span><span class="section-sub">core build milestones</span></div>
+          <div class="toolbar"><button class="btn" onclick="speImportTasks()">Import .lmstasks</button></div>
+          <div class="phase-grid" id="spe-main-phase-grid"></div>
+        </div>
+
+        <!-- SUB PHASES -->
+        <div class="page" id="spe-page-sub-tasks">
+          <div class="section-hdr"><span class="section-title">SUB PHASES</span><span class="section-sub">detail tasks per phase</span></div>
+          <div class="phase-grid" id="spe-sub-phase-grid"></div>
+        </div>
+
+        <!-- SCRIPT VAULT -->
+        <div class="page" id="spe-page-vault">
+          <div class="section-hdr"><span class="section-title">SCRIPT VAULT</span><span class="section-sub">shared project scripts</span></div>
+          <div class="toolbar">
+            <input class="add-inp" id="spe-new-folder-inp" placeholder="New folder name..." style="max-width:180px;">
+            <button class="add-btn" onclick="speCreateFolder()">Add Folder</button>
+            <button class="add-btn" style="margin-left:auto;" onclick="speOpenNewScript()">New Script</button>
+          </div>
+          <div class="folder-list" id="spe-folder-list"></div>
+          <div class="divider"></div>
+          <div id="spe-script-content"><div style="font-size:11px;color:var(--text3);">Select a folder to view scripts</div></div>
+        </div>
+
+        <!-- VERSIONS -->
+        <div class="page" id="spe-page-versions">
+          <div class="section-hdr"><span class="section-title">VERSIONS</span><span class="section-sub">build history</span></div>
+          <div class="toolbar"><button class="btn accent" onclick="openAddSrvVersion()">Log Version</button></div>
+          <div id="spe-versions-content"></div>
+        </div>
+
+        <!-- ANALYTICS -->
+        <div class="page" id="spe-page-analytics">
+          <div class="section-hdr"><span class="section-title">ANALYTICS</span><span class="section-sub">dev time tracker</span></div>
+          <div class="toolbar">
+            <button class="btn accent" id="spe-timer-start-btn" onclick="speTimerToggle()">Start Session</button>
+            <button class="btn" onclick="speOpenLogSession()">Log Manual Session</button>
+            <button class="btn" onclick="speClearSessions()">Clear Log</button>
+          </div>
+          <div class="timer-display" id="spe-timer-display">00:00:00</div>
+          <div class="analytics-grid">
+            <div class="an-card" style="--c:#c8f04a"><div class="an-val" id="spe-an-total">0h</div><div class="an-lbl">Total Dev Time</div></div>
+            <div class="an-card" style="--c:#4af0c8"><div class="an-val" id="spe-an-today">0h</div><div class="an-lbl">Today</div></div>
+            <div class="an-card" style="--c:#a04af0"><div class="an-val" id="spe-an-week">0h</div><div class="an-lbl">This Week</div></div>
+            <div class="an-card" style="--c:#f0a04a"><div class="an-val" id="spe-an-avg">0h</div><div class="an-lbl">Avg Session</div></div>
+          </div>
+          <div class="two-col">
+            <div class="section-card">
+              <div class="section-hdr" style="margin-bottom:10px;"><span class="section-title" style="font-size:14px">Weekly Hours</span></div>
+              <div class="bar-chart" id="spe-an-bar-chart"></div>
+            </div>
+            <div class="section-card">
+              <div class="section-hdr" style="margin-bottom:10px;"><span class="section-title" style="font-size:14px">52-Week Heatmap</span></div>
+              <div class="heatmap-grid" id="spe-an-heatmap"></div>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="section-hdr" style="margin-bottom:10px;"><span class="section-title" style="font-size:14px">Session History</span></div>
+            <div class="session-list" id="spe-an-session-list"></div>
+          </div>
+        </div>
+
+        <!-- SCENE TREE -->
+        <div class="page" id="spe-page-scene-tree">
+          <div class="section-hdr"><span class="section-title">SCENE TREE</span><span class="section-sub">godot-style node hierarchy</span></div>
+          <div class="toolbar">
+            <button class="btn accent" onclick="speNewSceneModal()">New Scene</button>
+            <button class="btn" onclick="speNewFolderModal()">New Folder</button>
+            <button class="btn" id="spe-st-add-btn" onclick="speAddNodeModal()" disabled style="opacity:.4;">Add Node</button>
+            <button class="btn" id="spe-st-del-btn" onclick="speDeleteNode()" style="color:var(--accent3);opacity:.4;" disabled>Remove Node</button>
+          </div>
+          <div class="scene-layout">
+            <div class="scene-panel scene-files-panel">
+              <div class="scene-panel-header"><span>SCENES</span><button class="scene-panel-hbtn" onclick="speNewSceneModal()">+</button></div>
+              <div class="scene-file-tree" id="spe-scene-file-tree"></div>
+            </div>
+            <div class="scene-panel scene-tree-panel">
+              <div class="scene-panel-header"><span id="spe-st-panel-title">NODE TREE</span><button class="scene-panel-hbtn" onclick="speAddNodeModal()">+</button></div>
+              <div class="scene-tree" id="spe-scene-node-tree"></div>
+            </div>
+            <div class="scene-panel scene-inspector-panel">
+              <div class="scene-panel-header"><span>INSPECTOR</span></div>
+              <div class="inspector-body" id="spe-inspector-body">
+                <div class="no-sel-msg">Select a node<br>to view &amp; edit properties</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GDD -->
+        <div class="page" id="spe-page-gdd">
+          <div class="section-hdr"><span class="section-title">GAME DESIGN DOC</span><span class="section-sub">shared gdd &amp; concept docs</span></div>
+          <div class="toolbar">
+            <button class="btn accent" onclick="speAddGDDSection()">Add Section</button>
+            <button class="btn" onclick="speExportGDD()">Export GDD</button>
+          </div>
+          <div id="spe-gdd-list"></div>
+        </div>
+
+        <!-- ASSET TRACKER -->
+        <div class="page" id="spe-page-assets">
+          <div class="section-hdr"><span class="section-title">ASSET TRACKER</span><span class="section-sub">sprites, audio, models, fx</span></div>
+          <div class="toolbar">
+            <button class="btn accent" onclick="speOpenAddAsset()">Add Asset</button>
+            <select class="add-inp" id="spe-asset-filter" onchange="speRenderAssets()" style="max-width:140px;">
+              <option value="all">All Types</option>
+              <option value="sprite">Sprite</option>
+              <option value="audio">Audio</option>
+              <option value="model">3D Model</option>
+              <option value="fx">VFX / Shader</option>
+              <option value="ui">UI</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div id="spe-assets-list"></div>
+        </div>
+
+        <!-- BUG TRACKER -->
+        <div class="page" id="spe-page-bugs">
+          <div class="section-hdr"><span class="section-title" style="color:var(--accent3);">BUG TRACKER</span><span class="section-sub">shared issue tracker</span></div>
+          <div class="toolbar">
+            <button onclick="openAddSrvBug()" class="btn" style="color:var(--accent3);border-color:var(--accent3);">+ Report Bug</button>
+          </div>
+          <div id="spe-bugs-content"></div>
+        </div>
+
+        <!-- TEAM CHAT — server only -->
+        <div class="page" id="spe-page-chat" style="display:none;flex-direction:column;height:calc(100vh - 130px);">
+          <div class="section-hdr" style="flex-shrink:0;"><span class="section-title" style="color:var(--accent2);">TEAM CHAT</span><span class="section-sub">server communication</span></div>
+          <div id="spe-chat-msgs" class="srv-chat-msgs" style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:2px;min-height:0;"></div>
+          <div class="srv-chat-inp-row" style="padding:10px 0 0;flex-shrink:0;">
+            <input id="spe-chat-inp" class="add-inp" placeholder="Message the team…" style="flex:1;" onkeydown="if(event.key==='Enter')sendSrvMsg()">
+            <button onclick="sendSrvMsg()" class="add-btn">Send</button>
+          </div>
+        </div>
+
+      </div><!-- end .content -->
+    </div><!-- end .main -->
   </div>
 </div>
 

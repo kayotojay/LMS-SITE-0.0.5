@@ -295,31 +295,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .color-opt{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s;flex-shrink:0;}
 .color-opt.selected,.color-opt:hover{border-color:#fff;}
 
-/* CUSTOM SECTION BLOCKS */
-.cblock{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
-.cblock-header{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg3);border-bottom:1px solid var(--border);}
-.cblock-title{font-size:11px;color:var(--text);flex:1;font-family:var(--font);letter-spacing:.05em;}
-.cblock-type-badge{font-size:8px;color:var(--text3);border:1px solid var(--border2);padding:1px 5px;border-radius:1px;letter-spacing:.1em;}
-.cblock-body{padding:10px 12px;}
-.cblock-textarea{width:100%;background:var(--inp-bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:8px;outline:none;resize:vertical;min-height:100px;line-height:1.6;border-radius:1px;}
-.cblock-textarea:focus{border-color:var(--border2);}
-.cblock-list-item{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(128,128,128,.06);}
-.cblock-list-item:last-child{border-bottom:none;}
-.cblock-list-lbl{font-size:11px;color:var(--text);flex:1;letter-spacing:.02em;}
-.cblock-controls{display:flex;gap:5px;align-items:center;}
-/* Rating stars */
-.star-row{display:flex;gap:4px;}
-.star{font-size:16px;cursor:pointer;color:var(--text3);transition:color .15s;}
-.star.on{color:var(--accent4);}
-/* Progress block */
-.prog-block-wrap{background:var(--bg);height:6px;border-radius:3px;flex:1;overflow:hidden;}
-.prog-block-fill{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s;}
-/* Link list */
-.link-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(128,128,128,.06);}
-.link-row:last-child{border-bottom:none;}
-.link-anchor{font-size:11px;color:var(--accent6);text-decoration:none;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.link-anchor:hover{text-decoration:underline;}
-
 /* SETTINGS PAGE */
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .settings-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
@@ -492,6 +467,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 input[type=range]{accent-color:var(--accent);width:100%;}
 select option{background:var(--bg2);}
 @media(max-width:700px){.phase-grid{grid-template-columns:1fr;}.stat-grid{grid-template-columns:1fr 1fr;}.notes-grid{grid-template-columns:1fr;}.settings-grid{grid-template-columns:1fr;}}
+
+/* ========== SERVER HUB ========== */
+.spe-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px 16px;cursor:pointer;letter-spacing:.08em;white-space:nowrap;transition:all .15s;}
+.spe-tab:hover{color:var(--text2);}
+.spe-tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.spe-tab-content{animation:fadeUp .2s ease;}
+.srv-proj-card{background:var(--bg2);border:1px solid var(--border);border-radius:2px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .2s;}
+.srv-proj-card:hover{border-color:var(--accent2);}
+.srv-member-badge{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:3px 10px;font-size:9px;color:var(--text2);letter-spacing:.08em;}
+.srv-member-badge.you{border-color:var(--accent2);color:var(--accent2);}
+.srv-task-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:2px;margin-bottom:5px;}
+.srv-task-assignee{font-size:9px;color:var(--text3);letter-spacing:.06em;flex-shrink:0;}
+.srv-msg{padding:8px 12px;margin-bottom:6px;border-radius:2px;max-width:82%;}
+.srv-msg.mine{background:rgba(74,240,200,.08);border:1px solid rgba(74,240,200,.15);margin-left:auto;}
+.srv-msg.theirs{background:var(--bg2);border:1px solid var(--border);}
+.srv-msg-name{font-size:8px;color:var(--text3);letter-spacing:.1em;margin-bottom:3px;}
+.srv-msg-text{font-size:11px;color:var(--text);}
+.srv-msg-time{font-size:8px;color:var(--text3);margin-top:3px;text-align:right;}
 </style>
 </head>
 <body>
@@ -507,6 +500,7 @@ select option{background:var(--bg2);}
     <button class="rs-btn" onclick="triggerImportRoot()">Import Root</button>
     <button class="rs-btn" onclick="showExportLastManTasks()">Export Starter Template</button>
     <button class="rs-btn" onclick="openRootSettings()">Settings</button>
+    <button class="rs-btn primary" onclick="openServerHub()" style="border-color:var(--accent2);color:var(--accent2);"> Server Hub</button>
   </div>
   <div class="root-grid" id="root-grid"></div>
   <div class="empty-root-state" id="empty-state" style="display:none;">
@@ -549,8 +543,6 @@ select option{background:var(--bg2);}
       <div class="nav-item" onclick="nav('assets')"><div class="nav-dot" style="background:#f0a04a"></div>Asset Tracker</div>
       <div class="nav-item" onclick="nav('bugs')"><div class="nav-dot" style="background:#f04a4a"></div>Bug Tracker</div>
     </div>
-    <!-- Custom sections injected here by renderSidebarCustom() -->
-    <div id="custom-nav-sections"></div>
     <!-- Project section -->
     <div class="nav-section">
       <div class="nav-label">Project</div>
@@ -651,14 +643,7 @@ select option{background:var(--bg2);}
               <div class="toggle" id="toggle-compact" onclick="toggleCompact(this)"></div>
             </div>
           </div>
-          <!-- CUSTOM SECTIONS -->
-          <div class="settings-section">
-            <h3>Custom Sections</h3>
-            <p style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6;">Add your own sidebar sections with sub-pages. Each sub-page can hold any combination of blocks: checklists, notes, lists, ratings, links, and progress bars.</p>
-            <button class="btn accent" onclick="openAddSection()" style="margin-bottom:10px;width:100%;">Add New Section</button>
-            <div id="custom-sections-list"></div>
-          </div>
-          <!-- DATA -->
+<!-- DATA -->
           <div class="settings-section danger-zone">
             <h3>Data</h3>
             <div class="setting-row">
@@ -1216,352 +1201,6 @@ const BLOCK_TYPES=[
   {type:'table',label:'Simple Table'},
   {type:'characters',label:'Character Cards'},
 ];
-const SECTION_COLORS=['#c8f04a','#4af0c8','#f04a4a','#f0a04a','#a04af0','#4a9af0','#f04ac8','#aaaaaa'];
-
-function ensureCustomSections(){if(!D.customSections)D.customSections=[];}
-
-function openAddSection(){
-  ensureCustomSections();
-  let selCol=SECTION_COLORS[D.customSections.length%SECTION_COLORS.length];
-  const colorOpts=SECTION_COLORS.map(c=>`<div class="color-opt${c===selCol?' selected':''}" style="background:${c}" data-col="${c}" onclick="this.parentElement.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected');document.getElementById('ns-sel-col').value='${c}';"></div>`).join('');
-  openModal('New Section',`
-    <label class="modal-label">Section Name</label>
-    <input class="modal-inp" id="ns-name" placeholder="e.g. Audio, Level Design, Marketing">
-    <label class="modal-label">Color</label>
-    <div class="color-row">${colorOpts}</div>
-    <input type="hidden" id="ns-sel-col" value="${selCol}">
-  `,[{label:'Cancel',action:closeModal},{label:'Create Section',action:addCustomSection,accent:true}]);
-}
-
-function addCustomSection(){
-  const name=document.getElementById('ns-name').value.trim();if(!name)return;
-  const color=document.getElementById('ns-sel-col').value;
-  const id='sec_'+Date.now();
-  ensureCustomSections();
-  D.customSections.push({id,name,color,subsections:[]});
-  save();closeModal();renderSidebarCustom();renderCustomSectionsList();toast('Section added: '+name);
-}
-
-function deleteCustomSection(secId){
-  D.customSections=D.customSections.filter(s=>s.id!==secId);
-  save();renderSidebarCustom();renderCustomSectionsList();
-  // Remove associated pages
-  document.querySelectorAll('[data-cpage]').forEach(p=>{if(p.dataset.cpage.startsWith(secId))p.remove();});
-  toast('Section deleted');
-}
-
-function openAddSubsection(secId){
-  const sec=D.customSections.find(s=>s.id===secId);if(!sec)return;
-  openModal('Add Sub-page to '+sec.name,`
-    <label class="modal-label">Sub-page Name</label>
-    <input class="modal-inp" id="sub-name" placeholder="e.g. World Audio, NPC Sounds, Music Tracks">
-  `,[{label:'Cancel',action:closeModal},{label:'Add Sub-page',action:()=>addSubsection(secId),accent:true}]);
-}
-
-function addSubsection(secId){
-  const name=document.getElementById('sub-name').value.trim();if(!name)return;
-  const sec=D.customSections.find(s=>s.id===secId);if(!sec)return;
-  const id='sub_'+Date.now();
-  if(!sec.subsections)sec.subsections=[];
-  sec.subsections.push({id,name,blocks:[]});
-  save();closeModal();renderSidebarCustom();renderCustomSectionsList();
-  nav('custom_'+secId+'_'+id);
-  toast('Sub-page added');
-}
-
-function deleteSubsection(secId,subId){
-  const sec=D.customSections.find(s=>s.id===secId);if(!sec)return;
-  sec.subsections=sec.subsections.filter(s=>s.id!==subId);
-  save();renderSidebarCustom();renderCustomSectionsList();
-  const el=document.getElementById('page-custom_'+secId+'_'+subId);if(el)el.remove();
-  nav('dash');toast('Sub-page deleted');
-}
-
-function renderSidebarCustom(){
-  const el=document.getElementById('custom-nav-sections');el.innerHTML='';
-  if(!D||!D.customSections?.length)return;
-  D.customSections.forEach(sec=>{
-    const section=document.createElement('div');section.className='nav-section';
-    const label=document.createElement('div');label.className='nav-label';
-    label.innerHTML=`<span style="display:flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:${sec.color};display:inline-block;flex-shrink:0;"></span>${escHtml(sec.name)}</span><span class="nav-label-add" onclick="openAddSubsection('${sec.id}')" title="Add sub-page">+</span>`;
-    section.appendChild(label);
-    (sec.subsections||[]).forEach(sub=>{
-      const item=document.createElement('div');item.className='nav-subitem';item.setAttribute('id','navitem-custom_'+sec.id+'_'+sub.id);
-      item.onclick=()=>nav('custom_'+sec.id+'_'+sub.id);
-      item.innerHTML=`<div class="nav-dot" style="background:${sec.color};opacity:.6;"></div><span style="flex:1">${escHtml(sub.name)}</span><div class="nav-subitem-actions"><button class="nav-tiny-btn" onclick="event.stopPropagation();deleteSubsection('${sec.id}','${sub.id}')" title="Delete">×</button></div>`;
-      section.appendChild(item);
-    });
-    // Section label also navigates to first sub if exists
-    if(!sec.subsections?.length){
-      const ph=document.createElement('div');ph.style.cssText='font-size:9px;color:var(--text3);padding:4px 12px 6px 22px;letter-spacing:.08em;';ph.textContent='No sub-pages yet';section.appendChild(ph);
-    }
-    el.appendChild(section);
-  });
-}
-
-function renderCustomSectionsList(){
-  const el=document.getElementById('custom-sections-list');if(!el)return;
-  if(!D.customSections?.length){el.innerHTML='<div style="font-size:10px;color:var(--text3);">No custom sections yet.</div>';return;}
-  el.innerHTML='';
-  D.customSections.forEach(sec=>{
-    const row=document.createElement('div');row.style.cssText='background:var(--bg3);border:1px solid var(--border);border-radius:1px;padding:8px 10px;margin-bottom:6px;';
-    row.innerHTML=`
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:${sec.color};flex-shrink:0;"></div>
-        <span style="font-size:11px;color:var(--text);flex:1;">${escHtml(sec.name)}</span>
-        <button class="nav-tiny-btn" onclick="openAddSubsection('${sec.id}')" style="color:var(--accent);font-size:10px;">+ Sub</button>
-        <button class="nav-tiny-btn" onclick="confirmDeleteCustomSection('${sec.id}')">×</button>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;">
-        ${(sec.subsections||[]).map(sub=>`<div style="font-size:9px;padding:2px 6px;background:var(--bg2);border:1px solid var(--border2);border-radius:1px;color:var(--text3);">${escHtml(sub.name)}</div>`).join('')}
-        ${!sec.subsections?.length?`<span style="font-size:9px;color:var(--text3);">No sub-pages</span>`:''}
-      </div>`;
-    el.appendChild(row);
-  });
-}
-
-function confirmDeleteCustomSection(secId){
-  const sec=D.customSections.find(s=>s.id===secId);
-  openModal('Delete Section',`<p style="font-size:11px;color:var(--text2);">Delete section <strong style="color:var(--accent3)">${escHtml(sec?.name||'')}</strong> and all its sub-pages and content?</p>`,[
-    {label:'Cancel',action:closeModal},{label:'Delete',action:()=>{closeModal();deleteCustomSection(secId);},danger:true}
-  ]);
-}
-
-// =====================================================
-// CUSTOM PAGE RENDERER
-// =====================================================
-function getOrCreateCustomPage(pageId,secId,subId){
-  let page=document.getElementById('page-'+pageId);
-  if(page)return page;
-  page=document.createElement('div');page.className='page';page.id='page-'+pageId;page.dataset.cpage=pageId;
-  document.getElementById('main-content').appendChild(page);
-  renderCustomPage(page,secId,subId);
-  return page;
-}
-
-function renderCustomPage(page,secId,subId){
-  const sec=D.customSections?.find(s=>s.id===secId);
-  const sub=sec?.subsections?.find(s=>s.id===subId);
-  if(!sec||!sub){page.innerHTML='<div style="color:var(--text3);">Section not found.</div>';return;}
-  page.innerHTML='';
-  const hdr=document.createElement('div');hdr.className='section-hdr';
-  hdr.innerHTML=`<span class="section-title" style="color:${sec.color}">${escHtml(sub.name).toUpperCase()}</span><span class="section-sub">${escHtml(sec.name)}</span>`;
-  page.appendChild(hdr);
-  const toolbar=document.createElement('div');toolbar.className='toolbar';
-  const addBlockBtn=document.createElement('button');addBlockBtn.className='btn accent';addBlockBtn.textContent='Add Block';
-  addBlockBtn.onclick=()=>openAddBlock(secId,subId,page);
-  toolbar.appendChild(addBlockBtn);
-  page.appendChild(toolbar);
-  const content=document.createElement('div');content.className='custom-page-content';
-  (sub.blocks||[]).forEach((block,bi)=>content.appendChild(renderBlock(block,bi,secId,subId,page)));
-  page.appendChild(content);
-}
-
-function renderBlock(block,bi,secId,subId,page){
-  const wrap=document.createElement('div');wrap.className='cblock';
-  const hdr=document.createElement('div');hdr.className='cblock-header';
-  hdr.innerHTML=`<span class="cblock-title">${escHtml(block.title||'Untitled')}</span><span class="cblock-type-badge">${block.type}</span>`;
-  const acts=document.createElement('div');acts.style.cssText='display:flex;gap:4px;margin-left:8px;';
-  const editBtn=document.createElement('button');editBtn.className='nav-tiny-btn';editBtn.textContent='Edit';editBtn.style.color='var(--text2)';
-  editBtn.onclick=()=>openEditBlock(secId,subId,bi,page);
-  const delBtn=document.createElement('button');delBtn.className='nav-tiny-btn';delBtn.textContent='×';
-  delBtn.onclick=()=>deleteBlock(secId,subId,bi,page);
-  acts.appendChild(editBtn);acts.appendChild(delBtn);hdr.appendChild(acts);wrap.appendChild(hdr);
-  const body=document.createElement('div');body.className='cblock-body';
-  body.appendChild(buildBlockContent(block,bi,secId,subId));
-  wrap.appendChild(body);return wrap;
-}
-
-function buildBlockContent(block,bi,secId,subId){
-  const c=document.createElement('div');
-  const save2=()=>{save();};
-  switch(block.type){
-    case 'textarea':{
-      const ta=document.createElement('textarea');ta.className='cblock-textarea';ta.value=block.data?.text||'';ta.placeholder='Start writing...';
-      ta.oninput=()=>{if(!block.data)block.data={};block.data.text=ta.value;save2();};c.appendChild(ta);break;}
-    case 'checklist':{
-      const list=block.data?.items||[];
-      function renderCL(){
-        c.innerHTML='';
-        list.forEach((item,i)=>{
-          const row=document.createElement('div');row.className='cblock-list-item';
-          const cbx=document.createElement('div');cbx.className='cbx'+(item.done?' on':'');
-          const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 7 7');const pl=document.createElementNS('http://www.w3.org/2000/svg','polyline');pl.setAttribute('points','1,3.5 2.8,5.5 6,1.5');pl.setAttribute('stroke','#080808');pl.setAttribute('stroke-width','1.5');pl.setAttribute('fill','none');svg.appendChild(pl);cbx.appendChild(svg);
-          cbx.onclick=()=>{item.done=!item.done;cbx.classList.toggle('on',item.done);lbl.classList.toggle('done',item.done);save2();};
-          const lbl=document.createElement('span');lbl.className='cblock-list-lbl'+(item.done?' done':'');lbl.textContent=item.text;
-          lbl.onclick=()=>cbx.click();
-          const xb=document.createElement('button');xb.className='xbtn';xb.textContent='×';xb.onclick=()=>{list.splice(i,1);save2();renderCL();};
-          row.appendChild(cbx);row.appendChild(lbl);row.appendChild(xb);c.appendChild(row);
-        });
-        const ar=document.createElement('div');ar.className='add-row';ar.style.margin='8px 0 0';
-        const inp=document.createElement('input');inp.type='text';inp.className='add-inp';inp.placeholder='Add item...';
-        const btn=document.createElement('button');btn.className='add-btn';btn.textContent='Add';
-        btn.onclick=()=>{const v=inp.value.trim();if(!v)return;if(!block.data)block.data={};if(!block.data.items)block.data.items=[];block.data.items.push({text:v,done:false});inp.value='';save2();renderCL();};
-        inp.onkeydown=e=>{if(e.key==='Enter')btn.click();};
-        ar.appendChild(inp);ar.appendChild(btn);c.appendChild(ar);
-      }
-      if(!block.data)block.data={items:[]};renderCL();break;}
-    case 'list':{
-      const items=block.data?.items||[];
-      function renderList(){
-        c.innerHTML='';
-        items.forEach((item,i)=>{
-          const row=document.createElement('div');row.className='cblock-list-item';
-          const dot=document.createElement('div');dot.style.cssText='width:4px;height:4px;background:var(--accent);border-radius:50%;flex-shrink:0;margin-top:6px;';
-          const lbl=document.createElement('span');lbl.className='cblock-list-lbl';lbl.textContent=item;
-          const xb=document.createElement('button');xb.className='xbtn';xb.textContent='×';xb.onclick=()=>{items.splice(i,1);save2();renderList();};
-          row.appendChild(dot);row.appendChild(lbl);row.appendChild(xb);c.appendChild(row);
-        });
-        const ar=document.createElement('div');ar.className='add-row';ar.style.margin='8px 0 0';
-        const inp=document.createElement('input');inp.type='text';inp.className='add-inp';inp.placeholder='Add item...';
-        const btn=document.createElement('button');btn.className='add-btn';btn.textContent='Add';
-        btn.onclick=()=>{const v=inp.value.trim();if(!v)return;if(!block.data)block.data={};if(!block.data.items)block.data.items=[];block.data.items.push(v);inp.value='';save2();renderList();};
-        inp.onkeydown=e=>{if(e.key==='Enter')btn.click();};
-        ar.appendChild(inp);ar.appendChild(btn);c.appendChild(ar);
-      }
-      if(!block.data)block.data={items:[]};renderList();break;}
-    case 'links':{
-      const links=block.data?.links||[];
-      function renderLinks(){
-        c.innerHTML='';
-        links.forEach((lnk,i)=>{
-          const row=document.createElement('div');row.className='link-row';
-          const a=document.createElement('a');a.className='link-anchor';a.href=lnk.url||'#';a.target='_blank';a.textContent=lnk.label||lnk.url;
-          const xb=document.createElement('button');xb.className='xbtn';xb.textContent='×';xb.onclick=()=>{links.splice(i,1);save2();renderLinks();};
-          row.appendChild(a);row.appendChild(xb);c.appendChild(row);
-        });
-        const ar=document.createElement('div');ar.style.cssText='display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;';
-        const labInp=document.createElement('input');labInp.type='text';labInp.className='add-inp';labInp.placeholder='Label';labInp.style.maxWidth='140px';
-        const urlInp=document.createElement('input');urlInp.type='text';urlInp.className='add-inp';urlInp.placeholder='https://...';
-        const btn=document.createElement('button');btn.className='add-btn';btn.textContent='Add';
-        btn.onclick=()=>{const url=urlInp.value.trim();if(!url)return;if(!block.data)block.data={};if(!block.data.links)block.data.links=[];block.data.links.push({label:labInp.value.trim()||url,url});labInp.value='';urlInp.value='';save2();renderLinks();};
-        ar.appendChild(labInp);ar.appendChild(urlInp);ar.appendChild(btn);c.appendChild(ar);
-      }
-      if(!block.data)block.data={links:[]};renderLinks();break;}
-    case 'rating':{
-      if(!block.data)block.data={rating:0,label:'',note:''};
-      const nameInp=document.createElement('input');nameInp.className='add-inp';nameInp.style.marginBottom='8px';nameInp.value=block.data.label||'';nameInp.placeholder='What are you rating?';
-      nameInp.oninput=()=>{block.data.label=nameInp.value;save2();};
-      const stars=document.createElement('div');stars.className='star-row';stars.style.marginBottom='8px';
-      for(let i=1;i<=5;i++){const s=document.createElement('span');s.className='star'+(i<=(block.data.rating||0)?' on':'');s.textContent='★';s.onclick=()=>{block.data.rating=i;save2();[...stars.children].forEach((st,idx)=>st.classList.toggle('on',idx<i));};stars.appendChild(s);}
-      const noteInp=document.createElement('textarea');noteInp.className='cblock-textarea';noteInp.style.minHeight='60px';noteInp.value=block.data.note||'';noteInp.placeholder='Notes...';
-      noteInp.oninput=()=>{block.data.note=noteInp.value;save2();};
-      c.appendChild(nameInp);c.appendChild(stars);c.appendChild(noteInp);break;}
-    case 'progress':{
-      if(!block.data)block.data={items:[]};
-      function renderProg(){
-        c.innerHTML='';
-        (block.data.items||[]).forEach((item,i)=>{
-          const row=document.createElement('div');row.style.marginBottom='8px';
-          const top=document.createElement('div');top.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:4px;';
-          const lbl=document.createElement('span');lbl.style.cssText='font-size:11px;color:var(--text);flex:1;';lbl.textContent=item.name;
-          const pct=document.createElement('span');pct.style.cssText='font-size:9px;color:var(--text3);';pct.textContent=item.value+'%';
-          const xb=document.createElement('button');xb.className='xbtn';xb.textContent='×';xb.onclick=()=>{block.data.items.splice(i,1);save2();renderProg();};
-          top.appendChild(lbl);top.appendChild(pct);top.appendChild(xb);
-          const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=100;slider.value=item.value||0;
-          slider.oninput=()=>{item.value=parseInt(slider.value);pct.textContent=item.value+'%';save2();};
-          row.appendChild(top);row.appendChild(slider);c.appendChild(row);
-        });
-        const ar=document.createElement('div');ar.style.cssText='display:flex;gap:6px;margin-top:6px;';
-        const inp=document.createElement('input');inp.type='text';inp.className='add-inp';inp.placeholder='Item name...';
-        const btn=document.createElement('button');btn.className='add-btn';btn.textContent='Add';
-        btn.onclick=()=>{const v=inp.value.trim();if(!v)return;block.data.items.push({name:v,value:0});inp.value='';save2();renderProg();};
-        inp.onkeydown=e=>{if(e.key==='Enter')btn.click();};
-        ar.appendChild(inp);ar.appendChild(btn);c.appendChild(ar);
-      }
-      renderProg();break;}
-    case 'table':{
-      if(!block.data)block.data={headers:['Column 1','Column 2'],rows:[]};
-      function renderTable(){
-        c.innerHTML='';
-        const tableWrap=document.createElement('div');tableWrap.style.overflowX='auto';
-        const table=document.createElement('table');table.style.cssText='width:100%;border-collapse:collapse;font-size:11px;';
-        const thead=document.createElement('thead');const hr=document.createElement('tr');
-        (block.data.headers||[]).forEach((h,hi)=>{
-          const th=document.createElement('th');th.style.cssText='text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);color:var(--text3);font-size:9px;letter-spacing:.12em;white-space:nowrap;';
-          const inp=document.createElement('input');inp.value=h;inp.style.cssText='background:none;border:none;color:var(--text3);font-family:var(--font);font-size:9px;letter-spacing:.12em;width:100%;outline:none;';
-          inp.onchange=()=>{block.data.headers[hi]=inp.value;save2();};
-          th.appendChild(inp);hr.appendChild(th);
-        });
-        const addColTh=document.createElement('th');const addColBtn=document.createElement('button');addColBtn.className='xbtn';addColBtn.style.color='var(--accent)';addColBtn.textContent='+';addColBtn.title='Add column';
-        addColBtn.onclick=()=>{block.data.headers.push('Column');block.data.rows.forEach(r=>r.push(''));save2();renderTable();};
-        addColTh.appendChild(addColBtn);hr.appendChild(addColTh);thead.appendChild(hr);table.appendChild(thead);
-        const tbody=document.createElement('tbody');
-        (block.data.rows||[]).forEach((row,ri)=>{
-          const tr=document.createElement('tr');tr.style.borderBottom='1px solid var(--border)';
-          row.forEach((cell,ci)=>{
-            const td=document.createElement('td');td.style.cssText='padding:5px 8px;';
-            const inp=document.createElement('input');inp.type='text';inp.value=cell;inp.style.cssText='background:none;border:none;color:var(--text);font-family:var(--font);font-size:11px;width:100%;outline:none;min-width:80px;';
-            inp.onchange=()=>{block.data.rows[ri][ci]=inp.value;save2();};
-            td.appendChild(inp);tr.appendChild(td);
-          });
-          const delTd=document.createElement('td');const delBtn=document.createElement('button');delBtn.className='xbtn';delBtn.textContent='×';delBtn.onclick=()=>{block.data.rows.splice(ri,1);save2();renderTable();};
-          delTd.appendChild(delBtn);tr.appendChild(delTd);tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);tableWrap.appendChild(table);c.appendChild(tableWrap);
-        const addRowBtn=document.createElement('button');addRowBtn.className='btn';addRowBtn.style.marginTop='8px';addRowBtn.textContent='Add Row';
-        addRowBtn.onclick=()=>{block.data.rows.push(block.data.headers.map(()=>''));save2();renderTable();};
-        c.appendChild(addRowBtn);
-      }
-      renderTable();break;}
-    case 'characters':{
-      // Mini character roster for this subsection
-      if(!block.data)block.data={chars:[]};
-      function renderCharsBlock(){
-        c.innerHTML='';
-        const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:10px;';
-        (block.data.chars||[]).forEach((ch,ci)=>{
-          const card=document.createElement('div');card.style.cssText='background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:10px;';
-          card.innerHTML=`<div style="font-size:12px;color:var(--text);margin-bottom:4px;">${escHtml(ch.name)}</div><div style="font-size:9px;color:var(--text3);">${escHtml(ch.role||'')}</div>${ch.note?`<div style="font-size:10px;color:var(--text2);margin-top:4px;line-height:1.4;">${escHtml(ch.note)}</div>`:''}`;
-          const xb=document.createElement('button');xb.className='xbtn';xb.style.position='absolute';xb.textContent='×';
-          card.style.position='relative';xb.style.cssText='position:absolute;top:4px;right:4px;';xb.onclick=()=>{block.data.chars.splice(ci,1);save2();renderCharsBlock();};
-          card.appendChild(xb);grid.appendChild(card);
-        });
-        c.appendChild(grid);
-        const ar=document.createElement('div');ar.style.cssText='display:flex;gap:6px;flex-wrap:wrap;';
-        const n=document.createElement('input');n.type='text';n.className='add-inp';n.placeholder='Name';n.style.maxWidth='120px';
-        const r=document.createElement('input');r.type='text';r.className='add-inp';r.placeholder='Role';r.style.maxWidth='120px';
-        const btn=document.createElement('button');btn.className='add-btn';btn.textContent='Add';
-        btn.onclick=()=>{const name=n.value.trim();if(!name)return;block.data.chars.push({name,role:r.value.trim(),note:''});n.value='';r.value='';save2();renderCharsBlock();};
-        ar.appendChild(n);ar.appendChild(r);ar.appendChild(btn);c.appendChild(ar);
-      }
-      renderCharsBlock();break;}
-    default:c.innerHTML='<div style="font-size:11px;color:var(--text3);">Unknown block type.</div>';}
-  return c;
-}
-
-function openAddBlock(secId,subId,page){
-  const typeOpts=BLOCK_TYPES.map(bt=>`<option value="${bt.type}">${bt.label}</option>`).join('');
-  openModal('Add Block',`
-    <label class="modal-label">Block Title</label>
-    <input class="modal-inp" id="ab-title" placeholder="e.g. BGM Tracks, SFX Checklist, Reference Links">
-    <label class="modal-label">Block Type</label>
-    <select class="modal-select" id="ab-type">${typeOpts}</select>
-  `,[{label:'Cancel',action:closeModal},{label:'Add Block',action:()=>{
-    const title=document.getElementById('ab-title').value.trim()||'Untitled';
-    const type=document.getElementById('ab-type').value;
-    const sec=D.customSections.find(s=>s.id===secId);const sub=sec?.subsections?.find(s=>s.id===subId);
-    if(!sub)return;if(!sub.blocks)sub.blocks=[];
-    sub.blocks.push({id:'blk_'+Date.now(),title,type,data:{}});
-    save();closeModal();renderCustomPage(page,secId,subId);
-    toast('Block added: '+title);
-  },accent:true}]);
-}
-
-function openEditBlock(secId,subId,bi,page){
-  const sec=D.customSections.find(s=>s.id===secId);const sub=sec?.subsections?.find(s=>s.id===subId);
-  if(!sub||!sub.blocks[bi])return;const block=sub.blocks[bi];
-  openModal('Edit Block',`
-    <label class="modal-label">Title</label>
-    <input class="modal-inp" id="eb-title" value="${escHtml(block.title||'')}">
-  `,[{label:'Cancel',action:closeModal},{label:'Save',action:()=>{block.title=document.getElementById('eb-title').value.trim()||block.title;save();closeModal();renderCustomPage(page,secId,subId);},accent:true}]);
-}
-
-function deleteBlock(secId,subId,bi,page){
-  const sec=D.customSections.find(s=>s.id===secId);const sub=sec?.subsections?.find(s=>s.id===subId);
-  if(!sub)return;sub.blocks.splice(bi,1);save();renderCustomPage(page,secId,subId);toast('Block deleted');
-}
-
 // =====================================================
 // NAV
 // =====================================================
@@ -1690,7 +1329,6 @@ function escHtml(str){if(!str)return'';return String(str).replace(/&/g,'&amp;').
 // =====================================================
 function initProject(){
   if(!D.customPhases)D.customPhases={main:[],sub:[]};
-  if(!D.customSections)D.customSections=[];
   activeFolder=null;activeScript=null;
   // Remove old custom pages
   document.querySelectorAll('[data-cpage]').forEach(p=>p.remove());
@@ -1698,7 +1336,6 @@ function initProject(){
   buildPhaseGrids();updateGlobal();renderActivity();
   renderFolders();renderScripts();renderVersions();
   renderSurvivors();renderNotes();renderLore();
-  renderSidebarCustom();
   // Ensure new data keys exist
   if(!D.sessions)D.sessions=[];
   if(!D.scenes)D.scenes=[];
@@ -2492,6 +2129,883 @@ function updateGDriveUI(){}
 loadSettings();
 loadRoots();
 renderRootGrid();
+
+// =====================================================
+// SERVER HUB — Real-time collaboration via Firebase RTDB
+// =====================================================
+// Uses Firebase Realtime Database (free, no signup needed via REST)
+// Server data lives at: https://lmsdevhub-default-rtdb.firebaseio.com/servers/{serverKey}
+// This gives genuine real-time multi-user sync via polling + REST
+
+// Firebase DB URL — set once, stored in localStorage
+let SRV_DB_URL = localStorage.getItem('lms_firebase_url') || '';
+
+function getSrvDbUrl(){
+  return SRV_DB_URL.replace(/\/+$/,'');
+}
+function setSrvDbUrl(url){
+  SRV_DB_URL = url.replace(/\/+$/,'');
+  localStorage.setItem('lms_firebase_url', SRV_DB_URL);
+}
+let srvState = {
+  connected: false,
+  serverKey: null,   // firebase key (hashed server name)
+  serverName: null,
+  username: null,
+  isHost: false,
+  pollInterval: null,
+  chatPollInterval: null,
+  activeProjId: null,
+  activeTab: 'tasks',
+  myId: null,        // unique session ID
+  lastChatTs: 0,
+};
+
+// Simple hash for server name → firebase key
+function hashStr(str){
+  let h=5381;for(let i=0;i<str.length;i++)h=(h*33^str.charCodeAt(i))>>>0;
+  return'srv_'+h.toString(36);
+}
+
+// SHA-256 password hash (async)
+async function hashPass(pass){
+  const enc=new TextEncoder();
+  const buf=await crypto.subtle.digest('SHA-256',enc.encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// Firebase REST helpers
+async function fbGet(path){
+  try{
+    const r=await fetch(getSrvDbUrl()+path+'.json');
+    if(!r.ok)return null;
+    return await r.json();
+  }catch(e){return null;}
+}
+async function fbSet(path,data){
+  try{
+    const r=await fetch(getSrvDbUrl()+path+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    return r.ok;
+  }catch(e){return false;}
+}
+async function fbPatch(path,data){
+  try{
+    const r=await fetch(getSrvDbUrl()+path+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    return r.ok;
+  }catch(e){return false;}
+}
+async function fbPush(path,data){
+  try{
+    const r=await fetch(getSrvDbUrl()+path+'.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!r.ok)return null;
+    const j=await r.json();return j.name;
+  }catch(e){return null;}
+}
+async function fbDelete(path){
+  try{await fetch(getSrvDbUrl()+path+'.json',{method:'DELETE'});return true;}catch(e){return false;}
+}
+
+// ---- UI helpers ----
+function openServerHub(){
+  document.getElementById('server-hub-overlay').style.display='block';
+  renderSrvStatus();
+  loadRecentServers();
+  if(!getSrvDbUrl()){
+    // Show hint in status bar, open setup after brief delay
+    const txt=document.getElementById('srv-status-txt');
+    if(txt)txt.textContent='⚠ Database not configured — click DB Setup to get started';
+    setTimeout(()=>openFirebaseSetup(), 400);
+    return;
+  }
+  if(srvState.connected) renderActiveServer();
+}
+function closeServerHub(){
+  document.getElementById('server-hub-overlay').style.display='none';
+}
+function switchSrvTab(tab){
+  document.getElementById('srv-panel-host').style.display=tab==='host'?'block':'none';
+  document.getElementById('srv-panel-join').style.display=tab==='join'?'block':'none';
+  document.getElementById('srv-tab-host').style.cssText = tab==='host'
+    ? 'flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;'
+    : 'flex:1;background:var(--bg2);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
+  document.getElementById('srv-tab-join').style.cssText = tab==='join'
+    ? 'flex:1;background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:none;color:var(--accent2);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;'
+    : 'flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
+}
+
+function renderSrvStatus(){
+  const dot=document.getElementById('srv-status-dot');
+  const dbBtn=document.getElementById('srv-db-setup-btn');if(dbBtn){dbBtn.style.display=srvState.connected?'none':'inline-block';dbBtn.textContent=getSrvDbUrl()?'✓ DB Ready':'⚙ DB Setup';dbBtn.style.color=getSrvDbUrl()?'var(--accent)':'var(--text3)';dbBtn.style.borderColor=getSrvDbUrl()?'var(--accent)':'var(--border2)';}
+  const txt=document.getElementById('srv-status-txt');
+  const discBtn=document.getElementById('srv-disconnect-btn');
+  const lobbyPanel=document.getElementById('srv-lobby-panel');
+  const activePanel=document.getElementById('srv-active-panel');
+  if(srvState.connected){
+    dot.style.background='var(--accent2)';
+    dot.style.boxShadow='0 0 8px var(--accent2)';
+    txt.textContent='Connected to: '+srvState.serverName+' as '+srvState.username+(srvState.isHost?' [HOST]':'');
+    discBtn.style.display='inline-block';
+    lobbyPanel.style.display='none';
+    activePanel.style.display='block';
+  } else {
+    dot.style.background='#444';
+    dot.style.boxShadow='none';
+    txt.textContent=getSrvDbUrl() ? 'Not connected to any server' : '⚠ Database not configured';
+    discBtn.style.display='none';
+    lobbyPanel.style.display='block';
+    activePanel.style.display='none';
+  }
+}
+
+// ---- HOST ----
+async function hostServer(){
+  if(!getSrvDbUrl()){openFirebaseSetup();return;}
+  const username=document.getElementById('host-username').value.trim();
+  const serverName=document.getElementById('host-servername').value.trim();
+  const pass=document.getElementById('host-password').value;
+  const pass2=document.getElementById('host-password2').value;
+  if(!username||!serverName||!pass){toast('Fill all fields');return;}
+  if(pass!==pass2){toast('Passwords do not match');return;}
+
+  toast('Creating server…');
+  const serverKey=hashStr(serverName.toLowerCase());
+  const passHash=await hashPass(pass);
+
+  // Check if server already exists
+  const existing=await fbGet('/servers/'+serverKey+'/meta');
+  if(existing && existing.passHash){
+    toast('Server name taken — try another');
+    return;
+  }
+
+  const myId='user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const now=Date.now();
+
+  // Create server
+  await fbSet('/servers/'+serverKey+'/meta',{name:serverName,passHash,createdAt:now,hostId:myId});
+  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:now,isHost:true});
+  await fbSet('/servers/'+serverKey+'/projects',{});
+
+  // Save state
+  srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null};
+  saveRecentServer(serverName,pass);
+  startSrvHeartbeat();
+  renderSrvStatus();
+  renderActiveServer();
+  toast('Server launched: '+serverName);
+}
+
+// ---- JOIN ----
+async function joinServer(){
+  if(!getSrvDbUrl()){openFirebaseSetup();return;}
+  const username=document.getElementById('join-username').value.trim();
+  const serverName=document.getElementById('join-servername').value.trim();
+  const pass=document.getElementById('join-password').value;
+  if(!username||!serverName||!pass){toast('Fill all fields');return;}
+
+  toast('Connecting…');
+  const serverKey=hashStr(serverName.toLowerCase());
+  const passHash=await hashPass(pass);
+
+  const meta=await fbGet('/servers/'+serverKey+'/meta');
+  if(!meta){toast('Server not found');return;}
+  if(meta.passHash!==passHash){toast('Wrong password');return;}
+
+  const myId='user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost:false});
+
+  srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost:false,myId,activeProjId:null};
+  saveRecentServer(serverName,pass);
+  startSrvHeartbeat();
+  renderSrvStatus();
+  renderActiveServer();
+  toast('Joined server: '+meta.name);
+}
+
+// ---- DISCONNECT ----
+async function disconnectServer(){
+  if(!srvState.connected)return;
+  // Remove member presence
+  await fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
+  stopSrvPolling();
+  srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0};
+  renderSrvStatus();
+  document.getElementById('srv-active-panel').style.display='none';
+  document.getElementById('srv-lobby-panel').style.display='block';
+  toast('Left server');
+}
+
+// ---- HEARTBEAT ----
+function startSrvHeartbeat(){
+  stopSrvPolling();
+  // Heartbeat: update lastSeen every 15s so others see us online
+  srvState.pollInterval=setInterval(async()=>{
+    if(!srvState.connected)return;
+    await fbPatch('/servers/'+srvState.serverKey+'/members/'+srvState.myId,{lastSeen:Date.now()});
+    // Refresh active server view if hub is open
+    if(document.getElementById('server-hub-overlay').style.display!=='none'){
+      renderActiveServer();
+    }
+    // Refresh project editor if open
+    if(document.getElementById('srv-proj-editor').style.display!=='none'){
+      await syncProjData();
+    }
+  },5000);
+}
+
+function stopSrvPolling(){
+  if(srvState.pollInterval)clearInterval(srvState.pollInterval);
+  if(srvState.chatPollInterval)clearInterval(srvState.chatPollInterval);
+  srvState.pollInterval=null;srvState.chatPollInterval=null;
+}
+
+// ---- RENDER ACTIVE SERVER ----
+async function renderActiveServer(){
+  if(!srvState.connected)return;
+  // Load members
+  const members=await fbGet('/servers/'+srvState.serverKey+'/members')||{};
+  const now=Date.now();
+  const onlineMs=30000; // 30s = online
+  const onlineMembers=Object.entries(members).filter(([id,m])=>(now-m.lastSeen)<onlineMs);
+
+  const memberEl=document.getElementById('srv-members-list');
+  const countEl=document.getElementById('srv-member-count');
+  document.getElementById('srv-active-name').textContent=srvState.serverName.toUpperCase();
+  countEl.textContent=onlineMembers.length+' online';
+
+  memberEl.innerHTML=onlineMembers.map(([id,m])=>
+    `<div class="srv-member-badge${id===srvState.myId?' you':''}">${escHtml(m.name)}${m.isHost?' ⚡':''}</div>`
+  ).join('');
+
+  // Load projects
+  const projects=await fbGet('/servers/'+srvState.serverKey+'/projects')||{};
+  renderSrvProjectsList(projects);
+}
+
+function renderSrvProjectsList(projects){
+  const el=document.getElementById('srv-projects-list');
+  const entries=Object.entries(projects);
+  if(!entries.length){
+    el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:16px 0;text-align:center;letter-spacing:.08em;">No projects yet. Create one to get started.</div>';
+    return;
+  }
+  el.innerHTML=entries.map(([id,proj])=>`
+    <div class="srv-proj-card" onclick="openSrvProject('${id}')">
+      <div style="width:8px;height:8px;border-radius:50%;background:${escHtml(proj.color||'#c8f04a')};flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-size:13px;color:var(--text);font-family:var(--vt);letter-spacing:.05em;">${escHtml(proj.name)}</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px;">${Object.keys(proj.tasks||{}).length} tasks · ${Object.keys(proj.bugs||{}).length} bugs</div>
+      </div>
+      <div style="font-size:9px;color:var(--text3);">→</div>
+      ${srvState.isHost?`<button onclick="event.stopPropagation();deleteSrvProject('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:11px;padding:2px 4px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>`:''}
+    </div>
+  `).join('');
+}
+
+// ---- CREATE SERVER PROJECT ----
+function openCreateServerProject(){
+  const colors=['#c8f04a','#4af0c8','#f04a4a','#f0a04a','#a04af0','#4a9af0'];
+  let selCol=colors[Math.floor(Math.random()*colors.length)];
+  openModal('New Server Project',`
+    <label class="modal-label">Project Name</label>
+    <input class="modal-inp" id="sp-name" placeholder="e.g. Main Build, Design Sprint, Hotfix">
+    <label class="modal-label">Color</label>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">${colors.map(c=>`<div onclick="document.querySelectorAll('.sc-col').forEach(x=>x.style.outline='none');this.style.outline='2px solid #fff';document.getElementById('sp-color-val').value='${c}'" class="sc-col" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;outline:${c===selCol?'2px solid #fff':'none'};"></div>`).join('')}</div>
+    <input type="hidden" id="sp-color-val" value="${selCol}">
+    <label class="modal-label">Description (optional)</label>
+    <input class="modal-inp" id="sp-desc" placeholder="What are you building?">
+  `,[{label:'Cancel',action:closeModal},{label:'Create',action:createSrvProject,accent:true}]);
+}
+
+async function createSrvProject(){
+  const name=document.getElementById('sp-name').value.trim();if(!name)return;
+  const color=document.getElementById('sp-color-val').value;
+  const desc=document.getElementById('sp-desc').value.trim();
+  const id='proj_'+Date.now();
+  const proj={id,name,color,desc,createdBy:srvState.username,createdAt:Date.now(),tasks:{},notes:{},bugs:{},chat:{}};
+  await fbSet('/servers/'+srvState.serverKey+'/projects/'+id,proj);
+  closeModal();
+  toast('Project created: '+name);
+  renderActiveServer();
+}
+
+async function deleteSrvProject(id){
+  if(!srvState.isHost){toast('Only the host can delete projects');return;}
+  openModal('Delete Project',`<p style="font-size:11px;color:var(--text2);">Delete this server project and all its data? Cannot be undone.</p>`,[
+    {label:'Cancel',action:closeModal},{label:'Delete',action:async()=>{
+      await fbDelete('/servers/'+srvState.serverKey+'/projects/'+id);
+      closeModal();toast('Project deleted');renderActiveServer();
+    },danger:true}
+  ]);
+}
+
+// ---- OPEN PROJECT EDITOR ----
+let speProjData=null;
+async function openSrvProject(projId){
+  if(!srvState.connected)return;
+  srvState.activeProjId=projId;
+  srvState.activeTab='tasks';
+  document.getElementById('srv-proj-editor').style.display='block';
+  document.getElementById('server-hub-overlay').style.display='none';
+  await syncProjData(true);
+  // Start chat polling
+  if(srvState.chatPollInterval)clearInterval(srvState.chatPollInterval);
+  srvState.chatPollInterval=setInterval(async()=>{
+    if(document.getElementById('spe-tab-chat').style.display!=='none'){
+      await renderSpeChat();
+    }
+  },3000);
+}
+
+function closeSrvProjEditor(){
+  document.getElementById('srv-proj-editor').style.display='none';
+  document.getElementById('server-hub-overlay').style.display='block';
+  if(srvState.chatPollInterval)clearInterval(srvState.chatPollInterval);
+  srvState.activeProjId=null;speProjData=null;
+  renderActiveServer();
+}
+
+async function syncProjData(fullRender=false){
+  if(!srvState.activeProjId)return;
+  const proj=await fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId);
+  speProjData=proj;
+  if(!proj){toast('Project not found');closeSrvProjEditor();return;}
+
+  // Update header
+  document.getElementById('spe-title').textContent=proj.name.toUpperCase();
+
+  // Online members
+  const members=await fbGet('/servers/'+srvState.serverKey+'/members')||{};
+  const now=Date.now();
+  const online=Object.entries(members).filter(([id,m])=>(now-m.lastSeen)<30000);
+  document.getElementById('spe-online-members').innerHTML=online.map(([id,m])=>
+    `<div title="${escHtml(m.name)}" style="width:22px;height:22px;border-radius:50%;background:var(--bg3);border:1px solid ${id===srvState.myId?'var(--accent2)':'var(--border2)'};display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text2);">${escHtml(m.name[0].toUpperCase())}</div>`
+  ).join('');
+
+  // Sync indicator
+  document.getElementById('spe-sync-dot').style.background='var(--accent2)';
+  document.getElementById('spe-sync-txt').textContent='Live';
+  setTimeout(()=>{
+    const dot=document.getElementById('spe-sync-dot');
+    if(dot)dot.style.background='#555';
+  },1500);
+
+  if(fullRender) renderSpeCurrentTab();
+}
+
+function speSwitchTab(tab){
+  srvState.activeTab=tab;
+  document.querySelectorAll('.spe-tab').forEach(t=>{t.classList.toggle('active',t.dataset.tab===tab);});
+  document.querySelectorAll('.spe-tab-content').forEach(c=>{c.style.display='none';});
+  document.getElementById('spe-tab-'+tab).style.display='block';
+  renderSpeCurrentTab();
+}
+
+function renderSpeCurrentTab(){
+  if(!speProjData)return;
+  const tab=srvState.activeTab;
+  if(tab==='tasks')renderSpeTasks();
+  if(tab==='notes')renderSpeNotes();
+  if(tab==='bugs')renderSpeBugs();
+  if(tab==='chat')renderSpeChat();
+}
+
+// ---- TASKS ----
+function renderSpeTasks(){
+  const el=document.getElementById('spe-tab-tasks');
+  const tasks=Object.entries(speProjData.tasks||{});
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:var(--vt);font-size:16px;color:var(--accent);letter-spacing:.08em;">TASKS</div>
+      <button onclick="openAddSrvTask()" class="btn accent" style="font-size:9px;">+ Add Task</button>
+    </div>
+    <div id="spe-tasks-list"></div>
+  `;
+  const listEl=document.getElementById('spe-tasks-list');
+  if(!tasks.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No tasks yet. Add the first one!</div>';return;}
+  
+  const statusOrder={todo:0,inprogress:1,done:2};
+  tasks.sort((a,b)=>(statusOrder[a[1].status]||0)-(statusOrder[b[1].status]||0));
+  
+  listEl.innerHTML=tasks.map(([id,task])=>`
+    <div class="srv-task-row">
+      <div style="width:10px;height:10px;border-radius:2px;border:1px solid ${task.status==='done'?'var(--accent)':task.status==='inprogress'?'var(--accent4)':'var(--border2)'};background:${task.status==='done'?'var(--accent)':task.status==='inprogress'?'rgba(240,160,74,.2)':'transparent'};cursor:pointer;flex-shrink:0;" onclick="cycleSrvTaskStatus('${id}')"></div>
+      <div style="flex:1;">
+        <div style="font-size:11px;color:var(--text);${task.status==='done'?'text-decoration:line-through;color:var(--text3);':''}">${escHtml(task.title)}</div>
+        ${task.desc?`<div style="font-size:9px;color:var(--text3);margin-top:2px;">${escHtml(task.desc)}</div>`:''}
+      </div>
+      <div class="srv-task-assignee">${escHtml(task.assignee||'—')}</div>
+      <div style="font-size:8px;padding:1px 6px;border-radius:1px;border:1px solid ${task.status==='done'?'var(--accent)':task.status==='inprogress'?'var(--accent4)':'var(--border2)'};color:${task.status==='done'?'var(--accent)':task.status==='inprogress'?'var(--accent4)':'var(--text3)'};">${task.status||'todo'}</div>
+      <button onclick="deleteSrvTask('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:11px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>
+    </div>
+  `).join('');
+}
+
+function openAddSrvTask(){
+  openModal('Add Task',`
+    <label class="modal-label">Task Title</label>
+    <input class="modal-inp" id="st-title" placeholder="e.g. Set up auth, Fix login bug">
+    <label class="modal-label">Description (optional)</label>
+    <input class="modal-inp" id="st-desc" placeholder="More details…">
+    <label class="modal-label">Assign To</label>
+    <input class="modal-inp" id="st-assign" placeholder="e.g. Slash" value="${escHtml(srvState.username)}">
+    <label class="modal-label">Status</label>
+    <select class="modal-select" id="st-status"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
+  `,[{label:'Cancel',action:closeModal},{label:'Add Task',action:addSrvTask,accent:true}]);
+}
+
+async function addSrvTask(){
+  const title=document.getElementById('st-title').value.trim();if(!title)return;
+  const task={id:'t_'+Date.now(),title,desc:document.getElementById('st-desc').value.trim(),assignee:document.getElementById('st-assign').value.trim(),status:document.getElementById('st-status').value,createdBy:srvState.username,createdAt:Date.now()};
+  await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/tasks/'+task.id,task);
+  closeModal();await syncProjData(true);toast('Task added');
+}
+
+async function cycleSrvTaskStatus(taskId){
+  const task=(speProjData.tasks||{})[taskId];if(!task)return;
+  const statuses=['todo','inprogress','done'];
+  const next=statuses[(statuses.indexOf(task.status)+1)%statuses.length];
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/tasks/'+taskId,{status:next});
+  await syncProjData(true);
+}
+
+async function deleteSrvTask(taskId){
+  await fbDelete('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/tasks/'+taskId);
+  await syncProjData(true);toast('Task removed');
+}
+
+// ---- NOTES ----
+function renderSpeNotes(){
+  const el=document.getElementById('spe-tab-notes');
+  const notes=Object.entries(speProjData.notes||{});
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:var(--vt);font-size:16px;color:var(--accent);letter-spacing:.08em;">NOTES</div>
+      <button onclick="addSrvNote()" class="btn accent" style="font-size:9px;">+ Add Note</button>
+    </div>
+    <div id="spe-notes-list"></div>
+  `;
+  const listEl=document.getElementById('spe-notes-list');
+  if(!notes.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No notes yet.</div>';return;}
+  listEl.innerHTML=notes.map(([id,note])=>`
+    <div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:10px;color:var(--text2);">${escHtml(note.title||'Note')}</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:9px;color:var(--text3);">${escHtml(note.author||'')}</span>
+          <button onclick="deleteSrvNote('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>
+        </div>
+      </div>
+      <textarea class="notes-area" style="min-height:80px;" onblur="updateSrvNote('${id}',this.value)">${escHtml(note.content||'')}</textarea>
+    </div>
+  `).join('');
+}
+
+function addSrvNote(){
+  openModal('New Note',`
+    <label class="modal-label">Title</label>
+    <input class="modal-inp" id="sn2-title" placeholder="e.g. Meeting Notes, Ideas">
+  `,[{label:'Cancel',action:closeModal},{label:'Create',action:async()=>{
+    const title=document.getElementById('sn2-title').value.trim();if(!title)return;
+    const id='note_'+Date.now();
+    await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/notes/'+id,{id,title,content:'',author:srvState.username,createdAt:Date.now()});
+    closeModal();await syncProjData(true);
+  },accent:true}]);
+}
+
+async function updateSrvNote(noteId,content){
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/notes/'+noteId,{content});
+}
+
+async function deleteSrvNote(noteId){
+  await fbDelete('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/notes/'+noteId);
+  await syncProjData(true);
+}
+
+// ---- BUGS ----
+function renderSpeBugs(){
+  const el=document.getElementById('spe-tab-bugs');
+  const bugs=Object.entries(speProjData.bugs||{});
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:var(--vt);font-size:16px;color:var(--accent3);letter-spacing:.08em;">BUG TRACKER</div>
+      <button onclick="openAddSrvBug()" class="btn" style="font-size:9px;color:var(--accent3);border-color:var(--accent3);">+ Report Bug</button>
+    </div>
+    <div id="spe-bugs-list"></div>
+  `;
+  const listEl=document.getElementById('spe-bugs-list');
+  if(!bugs.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No bugs reported. Either perfect or untested 🎉</div>';return;}
+  const sevColors={critical:'#f04a4a',high:'#f0a04a',medium:'#f0f04a',low:'#4a9af0'};
+  listEl.innerHTML=bugs.map(([id,bug])=>`
+    <div class="bug-card" style="--sev:${sevColors[bug.severity]||'#888'};margin-bottom:8px;${bug.status==='resolved'?'opacity:.5':''}">
+      <div class="bug-top">
+        <span class="bug-sev" style="color:${sevColors[bug.severity]||'#888'};border-color:${sevColors[bug.severity]||'#888'};">${(bug.severity||'').toUpperCase()}</span>
+        <span class="bug-title" style="flex:1;">${escHtml(bug.title)}</span>
+        <span class="pill" style="color:${bug.status==='resolved'?'var(--accent)':bug.status==='inprogress'?'var(--accent4)':'var(--accent3)'};border-color:currentColor;font-size:8px;">${bug.status||'open'}</span>
+        <button onclick="cycleSrvBug('${id}')" class="btn" style="font-size:9px;padding:3px 8px;">${bug.status==='open'?'→ In Progress':bug.status==='inprogress'?'✓ Resolve':'↺ Reopen'}</button>
+        <button onclick="deleteSrvBug('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>
+      </div>
+      ${bug.desc?`<div class="bug-desc">${escHtml(bug.desc)}</div>`:''}
+      <div class="bug-meta">By ${escHtml(bug.reportedBy||'?')} · ${bug.date||''}</div>
+    </div>
+  `).join('');
+}
+
+function openAddSrvBug(){
+  openModal('Report Bug',`
+    <label class="modal-label">Title</label>
+    <input class="modal-inp" id="sb-title" placeholder="Brief bug description">
+    <label class="modal-label">Severity</label>
+    <select class="modal-select" id="sb-sev"><option value="low">Low</option><option value="medium">Medium</option><option value="high" selected>High</option><option value="critical">Critical</option></select>
+    <label class="modal-label">Description / Steps</label>
+    <textarea class="modal-inp" id="sb-desc" style="min-height:80px;resize:vertical;" placeholder="Steps to reproduce…"></textarea>
+  `,[{label:'Cancel',action:closeModal},{label:'Report',action:addSrvBug,accent:true}]);
+}
+
+async function addSrvBug(){
+  const title=document.getElementById('sb-title').value.trim();if(!title)return;
+  const id='bug_'+Date.now();
+  const bug={id,title,severity:document.getElementById('sb-sev').value,desc:document.getElementById('sb-desc').value.trim(),status:'open',reportedBy:srvState.username,date:new Date().toLocaleDateString()};
+  await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/bugs/'+id,bug);
+  closeModal();await syncProjData(true);toast('Bug reported');
+}
+
+async function cycleSrvBug(bugId){
+  const bug=(speProjData.bugs||{})[bugId];if(!bug)return;
+  const statuses=['open','inprogress','resolved'];
+  const next=statuses[(statuses.indexOf(bug.status)+1)%statuses.length];
+  await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/bugs/'+bugId,{status:next});
+  await syncProjData(true);
+}
+
+async function deleteSrvBug(bugId){
+  await fbDelete('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/bugs/'+bugId);
+  await syncProjData(true);toast('Bug removed');
+}
+
+// ---- CHAT ----
+async function renderSpeChat(){
+  const el=document.getElementById('spe-tab-chat');
+  if(!speProjData)return;
+  
+  // Only rebuild structure once
+  if(!el.querySelector('#spe-chat-msgs')){
+    el.innerHTML=`
+      <div id="spe-chat-msgs" style="height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:8px 0;margin-bottom:12px;border-bottom:1px solid var(--border);"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <input id="spe-chat-inp" class="add-inp" placeholder="Message the team…" style="flex:1;" onkeydown="if(event.key==='Enter')sendSrvMsg()">
+        <button onclick="sendSrvMsg()" class="add-btn">Send</button>
+      </div>
+    `;
+  }
+  
+  // Load messages
+  const chat=await fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat')||{};
+  const msgs=Object.values(chat).sort((a,b)=>a.ts-b.ts).slice(-60);
+  const msgsEl=document.getElementById('spe-chat-msgs');
+  if(!msgsEl)return;
+  msgsEl.innerHTML=msgs.map(m=>`
+    <div class="srv-msg ${m.authorId===srvState.myId?'mine':'theirs'}">
+      ${m.authorId!==srvState.myId?`<div class="srv-msg-name">${escHtml(m.author)}</div>`:''}
+      <div class="srv-msg-text">${escHtml(m.text)}</div>
+      <div class="srv-msg-time">${new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+    </div>
+  `).join('');
+  // Auto-scroll to bottom
+  msgsEl.scrollTop=msgsEl.scrollHeight;
+}
+
+async function sendSrvMsg(){
+  const inp=document.getElementById('spe-chat-inp');
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';
+  const id='msg_'+Date.now();
+  await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat/'+id,{
+    id,text,author:srvState.username,authorId:srvState.myId,ts:Date.now()
+  });
+  await renderSpeChat();
+}
+
+// ---- RECENT SERVERS ----
+function saveRecentServer(name,pass){
+  const recent=JSON.parse(localStorage.getItem('lms_recent_servers')||'[]');
+  const filtered=recent.filter(s=>s.name.toLowerCase()!==name.toLowerCase());
+  filtered.unshift({name,pass,ts:Date.now()});
+  localStorage.setItem('lms_recent_servers',JSON.stringify(filtered.slice(0,5)));
+}
+
+function loadRecentServers(){
+  const recent=JSON.parse(localStorage.getItem('lms_recent_servers')||'[]');
+  const block=document.getElementById('srv-recent-block');
+  const list=document.getElementById('srv-recent-list');
+  if(!recent.length){block.style.display='none';return;}
+  block.style.display='block';
+  list.innerHTML=recent.map(s=>`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:2px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="quickJoin('${escHtml(s.name)}','${escHtml(s.pass)}')" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--accent2);"></div>
+      <div style="font-size:11px;color:var(--text);flex:1;">${escHtml(s.name)}</div>
+      <div style="font-size:9px;color:var(--text3);">Quick Join →</div>
+    </div>
+  `).join('');
+}
+
+async function quickJoin(name,pass){
+  document.getElementById('join-servername').value=name;
+  document.getElementById('join-password').value=pass;
+  const storedUser=localStorage.getItem('lms_last_username')||'';
+  if(storedUser)document.getElementById('join-username').value=storedUser;
+  switchSrvTab('join');
+}
+
+// Save username on join/host
+const _origJoin=joinServer;
+const _origHost=hostServer;
+
+
+// ---- FIREBASE SETUP ----
+function openFirebaseSetup(){
+  const modal = document.getElementById('firebase-setup-modal');
+  modal.style.display = 'block';
+  const currentUrl = getSrvDbUrl();
+  const hasUrlEl = document.getElementById('fsm-has-url');
+  if(currentUrl){
+    hasUrlEl.style.display = 'block';
+    document.getElementById('fsm-current-url').textContent = currentUrl;
+    document.getElementById('fsm-url-input').value = currentUrl;
+  } else {
+    hasUrlEl.style.display = 'none';
+  }
+}
+
+function closeFirebaseSetup(){
+  document.getElementById('firebase-setup-modal').style.display = 'none';
+}
+
+async function saveFirebaseUrl(){
+  const url = document.getElementById('fsm-url-input').value.trim();
+  if(!url || !url.startsWith('https://')){
+    toast('Enter a valid https:// URL');return;
+  }
+  // Test the connection
+  toast('Testing connection…');
+  try{
+    const r = await fetch(url.replace(/\/+$/,'') + '/ping.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body:'"ok"'});
+    if(!r.ok) throw new Error('Connection failed (status '+r.status+')');
+  } catch(e){
+    toast('Could not connect: ' + e.message);return;
+  }
+  setSrvDbUrl(url);
+  toast('✓ Database connected!');
+  closeFirebaseSetup();
+  // Show in status bar if hub is open
+  if(document.getElementById('server-hub-overlay').style.display !== 'none'){
+    renderSrvStatus();
+  }
+}
+
+function clearFirebaseUrl(){
+  localStorage.removeItem('lms_firebase_url');
+  SRV_DB_URL = '';
+  document.getElementById('fsm-has-url').style.display = 'none';
+  document.getElementById('fsm-url-input').value = '';
+  toast('Database URL cleared');
+}
+
+
+// Escape key closes overlays
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    const fbModal = document.getElementById('firebase-setup-modal');
+    if(fbModal && fbModal.style.display !== 'none'){ closeFirebaseSetup(); return; }
+    const editor = document.getElementById('srv-proj-editor');
+    if(editor && editor.style.display !== 'none'){ closeSrvProjEditor(); return; }
+    const hub = document.getElementById('server-hub-overlay');
+    if(hub && hub.style.display !== 'none'){ closeServerHub(); return; }
+  }
+});
+
 </script>
+
+<!-- SERVER HUB OVERLAY -->
+<div id="server-hub-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;overflow-y:auto;backdrop-filter:blur(6px);">
+  <div style="max-width:560px;margin:60px auto;padding:0 20px 60px;">
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-family:var(--vt);font-size:48px;background:linear-gradient(135deg,var(--accent2),var(--accent5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.1em;">SERVER HUB</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.3em;margin-top:6px;">REAL-TIME COLLABORATIVE WORKSPACE</div>
+      <button onclick="closeServerHub()" style="position:fixed;top:20px;right:20px;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:11px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.color='var(--accent3)';this.style.borderColor='var(--accent3)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">✕ Close</button>
+    </div>
+
+    <!-- Connection status -->
+    <div id="srv-status-bar" style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:10px;color:var(--text3);letter-spacing:.1em;">
+      <div id="srv-status-dot" style="width:7px;height:7px;border-radius:50%;background:#333;flex-shrink:0;"></div>
+      <span id="srv-status-txt">Not connected to any server</span>
+      <button id="srv-db-setup-btn" onclick="openFirebaseSetup()" style="margin-left:auto;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">⚙ DB Setup</button>
+      <button id="srv-disconnect-btn" onclick="disconnectServer()" style="display:none;margin-left:auto;background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Disconnect</button>
+    </div>
+
+    <!-- Active server panel (shown when connected) -->
+    <div id="srv-active-panel" style="display:none;">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;margin-bottom:16px;">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+          <div style="font-family:var(--vt);font-size:18px;color:var(--accent2);" id="srv-active-name">SERVER</div>
+          <div id="srv-member-count" style="font-size:9px;color:var(--text3);letter-spacing:.1em;margin-left:auto;"></div>
+        </div>
+        <!-- Members list -->
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);">
+          <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;margin-bottom:8px;">MEMBERS ONLINE</div>
+          <div id="srv-members-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+        <!-- Projects list -->
+        <div style="padding:10px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;">SERVER PROJECTS</div>
+            <button onclick="openCreateServerProject()" style="background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:9px;padding:4px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">+ New Project</button>
+          </div>
+          <div id="srv-projects-list"></div>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <button onclick="disconnectServer()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">Leave Server</button>
+      </div>
+    </div>
+
+    <!-- Join/Create tabs (shown when disconnected) -->
+    <div id="srv-lobby-panel">
+      <div style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
+        <button id="srv-tab-host" onclick="switchSrvTab('host')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">⚡ HOST SERVER</button>
+        <button id="srv-tab-join" onclick="switchSrvTab('join')" style="flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">→ JOIN SERVER</button>
+      </div>
+
+      <!-- HOST tab -->
+      <div id="srv-panel-host">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;">
+          <div style="font-family:var(--vt);font-size:16px;color:var(--accent);margin-bottom:14px;letter-spacing:.08em;">CREATE A SERVER</div>
+          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">YOUR DISPLAY NAME</label>
+          <input id="host-username" class="modal-inp" placeholder="e.g. Slash, DevX, Commander" style="margin-bottom:10px;">
+          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER NAME</label>
+          <input id="host-servername" class="modal-inp" placeholder="e.g. Project Chimera, The Lab" style="margin-bottom:10px;">
+          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER PASSWORD</label>
+          <input id="host-password" class="modal-inp" type="password" placeholder="Set a password for your server" style="margin-bottom:10px;">
+          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">CONFIRM PASSWORD</label>
+          <input id="host-password2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:16px;">
+          <button onclick="hostServer()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">⚡ Launch Server</button>
+          <div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;text-align:center;">Share your <strong style="color:var(--accent4);">server name + password</strong> with teammates. They also need to configure the same Firebase DB URL (⚙ DB Setup).</div>
+        </div>
+      </div>
+
+      <!-- JOIN tab -->
+      <div id="srv-panel-join" style="display:none;">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;">
+          <div style="font-family:var(--vt);font-size:16px;color:var(--accent2);margin-bottom:14px;letter-spacing:.08em;">JOIN A SERVER</div>
+          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">YOUR DISPLAY NAME</label>
+          <input id="join-username" class="modal-inp" placeholder="e.g. Slash, DevX, Commander" style="margin-bottom:10px;">
+          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER NAME</label>
+          <input id="join-servername" class="modal-inp" placeholder="Server name from host" style="margin-bottom:10px;">
+          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">PASSWORD</label>
+          <input id="join-password" class="modal-inp" type="password" placeholder="Server password" style="margin-bottom:16px;">
+          <button onclick="joinServer()" class="btn" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;color:var(--accent2);border-color:var(--accent2);">→ Join Server</button>
+        </div>
+      </div>
+
+      <!-- Recent servers -->
+      <div id="srv-recent-block" style="margin-top:16px;display:none;">
+        <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;margin-bottom:8px;">RECENTLY JOINED</div>
+        <div id="srv-recent-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVER PROJECT EDITOR OVERLAY -->
+<div id="srv-proj-editor" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:2100;overflow-y:auto;">
+  <div style="max-width:780px;margin:0 auto;padding:0;">
+    <!-- Topbar -->
+    <div style="height:42px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;position:sticky;top:0;z-index:10;">
+      <button onclick="closeSrvProjEditor()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;padding:0;" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">← Back to Server</button>
+      <span style="color:var(--border2);">|</span>
+      <span id="spe-title" style="font-family:var(--vt);font-size:18px;color:var(--accent2);letter-spacing:.06em;"></span>
+      <div id="spe-sync-indicator" style="margin-left:auto;font-size:9px;color:var(--text3);letter-spacing:.1em;display:flex;align-items:center;gap:6px;">
+        <div id="spe-sync-dot" style="width:6px;height:6px;border-radius:50%;background:#555;"></div>
+        <span id="spe-sync-txt">syncing…</span>
+      </div>
+      <div id="spe-online-members" style="display:flex;gap:5px;margin-left:10px;"></div>
+    </div>
+    <!-- Tabs -->
+    <div style="background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;">
+      <button class="spe-tab active" onclick="speSwitchTab('tasks')" data-tab="tasks">Tasks</button>
+      <button class="spe-tab" onclick="speSwitchTab('notes')" data-tab="notes">Notes</button>
+      <button class="spe-tab" onclick="speSwitchTab('bugs')" data-tab="bugs">Bug Tracker</button>
+      <button class="spe-tab" onclick="speSwitchTab('chat')" data-tab="chat">💬 Chat</button>
+    </div>
+    <!-- Content -->
+    <div style="padding:16px;">
+      <div id="spe-tab-tasks" class="spe-tab-content"></div>
+      <div id="spe-tab-notes" class="spe-tab-content" style="display:none;"></div>
+      <div id="spe-tab-bugs" class="spe-tab-content" style="display:none;"></div>
+      <div id="spe-tab-chat" class="spe-tab-content" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE SETUP MODAL -->
+<div id="firebase-setup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:3000;overflow-y:auto;backdrop-filter:blur(8px);">
+  <div style="max-width:540px;margin:60px auto;padding:0 20px 60px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-family:var(--vt);font-size:40px;color:var(--accent2);letter-spacing:.1em;">DATABASE SETUP</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.25em;margin-top:6px;">ONE-TIME SETUP — FREE, TAKES ~2 MIN</div>
+    </div>
+
+    <!-- Already have URL -->
+    <div id="fsm-has-url" style="display:none;background:var(--bg2);border:1px solid var(--accent);border-radius:3px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:9px;color:var(--accent);letter-spacing:.15em;margin-bottom:6px;">✓ DATABASE CONFIGURED</div>
+      <div id="fsm-current-url" style="font-size:10px;color:var(--text2);word-break:break-all;"></div>
+      <button onclick="clearFirebaseUrl()" style="margin-top:8px;background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:4px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Reset URL</button>
+    </div>
+
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;margin-bottom:16px;">
+      <div style="font-family:var(--vt);font-size:15px;color:var(--accent);margin-bottom:16px;letter-spacing:.08em;">HOW TO SET UP (FREE)</div>
+      
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(200,240,74,.15);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent);flex-shrink:0;font-family:var(--vt);">1</div>
+          <div>
+            <div style="font-size:11px;color:var(--text);margin-bottom:3px;">Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent2);">console.firebase.google.com</a></div>
+            <div style="font-size:9px;color:var(--text3);">Sign in with Google → Click "Create a project" → name it anything → skip Analytics</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(200,240,74,.15);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent);flex-shrink:0;font-family:var(--vt);">2</div>
+          <div>
+            <div style="font-size:11px;color:var(--text);margin-bottom:3px;">In the left sidebar → <strong style="color:var(--accent2);">Build → Realtime Database</strong></div>
+            <div style="font-size:9px;color:var(--text3);">Click "Create Database" → choose any location → start in <strong style="color:var(--accent4);">test mode</strong></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(200,240,74,.15);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent);flex-shrink:0;font-family:var(--vt);">3</div>
+          <div>
+            <div style="font-size:11px;color:var(--text);margin-bottom:3px;">Copy your <strong style="color:var(--accent2);">Database URL</strong> from the top of the Realtime Database page</div>
+            <div style="font-size:9px;color:var(--text3);">Looks like: <code style="color:var(--accent4);background:var(--bg3);padding:1px 4px;">https://your-project-default-rtdb.firebaseio.com</code></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(200,240,74,.15);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent);flex-shrink:0;font-family:var(--vt);">4</div>
+          <div>
+            <div style="font-size:11px;color:var(--text);margin-bottom:3px;">Paste it below — done! Share this URL with your team</div>
+            <div style="font-size:9px;color:var(--text3);">Everyone on your team pastes the same URL to connect to the same server network</div>
+          </div>
+        </div>
+      </div>
+
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:6px;">YOUR FIREBASE DATABASE URL</label>
+      <input id="fsm-url-input" class="modal-inp" placeholder="https://your-project-default-rtdb.firebaseio.com" style="margin-bottom:12px;font-size:11px;">
+      <button onclick="saveFirebaseUrl()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">✓ Save &amp; Connect</button>
+    </div>
+
+    <div style="text-align:center;">
+      <button onclick="closeFirebaseSetup()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;">Cancel</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

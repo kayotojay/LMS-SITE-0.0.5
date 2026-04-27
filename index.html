@@ -61,7 +61,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 /* ========== ROOT SCREEN ========== */
 #root-screen{
   display:flex;flex-direction:column;align-items:center;min-height:100vh;
-  padding:40px 24px 60px;overflow-y:visible;position:relative;
+  padding:20px 24px 40px;overflow-y:visible;position:relative;
   background:radial-gradient(ellipse at 20% 20%,#0d0d1a,var(--bg) 50%),radial-gradient(ellipse at 80% 80%,#0a0a14,var(--bg) 50%);
 }
 [data-theme="light"] #root-screen{background:radial-gradient(ellipse at 20% 20%,#e0e8f0,var(--bg) 60%);}
@@ -69,7 +69,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .rs-header{text-align:center;margin-bottom:32px;position:relative;z-index:1;animation:fadeUp .5s ease both;}
 .rs-logo{font-family:var(--vt);font-size:56px;letter-spacing:.12em;line-height:1;background:linear-gradient(135deg,#c8f04a,#4af0c8,#a04af0,#c8f04a);background-size:300% 300%;animation:gradShift 6s ease infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .rs-sub{font-size:10px;color:var(--text3);letter-spacing:.3em;margin-top:6px;text-transform:uppercase;}
-.rs-actions{display:flex;gap:10px;margin-bottom:28px;position:relative;z-index:1;animation:fadeUp .5s .1s ease both;flex-wrap:wrap;justify-content:center;}
+.rs-action-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.rs-action-card{background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:16px 14px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:3px;transition:border-color .2s,transform .15s,box-shadow .2s;font-family:var(--font);position:relative;overflow:hidden;}
+.rs-action-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--card-accent,var(--accent));opacity:0;transition:opacity .2s;}
+.rs-action-card:hover{border-color:var(--card-accent,var(--accent));transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.3);}
+.rs-action-card:hover::before{opacity:1;}
+.rs-action-card.primary-card{background:linear-gradient(135deg,rgba(200,240,74,.08),rgba(74,240,200,.04));border-color:rgba(200,240,74,.3);}
+.rs-action-card.primary-card:hover{border-color:var(--accent);box-shadow:0 6px 24px rgba(200,240,74,.08);}
+.rs-action-icon{font-family:var(--vt);font-size:22px;color:var(--accent);line-height:1;}
+.rs-action-label{font-size:11px;color:var(--text);letter-spacing:.05em;margin-top:4px;}
+.rs-action-sub{font-size:9px;color:var(--text3);letter-spacing:.06em;}
+#rs-account-chip:hover #rs-acct-name{color:var(--accent);}
+
 .rs-btn{font-family:var(--font);font-size:11px;letter-spacing:.08em;padding:9px 20px;cursor:pointer;border:1px solid var(--border2);border-radius:var(--radius);background:linear-gradient(135deg,var(--bg3),var(--bg2));color:var(--text2);transition:all .2s;position:relative;overflow:hidden;}
 .rs-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,240,74,.08),rgba(74,240,200,.08),rgba(160,74,240,.08));background-size:300%;animation:gradBtn 4s ease infinite;opacity:0;transition:opacity .2s;}
 .rs-btn:hover{color:var(--accent);border-color:var(--accent);box-shadow:0 0 16px rgba(200,240,74,.1);}
@@ -532,6 +543,9 @@ select option{background:var(--bg2);}
         <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
         <input id="li-password" class="modal-inp" type="password" placeholder="Your password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
         <button onclick="doLogin()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Sign In →</button>
+        <div style="text-align:center;margin-top:12px;">
+          <button onclick="showForgotPassword()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:9px;cursor:pointer;letter-spacing:.08em;" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">Forgot Password?</button>
+        </div>
       </div>
 
       <!-- Create Account panel -->
@@ -560,17 +574,59 @@ select option{background:var(--bg2);}
 <!-- ROOT SCREEN -->
 <div id="root-screen-wrap" style="height:100%;overflow-y:auto;display:none;">
 <div id="root-screen" style="min-height:100%;overflow-y:visible;">
-  <div class="rs-header">
+
+  <!-- Top bar with account info -->
+  <div style="position:relative;z-index:2;width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;padding:14px 0 0;animation:fadeUp .3s ease both;">
+    <div id="rs-account-chip" style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openAccountSettings()" title="Account Settings">
+      <div id="rs-avatar" style="width:30px;height:30px;border-radius:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:17px;color:#080808;flex-shrink:0;">?</div>
+      <div>
+        <div id="rs-acct-name" style="font-size:11px;color:var(--text);letter-spacing:.06em;">—</div>
+        <div id="rs-acct-handle" style="font-size:8px;color:var(--text3);letter-spacing:.1em;">not signed in</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="rs-btn" onclick="openRootSettings()" title="Settings" style="padding:6px 12px;">⚙ Settings</button>
+      <button class="rs-btn primary" id="rs-server-btn" onclick="openServerHub()" style="border-color:var(--accent2);color:var(--accent2);padding:6px 14px;">⚡ Server Hub</button>
+    </div>
+  </div>
+
+  <div class="rs-header" style="margin-top:20px;">
     <div class="rs-logo">LMS</div>
     <div class="rs-sub">Dev Hub &mdash; Project Roots</div>
   </div>
-  <div class="rs-actions">
-    <button class="rs-btn primary" onclick="openCreateRoot()">New Project</button>
-    <button class="rs-btn" onclick="triggerImportRoot()">Import Root</button>
-    <button class="rs-btn" onclick="showExportLastManTasks()">Export Starter Template</button>
-    <button class="rs-btn" onclick="openRootSettings()">Settings</button>
-    <button class="rs-btn" onclick="openAccountSettings()" style="border-color:var(--accent2);color:var(--accent2);" id="rs-account-btn">⚙ Account</button>
-    <button class="rs-btn primary" id="rs-server-btn" onclick="openServerHub()" style="border-color:var(--accent2);color:var(--accent2);">⚡ Server Hub</button>
+
+  <!-- Redesigned action buttons - card style grid -->
+  <div class="rs-action-grid" style="position:relative;z-index:1;animation:fadeUp .5s .1s ease both;width:100%;max-width:960px;margin-bottom:28px;">
+    <button class="rs-action-card primary-card" onclick="openCreateRoot()">
+      <span class="rs-action-icon">+</span>
+      <span class="rs-action-label">New Project</span>
+      <span class="rs-action-sub">Start a fresh root</span>
+    </button>
+    <button class="rs-action-card" onclick="openServerHub()" style="--card-accent:var(--accent2);">
+      <span class="rs-action-icon" style="color:var(--accent2);">⚡</span>
+      <span class="rs-action-label" style="color:var(--accent2);">Server Hub</span>
+      <span class="rs-action-sub">Join or host a team server</span>
+    </button>
+    <button class="rs-action-card" onclick="triggerImportRoot()">
+      <span class="rs-action-icon">↑</span>
+      <span class="rs-action-label">Import Root</span>
+      <span class="rs-action-sub">Load a .lmsroot file</span>
+    </button>
+    <button class="rs-action-card" onclick="showExportLastManTasks()">
+      <span class="rs-action-icon">↓</span>
+      <span class="rs-action-label">Starter Template</span>
+      <span class="rs-action-sub">Export sample tasks</span>
+    </button>
+    <button class="rs-action-card" onclick="openAccountSettings()" style="--card-accent:var(--accent5);">
+      <span class="rs-action-icon" style="color:var(--accent5);">◈</span>
+      <span class="rs-action-label" style="color:var(--accent5);">Account</span>
+      <span class="rs-action-sub">Profile & password</span>
+    </button>
+    <button class="rs-action-card danger-card" id="logout-action-card" style="display:none;" onclick="if(confirm('Sign out?'))logoutUser()">
+      <span class="rs-action-icon" style="color:var(--accent3);">→</span>
+      <span class="rs-action-label" style="color:var(--accent3);">Sign Out</span>
+      <span class="rs-action-sub">End your session</span>
+    </button>
   </div>
 
   <!-- SERVER STATUS BAR — only shown when connected -->
@@ -614,6 +670,15 @@ select option{background:var(--bg2);}
     <p>No projects yet. Create a root to get started.</p>
     <button class="rs-btn primary" onclick="openCreateRoot()">Create First Project</button>
   </div>
+
+  <!-- Footer -->
+  <footer style="position:relative;z-index:1;width:100%;max-width:960px;margin-top:auto;padding:28px 0 20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+    <div style="font-family:var(--vt);font-size:14px;color:var(--text3);letter-spacing:.12em;">LMS // DEV HUB</div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text3);letter-spacing:.1em;">
+      <span>SUPPORT:</span>
+      <a href="mailto:support@lmsdevhub.com" style="color:var(--accent2);text-decoration:none;letter-spacing:.08em;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">support@lmsdevhub.com</a>
+    </div>
+  </footer>
 </div>
 </div>
 
@@ -2461,6 +2526,9 @@ function resetLoginScreen(){
       <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
       <input id="li-password" class="modal-inp" type="password" placeholder="Your password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Sign In →</button>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="showForgotPassword()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:9px;cursor:pointer;letter-spacing:.08em;" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">Forgot Password?</button>
+      </div>
     </div>
     <div id="lpanel-create" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:20px;">
       <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">USERNAME <span style="color:var(--text3);font-size:8px;">(login ID — no spaces)</span></label>
@@ -2508,6 +2576,8 @@ function closeAccountSettings(){
 
 function renderAccountSettings(){
   const el=document.getElementById('acct-settings-body');if(!el||!currentUser)return;
+  const emailRl=currentUser.uid?checkRateLimit('email_'+currentUser.uid,3,25):{allowed:true,used:0,max:3};
+  const passRl=currentUser.uid?checkRateLimit('pass_'+currentUser.uid,3,25):{allowed:true,used:0,max:3};
   el.innerHTML=`
     <!-- Profile -->
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;margin-bottom:14px;">
@@ -2525,15 +2595,40 @@ function renderAccountSettings(){
         <input id="acct-dispname-inp" class="modal-inp" style="flex:1;margin:0;" value="${escHtml(currentUser.displayName||currentUser.username)}" placeholder="Display name">
         <button onclick="saveDisplayName()" class="btn accent" style="white-space:nowrap;">Save</button>
       </div>
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">EMAIL ${currentUser.email?'<span style="color:var(--accent);font-size:8px;">✓ LINKED</span>':'<span style="color:var(--text3);font-size:8px;">(not linked)</span>'}</label>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">EMAIL ${currentUser.email?'<span style="color:var(--accent);font-size:8px;">✓ LINKED</span>':'<span style="color:var(--text3);font-size:8px;">(not linked)</span>'} <span style="color:var(--text3);font-size:8px;">${emailRl.used}/${emailRl.max} changes in 25 days</span></label>
       ${currentUser.email
-        ? `<div style="font-size:10px;color:var(--text2);margin-bottom:4px;">${escHtml(currentUser.email)}</div>
-           <button onclick="unlinkEmail()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Unlink Email</button>`
-        : `<div style="display:flex;gap:6px;">
-             <input id="acct-email-inp" class="modal-inp" style="flex:1;margin:0;" type="email" placeholder="your@email.com">
-             <button onclick="linkEmail()" class="btn" style="white-space:nowrap;color:var(--accent2);border-color:var(--accent2);">Link</button>
+        ? `<div style="font-size:10px;color:var(--text2);margin-bottom:8px;">${escHtml(currentUser.email)}</div>
+           <div style="display:flex;gap:6px;flex-wrap:wrap;">
+             ${emailRl.allowed
+               ? `<div style="display:flex;gap:6px;flex:1;">
+                    <input id="acct-email-change-inp" class="modal-inp" style="flex:1;margin:0;" type="email" placeholder="New email address">
+                    <button onclick="changeEmail()" class="btn" style="white-space:nowrap;color:var(--accent2);border-color:var(--accent2);">Change</button>
+                  </div>`
+               : `<div style="font-size:9px;color:var(--accent3);">Email change limit reached. Try again in ${emailRl.daysLeft} day(s).</div>`
+             }
+             <button onclick="unlinkEmail()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Unlink</button>
            </div>`
+        : emailRl.allowed
+          ? `<div style="display:flex;gap:6px;">
+               <input id="acct-email-inp" class="modal-inp" style="flex:1;margin:0;" type="email" placeholder="your@email.com">
+               <button onclick="linkEmail()" class="btn" style="white-space:nowrap;color:var(--accent2);border-color:var(--accent2);">Link</button>
+             </div>`
+          : `<div style="font-size:9px;color:var(--accent3);">Email change limit reached. Try again in ${emailRl.daysLeft} day(s).</div>`
       }
+    </div>
+    <!-- Change Password -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;margin-bottom:14px;">
+      <div style="font-size:8px;color:var(--text3);letter-spacing:.22em;margin-bottom:14px;">CHANGE PASSWORD <span style="color:var(--text3);font-size:8px;font-family:var(--font);">${passRl.used}/${passRl.max} changes in 25 days</span></div>
+      ${passRl.allowed ? `
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">CURRENT PASSWORD</label>
+      <input id="cp-current" class="modal-inp" type="password" placeholder="Current password" style="margin-bottom:10px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">NEW PASSWORD</label>
+      <input id="cp-new1" class="modal-inp" type="password" placeholder="New password (min. 6 chars)" style="margin-bottom:10px;">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">CONFIRM NEW PASSWORD</label>
+      <input id="cp-new2" class="modal-inp" type="password" placeholder="Confirm new password" style="margin-bottom:14px;">
+      <div id="cp-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
+      <button onclick="changePassword()" class="btn accent" style="width:100%;padding:9px;font-size:11px;letter-spacing:.1em;">Change Password</button>
+      ` : `<div style="font-size:9px;color:var(--accent3);">Password change limit reached (3 per 25 days). Try again in ${passRl.daysLeft} day(s).</div>`}
     </div>
     <!-- Danger zone -->
     <div style="background:var(--bg2);border:1px solid rgba(240,74,74,.3);border-radius:3px;padding:18px;">
@@ -2556,6 +2651,7 @@ async function saveDisplayName(){
   localStorage.setItem('lms_session',JSON.stringify(currentUser));
   toast('Display name updated: '+val);
   renderAccountSettings();
+  updateAccountChip();
   // Update presence if on server
   if(srvState.connected&&srvState.myId){
     await fbPatch('/servers/'+srvState.serverKey+'/members/'+srvState.myId,{name:val});
@@ -2563,16 +2659,98 @@ async function saveDisplayName(){
   }
 }
 
+async function changePassword(){
+  const current=document.getElementById('cp-current').value;
+  const new1=document.getElementById('cp-new1').value;
+  const new2=document.getElementById('cp-new2').value;
+  const errEl=document.getElementById('cp-error');
+  if(!current||!new1||!new2){errEl.textContent='Fill in all fields.';errEl.style.display='block';return;}
+  if(new1.length<6){errEl.textContent='New password must be at least 6 characters.';errEl.style.display='block';return;}
+  if(new1!==new2){errEl.textContent='New passwords do not match.';errEl.style.display='block';return;}
+  // Verify current password
+  const currentHash=await hashPass(current);
+  const acc=await fbGet('/accounts/'+currentUser.uid);
+  if(!acc||acc.passHash!==currentHash){errEl.textContent='Current password is incorrect.';errEl.style.display='block';return;}
+  // Rate limit
+  const rl=checkRateLimit('pass_'+currentUser.uid,3,25);
+  if(!rl.allowed){errEl.textContent='Password change limit reached. Try again in '+rl.daysLeft+' day(s).';errEl.style.display='block';return;}
+  bumpRateLimit('pass_'+currentUser.uid,3,25);
+  const newHash=await hashPass(new1);
+  await fbPatch('/accounts/'+currentUser.uid,{passHash:newHash});
+  errEl.style.display='none';
+  toast('✓ Password changed successfully!');
+  renderAccountSettings();
+}
+
+async function changeEmail(){
+  const newEmail=(document.getElementById('acct-email-change-inp').value||'').trim().toLowerCase();
+  if(!newEmail||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newEmail)){toast('Enter a valid email');return;}
+  // Rate limit
+  const rl=checkRateLimit('email_'+currentUser.uid,3,25);
+  if(!rl.allowed){toast('Email change limit reached. Try again in '+rl.daysLeft+' day(s).');return;}
+  // Check not taken
+  const accounts=await fbGet('/accounts')||{};
+  const taken=Object.values(accounts).some(a=>a.email&&a.email===newEmail&&a.uid!==currentUser.uid);
+  if(taken){toast('Email already linked to another account');return;}
+  bumpRateLimit('email_'+currentUser.uid,3,25);
+  // Remove old email index
+  if(currentUser.email){const oldKey=currentUser.email.replace(/\./g,'_').replace(/@/g,'__at__');await fbDelete('/emailIndex/'+oldKey);}
+  // Send verification to new email
+  await sendEmailVerification(newEmail,'change_email_'+currentUser.uid);
+  closeAccountSettings();
+  showChangeEmailVerifyModal(newEmail);
+}
+
+function showChangeEmailVerifyModal(email){
+  let m=document.getElementById('change-email-verify-modal');
+  if(!m){m=document.createElement('div');m.id='change-email-verify-modal';m.style.cssText='display:flex;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:7000;align-items:center;justify-content:center;';document.body.appendChild(m);}
+  m.style.display='flex';
+  m.innerHTML=`
+    <div style="max-width:380px;width:93%;background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:24px;">
+      <div style="font-family:var(--vt);font-size:22px;color:var(--accent2);margin-bottom:6px;letter-spacing:.08em;">VERIFY NEW EMAIL</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:20px;line-height:1.7;">
+        A 6-digit OTP was sent to <strong style="color:var(--text);">${escHtml(email)}</strong>.<br>
+        <span style="font-size:9px;color:var(--text3);">Valid for 15 minutes.</span>
+      </div>
+      <input id="ce-verify-inp" class="modal-inp" placeholder="6-digit code" maxlength="6" style="letter-spacing:.2em;font-size:16px;text-align:center;margin-bottom:10px;">
+      <div id="ce-verify-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
+      <button onclick="submitChangeEmailVerify('${escHtml(email)}')" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Verify & Save Email →</button>
+      <button onclick="document.getElementById('change-email-verify-modal').style.display='none'" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;margin-top:12px;width:100%;letter-spacing:.06em;">Cancel</button>
+    </div>`;
+}
+
+async function submitChangeEmailVerify(email){
+  const entered=(document.getElementById('ce-verify-inp').value||'').trim();
+  const errEl=document.getElementById('ce-verify-error');
+  if(!entered||entered.length!==6){errEl.textContent='Enter the 6-digit code.';errEl.style.display='block';return;}
+  const key=email.replace(/\./g,'_').replace(/@/g,'__at__');
+  const stored=await fbGet('/emailCodes/'+key);
+  if(!stored){errEl.textContent='Code expired.';errEl.style.display='block';return;}
+  if(Date.now()>stored.expires){errEl.textContent='Code expired.';errEl.style.display='block';await fbDelete('/emailCodes/'+key);return;}
+  if(stored.code!==entered){errEl.textContent='Wrong code.';errEl.style.display='block';return;}
+  await fbDelete('/emailCodes/'+key);
+  await fbPatch('/accounts/'+currentUser.uid,{email});
+  await fbSet('/emailIndex/'+email.replace(/\./g,'_').replace(/@/g,'__at__'),currentUser.uid);
+  currentUser.email=email;
+  localStorage.setItem('lms_session',JSON.stringify(currentUser));
+  document.getElementById('change-email-verify-modal').style.display='none';
+  toast('✓ Email updated to '+email);
+  openAccountSettings();
+}
+
 async function linkEmail(){
   const email=(document.getElementById('acct-email-inp').value||'').trim().toLowerCase();
   if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast('Enter a valid email');return;}
+  // Rate limit
+  const rl=checkRateLimit('email_'+currentUser.uid,3,25);
+  if(!rl.allowed){toast('Email change limit reached. Try again in '+rl.daysLeft+' day(s).');return;}
   // Check not taken
   const accounts=await fbGet('/accounts')||{};
   const taken=Object.values(accounts).some(a=>a.email&&a.email===email&&a.uid!==currentUser.uid);
   if(taken){toast('Email already linked to another account');return;}
+  bumpRateLimit('email_'+currentUser.uid,3,25);
   await sendEmailVerification(email,'link');
   closeAccountSettings();
-  // Show verification on login screen... but we're logged in, so show a modal
   showLinkVerifyModal(email);
 }
 
@@ -2652,6 +2830,141 @@ async function confirmDeleteAccount(){
     closeModal();closeAccountSettings();logoutUser();
     toast('Account deleted. Goodbye.');
   },danger:true}]);
+}
+
+
+// =====================================================
+// FORGOT PASSWORD (from login screen)
+// =====================================================
+function showForgotPassword(){
+  const loginBody=document.getElementById('login-body-wrap');
+  loginBody.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:24px;text-align:left;">
+      <div style="font-family:var(--vt);font-size:18px;color:var(--accent2);margin-bottom:6px;letter-spacing:.08em;">FORGOT PASSWORD</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:20px;line-height:1.7;">
+        Enter your account email. We'll send a 6-digit reset code.<br>
+        <span style="font-size:9px;color:var(--text3);">You must have an email linked to your account.</span>
+      </div>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">EMAIL ADDRESS</label>
+      <input id="fp-email-inp" class="modal-inp" type="email" placeholder="your@email.com" style="margin-bottom:14px;" onkeydown="if(event.key==='Enter')submitForgotPassword()">
+      <div id="fp-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
+      <button onclick="submitForgotPassword()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Send Reset Code →</button>
+      <button onclick="resetLoginScreen()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;margin-top:12px;width:100%;letter-spacing:.06em;">← Back to Sign In</button>
+    </div>`;
+}
+
+async function submitForgotPassword(){
+  const email=(document.getElementById('fp-email-inp').value||'').trim().toLowerCase();
+  const errEl=document.getElementById('fp-error');
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){errEl.textContent='Enter a valid email.';errEl.style.display='block';return;}
+  if(!getSrvDbUrl()){errEl.textContent='Database not configured.';errEl.style.display='block';return;}
+  // Check account exists with this email
+  const accounts=await fbGet('/accounts')||{};
+  const entry=Object.values(accounts).find(a=>a.email&&a.email.toLowerCase()===email);
+  if(!entry){errEl.textContent='No account found with that email.';errEl.style.display='block';return;}
+  // Rate limit: 3 per 25 days
+  const rl=checkRateLimit('forgot_'+entry.uid,3,25);
+  if(!rl.allowed){errEl.textContent='Too many reset requests. Try again in '+rl.daysLeft+' day(s).';errEl.style.display='block';return;}
+  bumpRateLimit('forgot_'+entry.uid,3,25);
+  // Store pending reset UID
+  pendingResetUid=entry.uid;
+  // Send OTP
+  await sendEmailVerification(email,'reset');
+  showForgotPasswordCodePanel(email);
+}
+
+let pendingResetUid=null;
+
+function showForgotPasswordCodePanel(email){
+  const loginBody=document.getElementById('login-body-wrap');
+  loginBody.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:24px;text-align:left;">
+      <div style="font-family:var(--vt);font-size:18px;color:var(--accent2);margin-bottom:6px;letter-spacing:.08em;">ENTER CODE</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:20px;line-height:1.7;">
+        A 6-digit code was sent to <strong style="color:var(--text);">${escHtml(email)}</strong>.<br>
+        <span style="font-size:9px;color:var(--text3);">Check your inbox. Valid for 15 minutes.</span>
+      </div>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">OTP CODE</label>
+      <input id="fp-code-inp" class="modal-inp" placeholder="6-digit code" maxlength="6" style="letter-spacing:.2em;font-size:16px;text-align:center;margin-bottom:14px;" onkeydown="if(event.key==='Enter')submitForgotCode('${escHtml(email)}')">
+      <div id="fp-code-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
+      <button onclick="submitForgotCode('${escHtml(email)}')" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Verify →</button>
+      <button onclick="showForgotPassword()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;margin-top:12px;width:100%;letter-spacing:.06em;">← Back</button>
+    </div>`;
+}
+
+async function submitForgotCode(email){
+  const entered=(document.getElementById('fp-code-inp').value||'').trim();
+  const errEl=document.getElementById('fp-code-error');
+  if(!entered||entered.length!==6){errEl.textContent='Enter the 6-digit code.';errEl.style.display='block';return;}
+  const key=email.replace(/\./g,'_').replace(/@/g,'__at__');
+  const stored=await fbGet('/emailCodes/'+key);
+  if(!stored){errEl.textContent='Code expired. Try again.';errEl.style.display='block';return;}
+  if(Date.now()>stored.expires){errEl.textContent='Code expired.';errEl.style.display='block';await fbDelete('/emailCodes/'+key);return;}
+  if(stored.code!==entered){errEl.textContent='Wrong code.';errEl.style.display='block';return;}
+  await fbDelete('/emailCodes/'+key);
+  showSetNewPasswordPanel(email);
+}
+
+function showSetNewPasswordPanel(email){
+  const loginBody=document.getElementById('login-body-wrap');
+  loginBody.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:24px;text-align:left;">
+      <div style="font-family:var(--vt);font-size:18px;color:var(--accent);margin-bottom:6px;letter-spacing:.08em;">NEW PASSWORD</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:20px;line-height:1.7;">
+        Identity verified. Choose a new password for your account.
+      </div>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">NEW PASSWORD</label>
+      <input id="np-pass1" class="modal-inp" type="password" placeholder="New password" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('np-pass2').focus()">
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">CONFIRM PASSWORD</label>
+      <input id="np-pass2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:14px;" onkeydown="if(event.key==='Enter')submitNewPassword()">
+      <div id="np-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
+      <button onclick="submitNewPassword()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Set New Password →</button>
+    </div>`;
+}
+
+async function submitNewPassword(){
+  const pass1=document.getElementById('np-pass1').value;
+  const pass2=document.getElementById('np-pass2').value;
+  const errEl=document.getElementById('np-error');
+  if(!pass1||pass1.length<6){errEl.textContent='Password must be at least 6 characters.';errEl.style.display='block';return;}
+  if(pass1!==pass2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
+  if(!pendingResetUid){errEl.textContent='Session expired. Start over.';errEl.style.display='block';return;}
+  const passHash=await hashPass(pass1);
+  await fbPatch('/accounts/'+pendingResetUid,{passHash});
+  pendingResetUid=null;
+  resetLoginScreen();
+  toast('✓ Password reset! Sign in with your new password.');
+}
+
+// =====================================================
+// RATE LIMITING HELPERS (localStorage, client-side)
+// =====================================================
+function getRateLimitData(key){
+  try{const r=localStorage.getItem('lms_rl_'+key);return r?JSON.parse(r):{attempts:[]};}catch(e){return{attempts:[]};}
+}
+function saveRateLimitData(key,data){try{localStorage.setItem('lms_rl_'+key,JSON.stringify(data));}catch(e){}}
+
+function checkRateLimit(key,maxAttempts,windowDays){
+  const windowMs=windowDays*24*60*60*1000;
+  const now=Date.now();
+  const data=getRateLimitData(key);
+  const recent=(data.attempts||[]).filter(t=>now-t<windowMs);
+  const allowed=recent.length<maxAttempts;
+  let daysLeft=0;
+  if(!allowed){
+    const oldest=Math.min(...recent);
+    daysLeft=Math.ceil((oldest+windowMs-now)/(24*60*60*1000));
+  }
+  return{allowed,used:recent.length,max:maxAttempts,daysLeft};
+}
+
+function bumpRateLimit(key,maxAttempts,windowDays){
+  const windowMs=windowDays*24*60*60*1000;
+  const now=Date.now();
+  const data=getRateLimitData(key);
+  const recent=(data.attempts||[]).filter(t=>now-t<windowMs);
+  recent.push(now);
+  saveRateLimitData(key,{attempts:recent});
 }
 
 
@@ -2764,14 +3077,21 @@ function logoutUser(){
 
 // Add logout button to root screen header actions (called after DOM ready)
 function addLogoutBtn(){
-  const actions=document.querySelector('.rs-actions');
-  if(!actions||document.getElementById('logout-btn'))return;
-  const btn=document.createElement('button');
-  btn.id='logout-btn';btn.className='rs-btn';
-  btn.onclick=()=>{if(confirm('Sign out of your account?'))logoutUser();};
-  btn.style.borderColor='var(--accent3)';btn.style.color='var(--accent3)';
-  btn.textContent='Sign Out';
-  actions.appendChild(btn);
+  // Show logout card
+  const logoutCard=document.getElementById('logout-action-card');
+  if(logoutCard)logoutCard.style.display='flex';
+  // Update account chip
+  updateAccountChip();
+}
+
+function updateAccountChip(){
+  if(!currentUser)return;
+  const nameEl=document.getElementById('rs-acct-name');
+  const handleEl=document.getElementById('rs-acct-handle');
+  const avatarEl=document.getElementById('rs-avatar');
+  if(nameEl)nameEl.textContent=currentUser.displayName||currentUser.username;
+  if(handleEl)handleEl.textContent='@'+currentUser.username;
+  if(avatarEl)avatarEl.textContent=(currentUser.displayName||currentUser.username).charAt(0).toUpperCase();
 }
 
 // =====================================================

@@ -876,6 +876,8 @@ select option{background:var(--bg2);}
         <div class="g-progress-bar"><div class="g-progress-fill" id="g-bar" style="width:0%"></div></div>
         <div class="g-progress-label" id="g-label">overall progress</div>
         <div class="divider"></div>
+        <!-- Import log badge — shown after any import -->
+        <div id="dash-import-badge" style="display:none;background:rgba(200,240,74,.06);border:1px solid rgba(200,240,74,.2);border-radius:2px;padding:8px 12px;margin-bottom:12px;font-size:9px;color:var(--text2);letter-spacing:.08em;align-items:center;gap:8px;"></div>
         <div class="section-hdr"><span class="section-title" style="font-size:16px">Recent Activity</span></div>
         <div class="timeline" id="activity-log"></div>
       </div>
@@ -1198,7 +1200,19 @@ function setLayout(l){SETTINGS.layout=l;saveSettings();applySettings();}
 // =====================================================
 function loadRoots(){try{const r=localStorage.getItem(ROOT_SK);if(r)roots=JSON.parse(r);}catch(e){roots=[];}if(!Array.isArray(roots))roots=[];}
 function saveRoots(){try{localStorage.setItem(ROOT_SK,JSON.stringify(roots));}catch(e){}}
-function getRootData(id){const sk='lms_proj_'+id;try{const r=localStorage.getItem(sk);if(r)return JSON.parse(r);}catch(e){}return newProjectData();}
+function getRootData(id){
+  const sk='lms_proj_'+id;
+  try{
+    const r=localStorage.getItem(sk);
+    if(r){
+      const parsed=JSON.parse(r);
+      // Merge with defaults so missing keys never crash anything
+      const defaults=newProjectData();
+      return Object.assign({},defaults,parsed);
+    }
+  }catch(e){}
+  return newProjectData();
+}
 function saveRootData(id,data){const sk='lms_proj_'+id;try{localStorage.setItem(sk,JSON.stringify(data));}catch(e){}}
 
 function newProjectData(){
@@ -1251,6 +1265,7 @@ function renderRootGrid(){
   if(!roots.length){empty.style.display='block';return;}
   empty.style.display='none';
   roots.forEach(root=>{
+    try{
     const data=getRootData(root.id);
     const phases=getPhasesForData(data);
     const prog=calcProgress(data,phases);
@@ -1282,6 +1297,7 @@ function renderRootGrid(){
       </div>`;
     card.addEventListener('click',()=>openRoot(root.id));
     grid.appendChild(card);
+    }catch(err){console.warn('Failed to render root card',root.id,err);}
   });
 }
 
@@ -1426,6 +1442,22 @@ function exportRoot(id){
   toast('Root exported');
 }
 function exportCurrentRoot(){if(activeRootId)exportRoot(activeRootId);}
+
+// ---- SERVER ROOT EXPORT ----
+async function exportServerRoot(projId){
+  if(!srvState.connected)return;
+  toast('Fetching server project…');
+  const proj=await fbGet('/servers/'+srvState.serverKey+'/projects/'+projId);
+  if(!proj){toast('Project not found');return;}
+  const blob={_type:'lmsroot',_version:2,_source:'server',root:{id:projId,name:proj.name||'server-project',engine:proj.engine||'',genre:proj.genre||'',color:proj.color||'var(--accent)',created:proj.createdAt?new Date(proj.createdAt).toLocaleDateString():''},data:proj.data||{},phases:{main:proj.data?.customPhases?.main||[],sub:proj.data?.customPhases?.sub||[]}};
+  downloadFile(JSON.stringify(blob,null,2),(proj.name||'server-project').replace(/\s+/g,'-').toLowerCase()+'.lmsroot','application/json');
+  toast('Server root exported');
+}
+
+// ---- IMPORT ROOT (with overwrite/append modal) ----
+let _pendingImportBlob=null;
+let _pendingImportType=null;
+
 function triggerImportRoot(){document.getElementById('import-root-file').click();}
 function importRootFile(input){
   const file=input.files[0];if(!file)return;
@@ -1434,11 +1466,8 @@ function importRootFile(input){
     try{
       const blob=JSON.parse(e.target.result);
       if(blob._type!=='lmsroot')throw new Error('Not a .lmsroot file');
-      const newId='root_'+Date.now();
-      const root={...blob.root,id:newId,created:new Date().toLocaleDateString()};
-      const data=blob.data||newProjectData();
-      if(blob.phases){if(!data.customPhases)data.customPhases={main:[],sub:[]};if(blob.phases.main?.length)data.customPhases.main=[...blob.phases.main];if(blob.phases.sub?.length)data.customPhases.sub=[...blob.phases.sub];}
-      roots.push(root);saveRoots();saveRootData(newId,data);renderRootGrid();toast('Imported: '+root.name);
+      _pendingImportBlob=blob;_pendingImportType='root';
+      showImportModal('root',blob.root?.name||file.name);
     }catch(err){toast('Import failed: '+err.message);}
   };
   reader.readAsText(file);input.value='';
@@ -1481,11 +1510,8 @@ function importTasksFile(input){
     try{
       const blob=JSON.parse(e.target.result);
       if(blob._type!=='lmstasks')throw new Error('Not a .lmstasks file');
-      if(!D.customPhases)D.customPhases={main:[],sub:[]};
-      const existing=new Set([...D.customPhases.main,...D.customPhases.sub].map(p=>p.id));
-      (blob.main||[]).forEach(ph=>{if(!existing.has(ph.id))D.customPhases.main.push(ph);});
-      (blob.sub||[]).forEach(ph=>{if(!existing.has(ph.id))D.customPhases.sub.push({...ph,_subPhase:true});});
-      save();buildPhaseGrids();updateGlobal();toast('Tasks imported: '+(blob._name||'file'));
+      _pendingImportBlob=blob;_pendingImportType='tasks';
+      showImportModal('tasks',blob._name||file.name);
     }catch(err){toast('Import failed: '+err.message);}
   };
   reader.readAsText(file);input.value='';
@@ -1499,12 +1525,8 @@ function importBackupFile(input){
     try{
       const backup=JSON.parse(e.target.result);
       if(!backup.roots)throw new Error('Invalid backup file');
-      backup.roots.forEach(root=>{
-        if(!roots.find(r=>r.id===root.id))roots.push(root);
-        if(backup.data&&backup.data[root.id])saveRootData(root.id,backup.data[root.id]);
-      });
-      saveRoots();if(activeRootId)D=getRootData(activeRootId);
-      toast('Backup restored: '+backup.roots.length+' projects');
+      _pendingImportBlob=backup;_pendingImportType='backup';
+      showImportModal('backup',file.name+' ('+backup.roots.length+' projects)');
     }catch(err){toast('Restore failed: '+err.message);}
   };
   reader.readAsText(file);input.value='';
@@ -1515,6 +1537,202 @@ function gdriveExportAll(){
   roots.forEach(r=>{data.data[r.id]=getRootData(r.id);});
   downloadFile(JSON.stringify(data,null,2),'lms-devhub-backup.json','application/json');
   toast('Full backup downloaded');
+}
+
+// ====================================================
+// IMPORT MODAL — overwrite / append + dashboard notice
+// ====================================================
+function showImportModal(type,label){
+  const old=document.getElementById('import-mode-modal');if(old)old.remove();
+
+  let appendTitle='⊕ Append';let appendDesc='';
+  let overwriteTitle='⊘ Overwrite';let overwriteDesc='';
+
+  if(type==='root'){
+    appendTitle='⊕ Add as New Project';
+    appendDesc='Imports as a brand-new project on the home screen. Your existing projects are untouched.';
+    overwriteTitle='⊘ Replace Existing';
+    overwriteDesc='If a project with the same name exists, it will be replaced. Otherwise added as new.';
+  } else if(type==='tasks'){
+    appendTitle='⊕ Append Phases';
+    appendDesc='New phases from the file are added to the current project. Duplicate phases are skipped.';
+    overwriteTitle='⊘ Replace All Phases';
+    overwriteDesc='All existing phases in the current project are removed and replaced with the imported ones.';
+  } else if(type==='backup'){
+    appendTitle='⊕ Append Projects';
+    appendDesc='Projects from the backup that don\'t already exist are added. Existing ones are untouched.';
+    overwriteTitle='⊘ Restore Full Backup';
+    overwriteDesc='All current projects are removed and replaced with everything in the backup file.';
+  }
+
+  const modal=document.createElement('div');
+  modal.id='import-mode-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  modal.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:3px;padding:28px 28px 22px;max-width:440px;width:92%;font-family:var(--font);">
+      <div style="font-family:var(--vt);font-size:22px;color:var(--accent);letter-spacing:.1em;margin-bottom:4px;">IMPORT</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.12em;margin-bottom:20px;word-break:break-all;line-height:1.6;">${escHtml(label)}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <button onclick="applyImport('append')" style="background:linear-gradient(135deg,rgba(200,240,74,.08),rgba(74,240,200,.04));border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:10px;padding:12px 16px;cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">
+          <div style="font-size:12px;margin-bottom:4px;">${appendTitle}</div>
+          <div style="font-size:9px;color:var(--text3);line-height:1.5;">${appendDesc}</div>
+        </button>
+        <button onclick="applyImport('overwrite')" style="background:linear-gradient(135deg,rgba(240,74,74,.08),rgba(240,74,74,.03));border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:10px;padding:12px 16px;cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">
+          <div style="font-size:12px;margin-bottom:4px;">${overwriteTitle}</div>
+          <div style="font-size:9px;color:var(--text3);line-height:1.5;">${overwriteDesc}</div>
+        </button>
+      </div>
+      <button onclick="document.getElementById('import-mode-modal').remove();_pendingImportBlob=null;_pendingImportType=null;" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:9px;cursor:pointer;letter-spacing:.08em;width:100%;text-align:center;padding:4px;">Cancel</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function applyImport(mode){
+  const modal=document.getElementById('import-mode-modal');if(modal)modal.remove();
+  if(!_pendingImportBlob){toast('Nothing to import');return;}
+  const blob=_pendingImportBlob;const type=_pendingImportType;
+  _pendingImportBlob=null;_pendingImportType=null;
+
+  const report={roots:[],tasks:{main:[],sub:[]}};
+
+  try{
+    if(type==='root'){
+      // Always results in a project on the root screen (never modifies open active project)
+      if(mode==='overwrite'){
+        // Replace existing project with same name if found, otherwise add new
+        const origName=blob.root?.name||'';
+        const idx=origName?roots.findIndex(r=>r.name===origName):-1;
+        if(idx>=0){
+          // Replace in-place keeping same id so data key matches
+          const existingId=roots[idx].id;
+          const root={...blob.root,id:existingId,created:roots[idx].created||new Date().toLocaleDateString()};
+          const data=blob.data||newProjectData();
+          if(blob.phases){if(!data.customPhases)data.customPhases={main:[],sub:[]};if(blob.phases.main?.length)data.customPhases.main=[...blob.phases.main];if(blob.phases.sub?.length)data.customPhases.sub=[...blob.phases.sub];}
+          roots[idx]=root;
+          saveRootData(existingId,data);
+          // Refresh active project data if it's the one being overwritten
+          if(activeRootId===existingId)D=getRootData(existingId);
+          report.roots.push({name:root.name,action:'overwritten'});
+        } else {
+          // No match — just add as new
+          const newId='root_'+Date.now();
+          const root={...blob.root,id:newId,created:new Date().toLocaleDateString()};
+          const data=blob.data||newProjectData();
+          if(blob.phases){if(!data.customPhases)data.customPhases={main:[],sub:[]};if(blob.phases.main?.length)data.customPhases.main=[...blob.phases.main];if(blob.phases.sub?.length)data.customPhases.sub=[...blob.phases.sub];}
+          roots.push(root);saveRootData(newId,data);
+          report.roots.push({name:root.name,action:'added (no match found)'});
+        }
+      } else {
+        // Append — always add as a new project
+        const newId='root_'+Date.now();
+        const root={...blob.root,id:newId,created:new Date().toLocaleDateString()};
+        const data=blob.data||newProjectData();
+        if(blob.phases){if(!data.customPhases)data.customPhases={main:[],sub:[]};if(blob.phases.main?.length)data.customPhases.main=[...blob.phases.main];if(blob.phases.sub?.length)data.customPhases.sub=[...blob.phases.sub];}
+        roots.push(root);saveRootData(newId,data);
+        report.roots.push({name:root.name,action:'added'});
+      }
+      saveRoots();
+      renderRootGrid();
+
+    } else if(type==='tasks'){
+      // Operates on the currently open project (D)
+      if(!D){toast('Open a project first to import tasks into it');return;}
+      if(!D.customPhases)D.customPhases={main:[],sub:[]};
+      if(mode==='overwrite'){
+        D.customPhases.main=blob.main?blob.main.map(p=>({...p})):[];
+        D.customPhases.sub=blob.sub?blob.sub.map(p=>({...p,_subPhase:true})):[];
+        (blob.main||[]).forEach(p=>report.tasks.main.push({title:p.title,action:'overwritten'}));
+        (blob.sub||[]).forEach(p=>report.tasks.sub.push({title:p.title,action:'overwritten'}));
+      } else {
+        const existing=new Set([...D.customPhases.main,...D.customPhases.sub].map(p=>p.id));
+        (blob.main||[]).forEach(ph=>{if(!existing.has(ph.id)){D.customPhases.main.push({...ph});report.tasks.main.push({title:ph.title,action:'added'});}});
+        (blob.sub||[]).forEach(ph=>{if(!existing.has(ph.id)){D.customPhases.sub.push({...ph,_subPhase:true});report.tasks.sub.push({title:ph.title,action:'added'});}});
+      }
+      save();buildPhaseGrids();updateGlobal();
+
+    } else if(type==='backup'){
+      if(mode==='overwrite'){
+        // Clear all existing roots then restore from backup
+        const oldRoots=[...roots];
+        roots.length=0;
+        blob.roots.forEach(root=>{
+          roots.push(root);
+          if(blob.data&&blob.data[root.id])saveRootData(root.id,blob.data[root.id]);
+          report.roots.push({name:root.name,action:'restored'});
+        });
+        // If active project was overwritten, reload its data
+        if(activeRootId){const found=roots.find(r=>r.id===activeRootId);if(found)D=getRootData(activeRootId);}
+      } else {
+        blob.roots.forEach(root=>{
+          const exists=roots.find(r=>r.id===root.id);
+          if(!exists){roots.push(root);report.roots.push({name:root.name,action:'added'});}
+          else{report.roots.push({name:root.name,action:'skipped (exists)'});}
+          if(blob.data&&blob.data[root.id])saveRootData(root.id,blob.data[root.id]);
+        });
+      }
+      saveRoots();
+      renderRootGrid();
+    }
+
+    // Log the import
+    const importLog=JSON.parse(localStorage.getItem('lms_import_log')||'[]');
+    importLog.unshift({ts:Date.now(),mode,type,report});
+    if(importLog.length>20)importLog.length=20;
+    localStorage.setItem('lms_import_log',JSON.stringify(importLog));
+
+    showImportReport(report,type,mode);
+
+  }catch(err){
+    toast('Import error: '+err.message);
+    console.error('Import error',err);
+  }
+}
+
+function showImportReport(report,type,mode){
+  const old=document.getElementById('import-report-modal');if(old)old.remove();
+  let lines=[];
+  if(report.roots.length){
+    lines.push('<div style="font-size:9px;color:var(--text3);letter-spacing:.15em;margin-bottom:6px;">PROJECTS</div>');
+    report.roots.forEach(r=>{
+      const col=r.action==='skipped (exists)'?'var(--text3)':r.action==='overwritten'?'var(--accent4)':'var(--accent)';
+      lines.push(`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:10px;"><span style="color:var(--text)">${escHtml(r.name)}</span><span style="color:${col};letter-spacing:.06em;font-size:9px;">${r.action.toUpperCase()}</span></div>`);
+    });
+  }
+  if(report.tasks.main.length||report.tasks.sub.length){
+    lines.push('<div style="font-size:9px;color:var(--text3);letter-spacing:.15em;margin:12px 0 6px;">PHASES / TASKS</div>');
+    [...report.tasks.main,...report.tasks.sub].forEach(t=>{
+      const col=t.action==='overwritten'?'var(--accent4)':'var(--accent)';
+      lines.push(`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:10px;"><span style="color:var(--text)">${escHtml(t.title)}</span><span style="color:${col};letter-spacing:.06em;font-size:9px;">${t.action.toUpperCase()}</span></div>`);
+    });
+  }
+  if(!lines.length)lines.push('<div style="font-size:10px;color:var(--text3);">Nothing new was imported.</div>');
+
+  const modal=document.createElement('div');
+  modal.id='import-report-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  modal.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:3px;padding:28px 28px 22px;max-width:460px;width:90%;font-family:var(--font);max-height:80vh;overflow-y:auto;">
+      <div style="font-family:var(--vt);font-size:22px;color:var(--accent);letter-spacing:.1em;margin-bottom:4px;">IMPORT COMPLETE</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.15em;margin-bottom:20px;">${mode.toUpperCase()} MODE · ${type.toUpperCase()}</div>
+      ${lines.join('')}
+      <button onclick="document.getElementById('import-report-modal').remove()" style="margin-top:18px;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:10px;padding:9px 24px;cursor:pointer;border-radius:2px;width:100%;letter-spacing:.08em;">✓ Done</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+// Dashboard import log badge
+function renderImportLogBadge(){
+  const log=JSON.parse(localStorage.getItem('lms_import_log')||'[]');
+  const el=document.getElementById('dash-import-badge');if(!el)return;
+  if(!log.length){el.style.display='none';return;}
+  const last=log[0];const d=new Date(last.ts);
+  const rootCount=last.report.roots.filter(r=>r.action!=='skipped (exists)').length;
+  const taskCount=(last.report.tasks?.main?.length||0)+(last.report.tasks?.sub?.length||0);
+  let summary=[];
+  if(rootCount)summary.push(rootCount+' project'+(rootCount!==1?'s':''));
+  if(taskCount)summary.push(taskCount+' phase'+(taskCount!==1?'s':''));
+  el.style.display='flex';
+  el.innerHTML=`<span style="color:var(--accent);margin-right:6px;">⬆</span><span style="flex:1;">Last import: <strong>${summary.join(', ')||'nothing new'}</strong> · ${last.mode} · ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span><button onclick="localStorage.removeItem('lms_import_log');renderImportLogBadge();" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:9px;font-family:var(--font);">✕</button>`;
 }
 
 // =====================================================
@@ -1616,6 +1834,7 @@ function updateGlobal(){
   document.getElementById('d-total').textContent=tot;
   document.getElementById('d-scripts').textContent=D.scripts.length;
   document.getElementById('d-chars').textContent=D.survivors.length;
+  renderImportLogBadge();
 }
 
 // =====================================================
@@ -3337,6 +3556,7 @@ async function doLogin(){
   localStorage.setItem('lms_session',JSON.stringify(currentUser));
   document.getElementById('login-screen').style.display='none';
   document.getElementById('root-screen-wrap').style.display='block';
+  updateAccountChip();
   renderRootGrid();
   addLogoutBtn();
   toast('Welcome back, '+(entry.displayName||entry.username)+'!');
@@ -3388,6 +3608,7 @@ async function _finalizeCreateAccount(username,displayName,email,password){
   localStorage.setItem('lms_session',JSON.stringify(currentUser));
   document.getElementById('login-screen').style.display='none';
   document.getElementById('root-screen-wrap').style.display='block';
+  updateAccountChip();
   renderRootGrid();
   addLogoutBtn();
   toast('Account created! Welcome, '+(displayName||username)+'!');
@@ -3433,14 +3654,22 @@ loadRoots();
   if(session){
     try{
       currentUser=JSON.parse(session);
-      // Quick verify account still exists and refresh displayName/email
-      if(getSrvDbUrl()){
-        const acc=await fbGet('/accounts/'+currentUser.uid);
-        if(!acc){currentUser=null;localStorage.removeItem('lms_session');}
-        else{
-          currentUser.displayName=acc.displayName||acc.username;
-          currentUser.email=acc.email||'';
-          localStorage.setItem('lms_session',JSON.stringify(currentUser));
+      // Only verify against Firebase if we actually have a DB URL configured
+      // If Firebase is unreachable, we trust the local session — don't log them out
+      if(getSrvDbUrl()&&currentUser?.uid){
+        try{
+          const acc=await fbGet('/accounts/'+currentUser.uid);
+          if(acc){
+            // Refresh display name and email from server
+            currentUser.displayName=acc.displayName||acc.username||currentUser.displayName;
+            currentUser.email=acc.email||currentUser.email||'';
+            currentUser.username=acc.username||currentUser.username;
+            localStorage.setItem('lms_session',JSON.stringify(currentUser));
+          }
+          // If acc is null: Firebase returned null but was reachable.
+          // Could be a migration or data issue — still trust the local session.
+        }catch(fbErr){
+          // Firebase fetch failed (network error, CORS, etc.) — trust local session
         }
       }
     }catch(e){currentUser=null;}
@@ -3467,6 +3696,7 @@ loadRoots();
       }catch(e){localStorage.removeItem('lms_active_server');}
     }
     renderRootGrid();
+    updateAccountChip();
     addLogoutBtn();
   } else {
     document.getElementById('login-screen').style.display='flex';
@@ -3584,6 +3814,21 @@ function copyServerId(){
   });
 }
 
+// ---- COPY INVITE (includes Firebase URL so teammates on different DBs can join) ----
+function copyServerInvite(){
+  const lines=[
+    '=== LMS Dev Hub — Server Invite ===',
+    'Server Name: '+(srvState.serverName||''),
+    srvState.shortId?'Server ID: '+srvState.shortId:'',
+    'Firebase DB URL: '+getSrvDbUrl(),
+    '',
+    'To join: Open Server Hub → Join tab → paste the Firebase DB URL above, enter the server name (or ID), and the password the host gave you.',
+  ].filter(Boolean).join('\n');
+  navigator.clipboard.writeText(lines).then(()=>toast('Invite copied — share with teammates')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=lines;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Invite copied');
+  });
+}
+
 // ---- UI helpers ----
 function openServerHub(){
   document.getElementById('server-hub-overlay').style.display='block';
@@ -3594,6 +3839,14 @@ function openServerHub(){
     const dn=currentUser.displayName||currentUser.username;
     const hl=document.getElementById('host-as-label');const jl=document.getElementById('join-as-label');
     if(hl)hl.textContent=dn;if(jl)jl.textContent=dn;
+  }
+  // Pre-populate join DB URL with current URL so users know what they have
+  const joinDbInp=document.getElementById('join-firebase-url');
+  if(joinDbInp&&!joinDbInp.value&&getSrvDbUrl()){
+    joinDbInp.value=getSrvDbUrl();
+    updateJoinDbHint(joinDbInp.value);
+  } else if(joinDbInp){
+    updateJoinDbHint(joinDbInp.value);
   }
   if(!getSrvDbUrl()){
     const txt=document.getElementById('srv-status-txt');
@@ -3692,58 +3945,75 @@ async function hostServer(){
 }
 
 // ---- JOIN ----
+function updateJoinDbHint(val){
+  const el=document.getElementById('join-db-hint');if(!el)return;
+  if(!val||!val.trim()){el.textContent=getSrvDbUrl()?'← will use your current DB ('+getSrvDbUrl().replace('https://','').split('.')[0]+'…)':'← paste the host\'s Firebase URL to join their server';el.style.color='var(--text3)';return;}
+  if(val.startsWith('https://')&&val.includes('firebaseio')){el.textContent='✓ will connect to this database';el.style.color='var(--accent)';}
+  else{el.textContent='⚠ must be https://….firebaseio.com';el.style.color='var(--accent4)';}
+}
+
 async function joinServer(){
-  if(!getSrvDbUrl()){openFirebaseSetup();return;}
-  // Use display name from account — no need to enter name manually
+  // Resolve which DB URL to use — form input takes priority over stored URL
+  const joinUrlRaw=(document.getElementById('join-firebase-url')?.value||'').trim();
+  const dbUrl=joinUrlRaw||getSrvDbUrl();
+  if(!dbUrl){openFirebaseSetup();return;}
+
   const username=currentUser?(currentUser.displayName||currentUser.username):'Member';
   const serverName=document.getElementById('join-servername').value.trim();
   const pass=document.getElementById('join-password').value;
   if(!serverName||!pass){toast('Fill all fields');return;}
+
+  // Temporarily override DB URL for this join
+  const prevUrl=getSrvDbUrl();
+  if(joinUrlRaw&&joinUrlRaw!==prevUrl) setSrvDbUrl(joinUrlRaw);
 
   toast('Connecting…');
   const serverKey=hashStr(serverName.toLowerCase());
   const passHash=await hashPass(pass);
 
   const meta=await fbGet('/servers/'+serverKey+'/meta');
-  if(!meta){toast('Server not found');return;}
-  if(meta.passHash!==passHash){toast('Wrong password');return;}
+  if(!meta){toast('Server not found');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
+  if(meta.passHash!==passHash){toast('Wrong password');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
 
   const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
-  // Restore host privileges if this user created the server
   const isHost=!!(meta.hostId && meta.hostId===myId);
   await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost,uid:myId});
 
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||''};
   localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||''}));
   saveRecentServer(serverName,pass);
-  // If you're the host, make sure it appears in "Servers You Created"
   if(isHost)saveCreatedServer(meta.name,pass);
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
   toast('Joined server: '+meta.name+(isHost?' [HOST]':''));
-  // Close hub, go back to root screen with server projects visible
   closeServerHub();
   renderRootGrid();
 }
 
 // ---- JOIN BY SERVER ID ----
 async function joinServerById(){
-  if(!getSrvDbUrl()){openFirebaseSetup();return;}
+  const joinUrlRaw=(document.getElementById('join-firebase-url')?.value||'').trim();
+  const dbUrl=joinUrlRaw||getSrvDbUrl();
+  if(!dbUrl){openFirebaseSetup();return;}
+
   const username=currentUser?(currentUser.displayName||currentUser.username):'Member';
   const shortIdRaw=document.getElementById('join-server-id').value.trim();
   const pass=document.getElementById('join-password').value;
   if(!shortIdRaw||!pass){toast('Fill all fields');return;}
 
+  const prevUrl=getSrvDbUrl();
+  if(joinUrlRaw&&joinUrlRaw!==prevUrl) setSrvDbUrl(joinUrlRaw);
+
   toast('Looking up server ID…');
   const shortIdClean=shortIdRaw.toUpperCase().replace(/-/g,'').replace(/[^A-Z0-9]/g,'');
   const serverKey=await findServerByShortId(shortIdClean);
-  if(!serverKey){toast('Server ID not found');return;}
+  if(!serverKey){toast('Server ID not found');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
 
   const passHash=await hashPass(pass);
   const meta=await fbGet('/servers/'+serverKey+'/meta');
-  if(!meta){toast('Server not found');return;}
-  if(meta.passHash!==passHash){toast('Wrong password');return;}
+  if(!meta){toast('Server not found');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
+  if(meta.passHash!==passHash){toast('Wrong password');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
 
   const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
   const isHost=!!(meta.hostId && meta.hostId===myId);
@@ -3752,7 +4022,6 @@ async function joinServerById(){
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||shortIdRaw};
   localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw}));
   saveRecentServer(meta.name,pass);
-  // If you're the host, make sure it appears in "Servers You Created"
   if(isHost)saveCreatedServer(meta.name,pass);
   startSrvHeartbeat();
   renderSrvStatus();
@@ -4057,6 +4326,7 @@ async function renderRootServerProjects(){
       </div>
       <div class="rc-prog"><div class="rc-prog-bar"><div class="rc-prog-fill" style="width:${pct}%;background:${col}"></div></div><div class="rc-prog-txt">${pct}% complete</div></div>
       <div class="rc-actions">
+        <button class="rc-action-btn" onclick="event.stopPropagation();exportServerRoot('${id}')">Export</button>
         ${srvState.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();deleteSrvProject('' + id + '')" style="color:var(--accent3);">Delete</button>`:''}
       </div>`;
     card.addEventListener('click',()=>openSrvProject(id));
@@ -5425,6 +5695,7 @@ document.addEventListener('keydown', function(e){
         </div>
       </div>
       <div style="text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button onclick="copyServerInvite()" style="background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">⧉ Copy Invite</button>
         <button onclick="disconnectServer()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">Leave Server</button>
         <button id="srv-change-pw-btn" onclick="promptChangeServerPassword()" style="display:none;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.color='var(--accent4)';this.style.borderColor='var(--accent4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">🔑 Change Password</button>
         <button id="srv-delete-server-btn" onclick="confirmDeleteServer()" style="display:none;background:none;border:1px solid rgba(240,74,74,.5);color:var(--accent3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">🗑 Delete Server</button>
@@ -5489,7 +5760,15 @@ document.addEventListener('keydown', function(e){
             <input id="join-server-id" class="modal-inp" placeholder="Paste Server ID here" style="margin-bottom:10px;font-family:var(--vt);font-size:15px;letter-spacing:.15em;">
           </div>
           <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">PASSWORD</label>
-          <input id="join-password" class="modal-inp" type="password" placeholder="Server password" style="margin-bottom:16px;">
+          <input id="join-password" class="modal-inp" type="password" placeholder="Server password" style="margin-bottom:10px;">
+          <!-- Firebase URL for joining a server on a different database -->
+          <div id="join-db-row" style="margin-bottom:16px;">
+            <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">
+              FIREBASE DB URL <span style="color:var(--text3);font-size:8px;">(required if host has a different database)</span>
+            </label>
+            <input id="join-firebase-url" class="modal-inp" placeholder="https://host-project-default-rtdb.firebaseio.com" style="font-size:10px;margin-bottom:4px;" oninput="updateJoinDbHint(this.value)">
+            <div id="join-db-hint" style="font-size:9px;color:var(--text3);letter-spacing:.06em;min-height:14px;"></div>
+          </div>
           <button id="join-submit-btn" onclick="joinServer()" class="btn" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;color:var(--accent2);border-color:var(--accent2);">→ Join by Name</button>
         </div>
       </div>

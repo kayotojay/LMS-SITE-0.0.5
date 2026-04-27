@@ -13,8 +13,8 @@
 /* ========== THEMES ========== */
 :root {
   --bg:#060608;--bg2:#0c0c10;--bg3:#111118;--bg4:#16161f;
-  --border:#1a1a28;--border2:#252535;
-  --text:#8888aa;--text2:#55556a;--text3:#333344;
+  --border:#1a1a28;--border2:#2e2e44;
+  --text:#c8c8e8;--text2:#9898bb;--text3:#666688;
   --accent:#c8f04a;--accent2:#4af0c8;--accent3:#f04a4a;
   --accent4:#f0a04a;--accent5:#a04af0;--accent6:#4a9af0;
   --sidebar:220px;--font:'Share Tech Mono',monospace;--vt:'VT323',monospace;
@@ -22,27 +22,27 @@
 }
 [data-theme="light"]{
   --bg:#f0f0f0;--bg2:#e8e8e8;--bg3:#ddd;--bg4:#d0d0d0;
-  --border:#ccc;--border2:#bbb;
-  --text:#333;--text2:#555;--text3:#888;
+  --border:#ccc;--border2:#aaa;
+  --text:#1a1a2e;--text2:#333355;--text3:#666688;
   --inp-bg:#fff;
 }
 [data-theme="dim"]{
   --bg:#12121a;--bg2:#1a1a24;--bg3:#20202e;--bg4:#26263a;
-  --border:#2a2a3e;--border2:#363650;
-  --text:#aaa8cc;--text2:#7070a0;--text3:#44446a;
+  --border:#2a2a3e;--border2:#3e3e5e;
+  --text:#d0cef0;--text2:#9898c0;--text3:#5a5a80;
   --inp-bg:#0e0e16;
 }
 [data-theme="forest"]{
   --bg:#080f08;--bg2:#0d160d;--bg3:#111e11;--bg4:#162416;
-  --border:#1a2e1a;--border2:#254025;
-  --text:#88aa88;--text2:#557055;--text3:#334433;
+  --border:#1a2e1a;--border2:#2e4a2e;
+  --text:#b8d8b8;--text2:#88b888;--text3:#507050;
   --accent:#4af04a;--accent2:#f0c84a;
   --inp-bg:#060f06;
 }
 [data-theme="blood"]{
   --bg:#0f0606;--bg2:#160c0c;--bg3:#1e1010;--bg4:#261414;
-  --border:#2e1a1a;--border2:#401a1a;
-  --text:#aa8888;--text2:#706060;--text3:#443333;
+  --border:#2e1a1a;--border2:#4a2a2a;
+  --text:#e8c8c8;--text2:#c89898;--text3:#806060;
   --accent:#f04a4a;--accent2:#f0a04a;
   --inp-bg:#0c0505;
 }
@@ -130,7 +130,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .nav-label{font-size:8px;color:var(--text3);letter-spacing:.22em;padding:6px 12px 4px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;}
 .nav-label-add{cursor:pointer;color:var(--text3);transition:color .15s;font-size:10px;padding:2px 4px;border-radius:1px;}
 .nav-label-add:hover{color:var(--accent);}
-.nav-item{display:flex;align-items:center;gap:7px;padding:6px 12px;cursor:pointer;color:var(--text2);font-size:11px;letter-spacing:.04em;transition:background .15s,color .15s;border-left:2px solid transparent;position:relative;user-select:none;}
+.nav-item{display:flex;align-items:center;gap:7px;padding:6px 12px;cursor:pointer;color:var(--text);font-size:11px;letter-spacing:.04em;transition:background .15s,color .15s;border-left:2px solid transparent;position:relative;user-select:none;}
 .nav-item:hover{background:var(--bg3);color:var(--text);}
 .nav-item.active{background:var(--bg3);color:var(--accent);border-left-color:var(--accent);}
 .nav-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
@@ -324,8 +324,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .toggle::after{content:'';position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;}
 .toggle.on::after{left:17px;}
 .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
-.theme-btn{background:var(--bg3);border:1px solid var(--border);font-family:var(--font);font-size:9px;color:var(--text2);padding:6px 8px;cursor:pointer;border-radius:1px;text-align:center;letter-spacing:.08em;transition:all .15s;}
-.theme-btn:hover,.theme-btn.active{border-color:var(--accent);color:var(--accent);}
+.theme-btn{background:var(--bg3);border:1px solid var(--border2);font-family:var(--font);font-size:9px;color:var(--text);padding:6px 8px;cursor:pointer;border-radius:1px;text-align:center;letter-spacing:.08em;transition:all .15s;}
+.theme-btn:hover,.theme-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(200,240,74,.08);}
 
 
 /* SPINNER */
@@ -557,7 +557,9 @@ select option{background:var(--bg2);}
         <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">EMAIL <span style="color:var(--text3);font-size:8px;">(optional)</span></label>
         <input id="ca-email" class="modal-inp" type="email" placeholder="your@email.com" style="margin-bottom:10px;">
         <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
-        <input id="ca-password" class="modal-inp" type="password" placeholder="Choose a password" style="margin-bottom:10px;">
+        <input id="ca-password" class="modal-inp" type="password" placeholder="Choose a strong password" style="margin-bottom:4px;" oninput="checkCaPwStrength(this.value)">
+        <div style="height:3px;border-radius:2px;background:var(--border);margin-bottom:4px;"><div id="ca-pw-fill" style="height:3px;border-radius:2px;width:0%;transition:width .3s,background .3s;"></div></div>
+        <div id="ca-pw-hint" style="font-size:9px;color:var(--text3);margin-bottom:8px;min-height:14px;"></div>
         <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">CONFIRM PASSWORD</label>
         <input id="ca-password2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:16px;">
         <button onclick="doCreateAccount()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Create Account →</button>
@@ -602,11 +604,6 @@ select option{background:var(--bg2);}
       <span class="rs-action-label">New Project</span>
       <span class="rs-action-sub">Start a fresh root</span>
     </button>
-    <button class="rs-action-card" onclick="openServerHub()" style="--card-accent:var(--accent2);">
-      <span class="rs-action-icon" style="color:var(--accent2);">⚡</span>
-      <span class="rs-action-label" style="color:var(--accent2);">Server Hub</span>
-      <span class="rs-action-sub">Join or host a team server</span>
-    </button>
     <button class="rs-action-card" onclick="triggerImportRoot()">
       <span class="rs-action-icon">↑</span>
       <span class="rs-action-label">Import Root</span>
@@ -620,12 +617,7 @@ select option{background:var(--bg2);}
     <button class="rs-action-card" onclick="openAccountSettings()" style="--card-accent:var(--accent5);">
       <span class="rs-action-icon" style="color:var(--accent5);">◈</span>
       <span class="rs-action-label" style="color:var(--accent5);">Account</span>
-      <span class="rs-action-sub">Profile & password</span>
-    </button>
-    <button class="rs-action-card danger-card" id="logout-action-card" style="display:none;" onclick="if(confirm('Sign out?'))logoutUser()">
-      <span class="rs-action-icon" style="color:var(--accent3);">→</span>
-      <span class="rs-action-label" style="color:var(--accent3);">Sign Out</span>
-      <span class="rs-action-sub">End your session</span>
+      <span class="rs-action-sub">Profile, password &amp; sign out</span>
     </button>
   </div>
 
@@ -1104,7 +1096,9 @@ function renderRootGrid(){
     card.className='root-card';
     card.style.setProperty('--card-color',col);
     card.style.setProperty('--card-glow',`rgba(${hexToRgb(col)},.05)`);
-    const hostBtn=srvState.connected&&srvState.isHost?`<button class="rc-action-btn" style="color:var(--accent2);border-color:var(--accent2);margin-right:auto;" onclick="event.stopPropagation();hostExistingProjectOnServer('${root.id}')">⚡ Host on Server</button>`:'';
+    const hostBtn=srvState.connected&&srvState.isHost
+      ? `<button class="rc-action-btn" style="color:var(--accent2);border-color:var(--accent2);margin-right:auto;" onclick="event.stopPropagation();hostExistingProjectOnServer('${root.id}')">⚡ Publish to Server</button>`
+      : `<button class="rc-action-btn" style="color:var(--accent2);margin-right:auto;opacity:.7;" onclick="event.stopPropagation();promptPublishToServer('${root.id}')">⚡ Publish to Server</button>`;
     card.innerHTML=`
       <div class="rc-top">
         <div class="rc-icon" style="background:linear-gradient(135deg,${col}40,${col}10);color:${col};">${(root.name||'P').charAt(0).toUpperCase()}</div>
@@ -2600,39 +2594,33 @@ function renderAccountSettings(){
         ? `<div style="font-size:10px;color:var(--text2);margin-bottom:8px;">${escHtml(currentUser.email)}</div>
            <div style="display:flex;gap:6px;flex-wrap:wrap;">
              ${emailRl.allowed
-               ? `<div style="display:flex;gap:6px;flex:1;">
-                    <input id="acct-email-change-inp" class="modal-inp" style="flex:1;margin:0;" type="email" placeholder="New email address">
-                    <button onclick="changeEmail()" class="btn" style="white-space:nowrap;color:var(--accent2);border-color:var(--accent2);">Change</button>
-                  </div>`
+               ? `<button onclick="promptChangeEmail()" class="btn" style="color:var(--accent2);border-color:var(--accent2);">Change Email</button>`
                : `<div style="font-size:9px;color:var(--accent3);">Email change limit reached. Try again in ${emailRl.daysLeft} day(s).</div>`
              }
              <button onclick="unlinkEmail()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Unlink</button>
            </div>`
         : emailRl.allowed
-          ? `<div style="display:flex;gap:6px;">
-               <input id="acct-email-inp" class="modal-inp" style="flex:1;margin:0;" type="email" placeholder="your@email.com">
-               <button onclick="linkEmail()" class="btn" style="white-space:nowrap;color:var(--accent2);border-color:var(--accent2);">Link</button>
-             </div>`
+          ? `<button onclick="promptLinkEmail()" class="btn" style="color:var(--accent2);border-color:var(--accent2);">Link Email Address</button>`
           : `<div style="font-size:9px;color:var(--accent3);">Email change limit reached. Try again in ${emailRl.daysLeft} day(s).</div>`
       }
     </div>
     <!-- Change Password -->
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;margin-bottom:14px;">
       <div style="font-size:8px;color:var(--text3);letter-spacing:.22em;margin-bottom:14px;">CHANGE PASSWORD <span style="color:var(--text3);font-size:8px;font-family:var(--font);">${passRl.used}/${passRl.max} changes in 25 days</span></div>
-      ${passRl.allowed ? `
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">CURRENT PASSWORD</label>
-      <input id="cp-current" class="modal-inp" type="password" placeholder="Current password" style="margin-bottom:10px;">
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">NEW PASSWORD</label>
-      <input id="cp-new1" class="modal-inp" type="password" placeholder="New password (min. 6 chars)" style="margin-bottom:10px;">
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">CONFIRM NEW PASSWORD</label>
-      <input id="cp-new2" class="modal-inp" type="password" placeholder="Confirm new password" style="margin-bottom:14px;">
-      <div id="cp-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
-      <button onclick="changePassword()" class="btn accent" style="width:100%;padding:9px;font-size:11px;letter-spacing:.1em;">Change Password</button>
-      ` : `<div style="font-size:9px;color:var(--accent3);">Password change limit reached (3 per 25 days). Try again in ${passRl.daysLeft} day(s).</div>`}
+      ${passRl.allowed
+        ? `<button onclick="promptChangePassword()" class="btn accent" style="width:100%;padding:9px;font-size:11px;letter-spacing:.1em;">Change Password</button>`
+        : `<div style="font-size:9px;color:var(--accent3);">Password change limit reached (3 per 25 days). Try again in ${passRl.daysLeft} day(s).</div>`}
     </div>
     <!-- Danger zone -->
     <div style="background:var(--bg2);border:1px solid rgba(240,74,74,.3);border-radius:3px;padding:18px;">
       <div style="font-size:8px;color:var(--accent3);letter-spacing:.22em;margin-bottom:14px;">DANGER ZONE</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid rgba(240,74,74,.15);margin-bottom:12px;">
+        <div>
+          <div style="font-size:11px;color:var(--text);margin-bottom:2px;">Sign Out</div>
+          <div style="font-size:9px;color:var(--text3);">End your current session</div>
+        </div>
+        <button onclick="closeAccountSettings();logoutUser();" style="background:none;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:9px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;white-space:nowrap;" onmouseover="this.style.borderColor='var(--accent3)';this.style.color='var(--accent3)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">→ Sign Out</button>
+      </div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div>
           <div style="font-size:11px;color:var(--text);margin-bottom:2px;">Delete Account</div>
@@ -2659,6 +2647,89 @@ async function saveDisplayName(){
   }
 }
 
+function promptChangePassword(){
+  // Password strength criteria:
+  // - 8+ chars, uppercase, lowercase, number, special char
+  openModal('Change Password',`
+    <label class="modal-label">CURRENT PASSWORD</label>
+    <input id="pcp-current" class="modal-inp" type="password" placeholder="Your current password" style="margin-bottom:10px;">
+    <label class="modal-label">NEW PASSWORD</label>
+    <input id="pcp-new1" class="modal-inp" type="password" placeholder="New password" oninput="checkPwStrength(this.value)" style="margin-bottom:6px;">
+    <div id="pcp-strength-bar" style="height:3px;border-radius:2px;background:var(--border);margin-bottom:4px;"><div id="pcp-strength-fill" style="height:3px;border-radius:2px;width:0%;transition:width .3s,background .3s;"></div></div>
+    <div id="pcp-strength-hints" style="font-size:9px;color:var(--text3);margin-bottom:10px;line-height:1.8;">
+      <span id="ph-len" style="display:block;">○ At least 8 characters</span>
+      <span id="ph-upper" style="display:block;">○ Uppercase letter (A-Z)</span>
+      <span id="ph-lower" style="display:block;">○ Lowercase letter (a-z)</span>
+      <span id="ph-num" style="display:block;">○ Number (0-9)</span>
+      <span id="ph-special" style="display:block;">○ Special character (!@#$%^&*)</span>
+    </div>
+    <label class="modal-label">CONFIRM NEW PASSWORD</label>
+    <input id="pcp-new2" class="modal-inp" type="password" placeholder="Confirm new password" style="margin-bottom:10px;">
+    <div id="pcp-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;font-size:10px;color:var(--accent3);"></div>
+  `,[{label:'Cancel',action:closeModal},{label:'Change Password',action:async()=>{
+    const current=document.getElementById('pcp-current').value;
+    const new1=document.getElementById('pcp-new1').value;
+    const new2=document.getElementById('pcp-new2').value;
+    const errEl=document.getElementById('pcp-error');
+    if(!current||!new1||!new2){errEl.textContent='Fill in all fields.';errEl.style.display='block';return;}
+    const strength=getPwStrength(new1);
+    if(strength.score<4){errEl.textContent='Password does not meet security requirements. Please check the criteria above.';errEl.style.display='block';return;}
+    if(new1!==new2){errEl.textContent='New passwords do not match.';errEl.style.display='block';return;}
+    const currentHash=await hashPass(current);
+    const acc=await fbGet('/accounts/'+currentUser.uid);
+    if(!acc||acc.passHash!==currentHash){errEl.textContent='Current password is incorrect.';errEl.style.display='block';return;}
+    const rl=checkRateLimit('pass_'+currentUser.uid,3,25);
+    if(!rl.allowed){errEl.textContent='Password change limit reached. Try again in '+rl.daysLeft+' day(s).';errEl.style.display='block';return;}
+    bumpRateLimit('pass_'+currentUser.uid,3,25);
+    const newHash=await hashPass(new1);
+    await fbPatch('/accounts/'+currentUser.uid,{passHash:newHash});
+    closeModal();toast('✓ Password changed successfully!');openAccountSettings();
+  },accent:true}]);
+}
+
+function getPwStrength(pw){
+  const checks={len:pw.length>=8,upper:/[A-Z]/.test(pw),lower:/[a-z]/.test(pw),num:/[0-9]/.test(pw),special:/[^a-zA-Z0-9]/.test(pw)};
+  const score=Object.values(checks).filter(Boolean).length;
+  return{score,checks};
+}
+
+function checkPwStrength(pw){
+  const {score,checks}=getPwStrength(pw);
+  const pct=score/5*100;
+  const colors=['#f04a4a','#f04a4a','#f0a04a','#f0c84a','#c8f04a','#4af0c8'];
+  const fill=document.getElementById('pcp-strength-fill');
+  if(fill){fill.style.width=pct+'%';fill.style.background=colors[score]||'#4af0c8';}
+  const mark=(ok)=>ok?'<span style="color:var(--accent);">✓</span>':'○';
+  const hints=[
+    ['ph-len',mark(checks.len)+' At least 8 characters'],
+    ['ph-upper',mark(checks.upper)+' Uppercase letter (A-Z)'],
+    ['ph-lower',mark(checks.lower)+' Lowercase letter (a-z)'],
+    ['ph-num',mark(checks.num)+' Number (0-9)'],
+    ['ph-special',mark(checks.special)+' Special character (!@#$%^&*)'],
+  ];
+  hints.forEach(([id,html])=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+}
+
+function checkCaPwStrength(pw){
+  const {score,checks}=getPwStrength(pw);
+  const pct=score/5*100;
+  const colors=['#f04a4a','#f04a4a','#f0a04a','#f0c84a','#c8f04a','#4af0c8'];
+  const fill=document.getElementById('ca-pw-fill');
+  if(fill){fill.style.width=pct+'%';fill.style.background=colors[score]||'#4af0c8';}
+  const hints=[];
+  if(!checks.len)hints.push('8+ chars');
+  if(!checks.upper)hints.push('uppercase');
+  if(!checks.lower)hints.push('lowercase');
+  if(!checks.num)hints.push('number');
+  if(!checks.special)hints.push('special char');
+  const el=document.getElementById('ca-pw-hint');
+  if(el){
+    if(score>=4){el.textContent='✓ Strong password';el.style.color='var(--accent)';}
+    else if(score>=2){el.textContent='Needs: '+hints.join(', ');el.style.color='var(--accent4)';}
+    else{el.textContent='Weak — needs: '+hints.join(', ');el.style.color='var(--accent3)';}
+  }
+}
+
 async function changePassword(){
   const current=document.getElementById('cp-current').value;
   const new1=document.getElementById('cp-new1').value;
@@ -2680,6 +2751,47 @@ async function changePassword(){
   errEl.style.display='none';
   toast('✓ Password changed successfully!');
   renderAccountSettings();
+}
+
+function promptChangeEmail(){
+  openModal('Change Email',`
+    <p style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.7;">Enter your new email address. You'll receive a verification code.</p>
+    <label class="modal-label">NEW EMAIL ADDRESS</label>
+    <input id="prompt-email-inp" class="modal-inp" type="email" placeholder="new@email.com">
+    <div id="prompt-email-err" style="display:none;color:var(--accent3);font-size:10px;margin-top:4px;"></div>
+  `,[{label:'Cancel',action:closeModal},{label:'Send Verification Code',action:async()=>{
+    const newEmail=(document.getElementById('prompt-email-inp').value||'').trim().toLowerCase();
+    if(!newEmail||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newEmail)){document.getElementById('prompt-email-err').textContent='Enter a valid email.';document.getElementById('prompt-email-err').style.display='block';return;}
+    const rl=checkRateLimit('email_'+currentUser.uid,3,25);
+    if(!rl.allowed){toast('Email change limit reached. Try again in '+rl.daysLeft+' day(s).');closeModal();return;}
+    const accounts=await fbGet('/accounts')||{};
+    const taken=Object.values(accounts).some(a=>a.email&&a.email===newEmail&&a.uid!==currentUser.uid);
+    if(taken){document.getElementById('prompt-email-err').textContent='Email already linked to another account.';document.getElementById('prompt-email-err').style.display='block';return;}
+    bumpRateLimit('email_'+currentUser.uid,3,25);
+    if(currentUser.email){const oldKey=currentUser.email.replace(/\./g,'_').replace(/@/g,'__at__');await fbDelete('/emailIndex/'+oldKey);}
+    await sendEmailVerification(newEmail,'change_email_'+currentUser.uid);
+    closeModal();closeAccountSettings();showChangeEmailVerifyModal(newEmail);
+  },accent:true}]);
+}
+
+function promptLinkEmail(){
+  openModal('Link Email',`
+    <p style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.7;">Enter an email address to link to your account. You'll receive a verification code.</p>
+    <label class="modal-label">EMAIL ADDRESS</label>
+    <input id="prompt-link-email-inp" class="modal-inp" type="email" placeholder="your@email.com">
+    <div id="prompt-link-email-err" style="display:none;color:var(--accent3);font-size:10px;margin-top:4px;"></div>
+  `,[{label:'Cancel',action:closeModal},{label:'Send Verification Code',action:async()=>{
+    const email=(document.getElementById('prompt-link-email-inp').value||'').trim().toLowerCase();
+    if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){document.getElementById('prompt-link-email-err').textContent='Enter a valid email.';document.getElementById('prompt-link-email-err').style.display='block';return;}
+    const rl=checkRateLimit('email_'+currentUser.uid,3,25);
+    if(!rl.allowed){toast('Email change limit reached. Try again in '+rl.daysLeft+' day(s).');closeModal();return;}
+    const accounts=await fbGet('/accounts')||{};
+    const taken=Object.values(accounts).some(a=>a.email&&a.email===email&&a.uid!==currentUser.uid);
+    if(taken){document.getElementById('prompt-link-email-err').textContent='Email already linked to another account.';document.getElementById('prompt-link-email-err').style.display='block';return;}
+    bumpRateLimit('email_'+currentUser.uid,3,25);
+    await sendEmailVerification(email,'link');
+    closeModal();closeAccountSettings();showLinkVerifyModal(email);
+  },accent:true}]);
 }
 
 async function changeEmail(){
@@ -2914,7 +3026,9 @@ function showSetNewPasswordPanel(email){
         Identity verified. Choose a new password for your account.
       </div>
       <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">NEW PASSWORD</label>
-      <input id="np-pass1" class="modal-inp" type="password" placeholder="New password" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('np-pass2').focus()">
+      <input id="np-pass1" class="modal-inp" type="password" placeholder="New password (8+ chars, mixed)" style="margin-bottom:4px;" oninput="checkNpStrength(this.value)" onkeydown="if(event.key==='Enter')document.getElementById('np-pass2').focus()">
+      <div style="height:3px;border-radius:2px;background:rgba(255,255,255,.1);margin-bottom:4px;"><div id="np-str-fill" style="height:3px;border-radius:2px;width:0%;transition:width .3s,background .3s;"></div></div>
+      <div id="np-str-hint" style="font-size:9px;color:var(--text3);margin-bottom:10px;min-height:14px;"></div>
       <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">CONFIRM PASSWORD</label>
       <input id="np-pass2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:14px;" onkeydown="if(event.key==='Enter')submitNewPassword()">
       <div id="np-error" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);"></div>
@@ -2922,11 +3036,20 @@ function showSetNewPasswordPanel(email){
     </div>`;
 }
 
+function checkNpStrength(pw){
+  const {score}=getPwStrength(pw);
+  const fill=document.getElementById('np-str-fill');
+  const hint=document.getElementById('np-str-hint');
+  const colors=['#f04a4a','#f04a4a','#f0a04a','#f0c84a','#c8f04a','#4af0c8'];
+  if(fill){fill.style.width=(score/5*100)+'%';fill.style.background=colors[score];}
+  if(hint){if(score>=4){hint.textContent='✓ Strong';hint.style.color='var(--accent)';}else{hint.textContent='Add uppercase, number, special char...';hint.style.color='var(--accent4)';}}
+}
+
 async function submitNewPassword(){
   const pass1=document.getElementById('np-pass1').value;
   const pass2=document.getElementById('np-pass2').value;
   const errEl=document.getElementById('np-error');
-  if(!pass1||pass1.length<6){errEl.textContent='Password must be at least 6 characters.';errEl.style.display='block';return;}
+  if(!pass1||getPwStrength(pass1).score<4){errEl.textContent='Password too weak. Need 8+ chars, uppercase, lowercase, number, and special character.';errEl.style.display='block';return;}
   if(pass1!==pass2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
   if(!pendingResetUid){errEl.textContent='Session expired. Start over.';errEl.style.display='block';return;}
   const passHash=await hashPass(pass1);
@@ -3027,6 +3150,9 @@ async function doCreateAccount(){
   if(password!==password2){showLoginError('Passwords do not match.');return;}
   if(username.length<2){showLoginError('Username must be at least 2 characters.');return;}
   if(!/^[a-zA-Z0-9_.-]+$/.test(username)){showLoginError('Username can only contain letters, numbers, _ . -');return;}
+  // Password strength check
+  const pwStrength=getPwStrength(password);
+  if(pwStrength.score<4){showLoginError('Password too weak. Need: 8+ chars, uppercase, lowercase, number, and a special character.');return;}
   // If email provided, send verification code first
   if(email){
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){showLoginError('Enter a valid email address.');return;}
@@ -3077,9 +3203,6 @@ function logoutUser(){
 
 // Add logout button to root screen header actions (called after DOM ready)
 function addLogoutBtn(){
-  // Show logout card
-  const logoutCard=document.getElementById('logout-action-card');
-  if(logoutCard)logoutCard.style.display='flex';
   // Update account chip
   updateAccountChip();
 }
@@ -3622,6 +3745,31 @@ async function renderRootServerProjects(){
     card.addEventListener('click',()=>openSrvProject(id));
     grid.appendChild(card);
   });
+}
+
+// ---- PROMPT PUBLISH TO SERVER (when not connected/host) ----
+function promptPublishToServer(rootId){
+  const root=roots.find(r=>r.id===rootId);
+  if(!root)return;
+  if(!getSrvDbUrl()){
+    openModal('Publish to Server',`<p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:10px;">To publish <strong style="color:var(--accent);">${escHtml(root.name)}</strong> to a server, you first need to configure a Firebase database and connect to or host a server.</p>`,[
+      {label:'Cancel',action:closeModal},{label:'⚙ DB Setup',action:()=>{closeModal();openFirebaseSetup();},accent:true}
+    ]);
+    return;
+  }
+  if(!srvState.connected){
+    openModal('Publish to Server',`<p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:10px;">To publish <strong style="color:var(--accent);">${escHtml(root.name)}</strong> to a server, you need to host or join a server first as the host.</p>`,[
+      {label:'Cancel',action:closeModal},{label:'⚡ Open Server Hub',action:()=>{closeModal();openServerHub();},accent:true}
+    ]);
+    return;
+  }
+  if(!srvState.isHost){
+    openModal('Publish to Server',`<p style="font-size:11px;color:var(--text2);line-height:1.7;">Only the server host can publish projects. You are currently a member of <strong style="color:var(--accent2);">${escHtml(srvState.serverName)}</strong>.</p>`,[
+      {label:'OK',action:closeModal}
+    ]);
+    return;
+  }
+  hostExistingProjectOnServer(rootId);
 }
 
 // ---- HOST EXISTING LOCAL PROJECT ON SERVER ----

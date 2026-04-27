@@ -712,6 +712,7 @@ select option{background:var(--bg2);}
     <div style="display:flex;gap:6px;align-items:center;">
       <button class="rs-btn" onclick="openRootSettings()" title="Settings" style="padding:6px 12px;">⚙ Settings</button>
       <button class="rs-btn primary" id="rs-server-btn" onclick="openServerHub()" style="border-color:var(--accent2);color:var(--accent2);padding:6px 14px;">⚡ Server Hub</button>
+      <button class="rs-btn" onclick="openCommunity()" style="padding:6px 12px;">🌐 Community</button>
     </div>
   </div>
 
@@ -748,19 +749,19 @@ select option{background:var(--bg2);}
   <div id="rs-server-bar" style="display:none;width:100%;max-width:960px;margin-bottom:16px;position:relative;z-index:1;animation:fadeUp .3s ease both;">
     <div style="background:var(--bg2);border:1px solid var(--accent2);border-radius:3px;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <div style="width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2);flex-shrink:0;animation:glowPulse 2s infinite;"></div>
-      <div style="flex:1;">
+      <div style="flex:1;min-width:0;">
         <span style="font-size:11px;color:var(--accent2);letter-spacing:.08em;" id="rs-srv-name">SERVER</span>
         <span style="font-size:9px;color:var(--text3);letter-spacing:.1em;margin-left:10px;" id="rs-srv-members"></span>
       </div>
       <div id="rs-srv-presence" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
       <button onclick="openServerHub()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">Hub ⚡</button>
-      <button onclick="disconnectServer();renderRootGrid();" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Leave</button>
+      <button onclick="disconnectServer(srvState.serverKey);renderRootGrid();" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" title="Leave current server">Leave</button>
     </div>
   </div>
 
   <!-- SERVER PROJECTS SECTION — shown when connected, live cards just like solo -->
   <div id="rs-server-projects-section" style="display:none;width:100%;max-width:960px;position:relative;z-index:1;margin-bottom:28px;animation:fadeUp .4s .05s ease both;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+    <div id="rs-srv-default-hdr" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
       <div style="font-size:9px;color:var(--accent2);letter-spacing:.25em;text-transform:uppercase;">Live Server Projects</div>
       <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--accent2),transparent);opacity:.25;"></div>
       <button onclick="openCreateServerProject()" style="background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:9px;padding:4px 14px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">+ New Server Project</button>
@@ -1240,26 +1241,34 @@ function renderRootGrid(){
   const empty=document.getElementById('empty-state');
   grid.innerHTML='';
 
-  // Update server section visibility
+  // Update server section visibility — multi-server support
   const srvBar=document.getElementById('rs-server-bar');
   const srvSection=document.getElementById('rs-server-projects-section');
   const localLabel=document.getElementById('rs-local-label');
-  if(srvState.connected){
+
+  if(multiServers.length>0){
     srvBar.style.display='block';
     srvSection.style.display='block';
     if(localLabel)localLabel.style.display='flex';
-    const rsIdLabel=srvState.shortId?' · ID: '+srvState.shortId:'';
-    document.getElementById('rs-srv-name').textContent=srvState.serverName.toUpperCase()+' as '+srvState.username+(srvState.isHost?' [HOST]':'')+rsIdLabel;
-    // Show a loading placeholder while async fetch runs
-    const rsGrid=document.getElementById('rs-server-proj-grid');
-    const rsEmpty=document.getElementById('rs-server-proj-empty');
-    if(rsGrid&&!rsGrid.children.length){rsGrid.innerHTML='<div style="font-size:10px;color:var(--text3);padding:16px 0;letter-spacing:.1em;">Loading server projects…</div>';}
-    if(rsEmpty)rsEmpty.style.display='none';
-    renderRootServerProjects();
+    // Show server label — multi-server aware
+    const rsNameEl=document.getElementById('rs-srv-name');
+    if(multiServers.length===1){
+      const sv=multiServers[0];
+      const rsIdLabel=sv.shortId?' · ID: '+sv.shortId:'';
+      rsNameEl.textContent=sv.serverName.toUpperCase()+' as '+sv.username+(sv.isHost?' [HOST]':'')+rsIdLabel;
+    } else {
+      rsNameEl.innerHTML=multiServers.map(sv=>`<span style="padding:1px 7px;border:1px solid ${sv.isHost?'var(--accent2)':'var(--border2)'};border-radius:1px;font-size:9px;letter-spacing:.06em;color:${sv.isHost?'var(--accent2)':'var(--text3)'};">${escHtml(sv.serverName)}${sv.isHost?' ⚡':''}</span>`).join(' ') + ' <span style="color:var(--text3);font-size:9px;">— '+multiServers.length+'/'+MAX_SERVERS+' servers</span>';
+    }
+    // Render multi-server project sections
+    renderAllServerSections();
   } else {
     srvBar.style.display='none';
     srvSection.style.display='none';
     if(localLabel)localLabel.style.display='none';
+    const rsGrid=document.getElementById('rs-server-proj-grid');
+    if(rsGrid)rsGrid.innerHTML='';
+    const rsEmpty=document.getElementById('rs-server-proj-empty');
+    if(rsEmpty)rsEmpty.style.display='none';
   }
 
   if(!roots.length){empty.style.display='block';return;}
@@ -1299,6 +1308,168 @@ function renderRootGrid(){
     grid.appendChild(card);
     }catch(err){console.warn('Failed to render root card',root.id,err);}
   });
+}
+
+// Render all active server sections (multi-server)
+// Guard prevents concurrent renders racing and causing panel glitch
+let _renderingServerSections=false;
+async function renderAllServerSections(){
+  if(_renderingServerSections)return;
+  _renderingServerSections=true;
+  try{
+  const srvSection=document.getElementById('rs-server-projects-section');
+  if(!srvSection||multiServers.length===0){_renderingServerSections=false;return;}
+
+  const defaultHdr=document.getElementById('rs-srv-default-hdr');
+
+  // Clear old per-server sections (keep the first rs-server-proj-grid for compatibility)
+  const existingExtra=srvSection.querySelectorAll('.multi-srv-section');
+  existingExtra.forEach(el=>el.remove());
+
+  if(multiServers.length===1){
+    // Single server — use existing layout, show default header
+    const sv=multiServers[0];
+    const rsGrid=document.getElementById('rs-server-proj-grid');
+    const rsEmpty=document.getElementById('rs-server-proj-empty');
+    if(defaultHdr){
+      defaultHdr.style.display='flex';
+      const lbl=defaultHdr.querySelector('div');
+      if(lbl)lbl.textContent='Live Server Projects — '+sv.serverName;
+    }
+    await _renderServerSection(sv, rsGrid, rsEmpty);
+  } else {
+    // Multiple servers — hide default header, render one section per server
+    const rsGrid=document.getElementById('rs-server-proj-grid');
+    const rsEmpty=document.getElementById('rs-server-proj-empty');
+    if(rsGrid)rsGrid.innerHTML='';
+    if(rsEmpty)rsEmpty.style.display='none';
+    if(defaultHdr)defaultHdr.style.display='none';
+
+    // Build all section containers first (synchronously), then fetch data concurrently
+    const renderJobs=multiServers.map(sv=>{
+      const srvDiv=document.createElement('div');
+      srvDiv.className='multi-srv-section';
+      srvDiv.style.cssText='margin-bottom:28px;';
+      const typeLabel=sv.isHost?'<span style="font-size:7px;padding:1px 5px;border:1px solid var(--accent);color:var(--accent);border-radius:1px;letter-spacing:.08em;margin-left:6px;">HOST</span>':'';
+      srvDiv.innerHTML=`
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 6px var(--accent2);flex-shrink:0;animation:glowPulse 2s infinite;"></div>
+          <div style="font-size:9px;color:var(--accent2);letter-spacing:.25em;text-transform:uppercase;">${escHtml(sv.serverName)}${typeLabel}</div>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--accent2),transparent);opacity:.25;"></div>
+          <button onclick="openServerHubForServer('${sv.serverKey}')" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">Hub ⚡</button>
+          <button onclick="openCreateServerProjectFor('${sv.serverKey}')" style="background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:9px;padding:4px 14px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">+ New</button>
+          <button onclick="disconnectServer('${sv.serverKey}')" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Leave</button>
+        </div>
+        <div class="root-grid ms-grid-${sv.serverKey}" style="margin-bottom:0;"></div>
+        <div class="ms-empty-${sv.serverKey}" style="display:none;text-align:center;padding:16px;background:var(--bg2);border:1px dashed var(--border2);border-radius:3px;font-size:9px;color:var(--text3);letter-spacing:.15em;">No server projects yet</div>
+      `;
+      srvSection.appendChild(srvDiv);
+      const g=srvDiv.querySelector('.ms-grid-'+sv.serverKey);
+      const e=srvDiv.querySelector('.ms-empty-'+sv.serverKey);
+      return _renderServerSection(sv,g,e);
+    });
+    await Promise.all(renderJobs);
+  }
+  }finally{_renderingServerSections=false;}
+}
+
+async function _renderServerSection(sv,grid,empty){
+  if(!grid)return;
+  const projects=await fbGet('/servers/'+sv.serverKey+'/projects')||{};
+  const members=await fbGet('/servers/'+sv.serverKey+'/members')||{};
+  const now=Date.now();
+  const online=Object.entries(members).filter(([id,m])=>(now-m.lastSeen)<30000);
+  const entries=Object.entries(projects);
+  if(!entries.length){grid.innerHTML='';if(empty)empty.style.display='block';return;}
+  if(empty)empty.style.display='none';
+  grid.innerHTML='';
+  entries.forEach(([id,proj])=>{
+    const col=proj.color||'#4af0c8';
+    const totalTasks=Object.keys(proj.tasks||{}).length;
+    const doneTasks=Object.values(proj.tasks||{}).filter(t=>t.status==='done').length;
+    const openBugs=Object.values(proj.bugs||{}).filter(b=>b.status!=='resolved').length;
+    const pct=totalTasks?Math.round(doneTasks/totalTasks*100):0;
+    const inProj=online.filter(([uid,m])=>m.inProject===id);
+    const card=document.createElement('div');
+    card.className='root-card';
+    card.style.setProperty('--card-color',col);
+    card.style.setProperty('--card-glow',`rgba(${hexToRgb(col)},.05)`);
+    card.innerHTML=`
+      <div class="rc-top">
+        <div class="rc-icon" style="background:linear-gradient(135deg,${col}40,${col}10);color:${col};">${(proj.name||'P').charAt(0).toUpperCase()}</div>
+        <div class="rc-info">
+          <div class="rc-name">${escHtml(proj.name)}</div>
+          <div class="rc-engine" style="display:flex;align-items:center;gap:6px;">
+            <span style="color:var(--accent2);font-size:8px;padding:1px 5px;border:1px solid var(--accent2);border-radius:1px;letter-spacing:.1em;">LIVE</span>
+            <span>${escHtml(sv.serverName||'server')}</span>
+          </div>
+        </div>
+      </div>
+      ${inProj.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">${inProj.map(([uid,m])=>`<div style="font-size:8px;padding:1px 6px;border-radius:8px;background:rgba(74,240,200,.1);border:1px solid rgba(74,240,200,.3);color:var(--accent2);">${escHtml(m.name)}</div>`).join('')}</div>`:''}
+      <div class="rc-stats">
+        <div class="rc-stat"><div class="rc-stat-val" style="color:${col}">${doneTasks}</div><div class="rc-stat-lbl">Done</div></div>
+        <div class="rc-stat"><div class="rc-stat-val">${totalTasks}</div><div class="rc-stat-lbl">Tasks</div></div>
+        <div class="rc-stat"><div class="rc-stat-val" style="color:#f04a4a">${openBugs}</div><div class="rc-stat-lbl">Bugs</div></div>
+        <div class="rc-stat"><div class="rc-stat-val" style="color:var(--accent2)">${inProj.length}</div><div class="rc-stat-lbl">Online</div></div>
+      </div>
+      <div class="rc-prog"><div class="rc-prog-bar"><div class="rc-prog-fill" style="width:${pct}%;background:${col}"></div></div><div class="rc-prog-txt">${pct}% complete</div></div>
+      <div class="rc-actions">
+        <button class="rc-action-btn" onclick="event.stopPropagation();exportServerRootFor('${sv.serverKey}','${id}')">Export</button>
+        ${sv.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();deleteSrvProjectFor('${sv.serverKey}','${id}')" style="color:var(--accent3);">Delete</button>`:''}
+      </div>`;
+    card.addEventListener('click',()=>openSrvProjectFrom(sv,id));
+    grid.appendChild(card);
+  });
+}
+
+// Open a server hub focused on a specific server
+function openServerHubForServer(serverKey){
+  const sv=getServerById(serverKey);
+  if(sv){
+    // Temporarily set as active srvState so hub shows correctly
+    if(srvState.serverKey!==serverKey){
+      srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId};
+    }
+  }
+  openServerHub();
+}
+
+// Open create project for a specific server
+function openCreateServerProjectFor(serverKey){
+  const sv=getServerById(serverKey);
+  if(!sv)return;
+  // Temporarily set srvState
+  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId};
+  openCreateServerProject();
+}
+
+// Export server root for a specific server
+async function exportServerRootFor(serverKey,projId){
+  const sv=getServerById(serverKey);
+  if(!sv)return;
+  const origKey=srvState.serverKey;
+  const origConn=srvState.connected;
+  srvState={...srvState,connected:true,serverKey};
+  await exportServerRoot(projId);
+  srvState={...srvState,connected:origConn,serverKey:origKey};
+}
+
+// Delete server project for a specific server
+async function deleteSrvProjectFor(serverKey,projId){
+  const sv=getServerById(serverKey);
+  if(!sv||!sv.isHost){toast('Only the host can delete projects');return;}
+  const origState={...srvState};
+  srvState={...srvState,connected:true,serverKey,serverName:sv.serverName,isHost:true,myId:sv.myId};
+  await deleteSrvProject(projId);
+  srvState={...origState};
+}
+
+// Open a server project from a specific server connection
+async function openSrvProjectFrom(sv,projId){
+  // Set srvState to this server temporarily
+  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,activeProjId:projId};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId}));
+  await openSrvProject(projId);
 }
 
 let selectedRootColor=ACCENT_COLORS[0];
@@ -1458,7 +1629,27 @@ async function exportServerRoot(projId){
 let _pendingImportBlob=null;
 let _pendingImportType=null;
 
-function triggerImportRoot(){document.getElementById('import-root-file').click();}
+function openCommunity(){
+  const old=document.getElementById('community-modal');if(old)old.remove();
+  const modal=document.createElement('div');
+  modal.id='community-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(16px);';
+  modal.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:3px;padding:48px 40px;max-width:420px;width:90%;font-family:var(--font);text-align:center;position:relative;">
+      <div style="font-family:var(--vt);font-size:48px;letter-spacing:.1em;background:linear-gradient(135deg,#c8f04a,#4af0c8,#a04af0,#c8f04a);background-size:300% 300%;animation:gradShift 5s ease infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;">🌐</div>
+      <div style="font-family:var(--vt);font-size:30px;color:var(--text);letter-spacing:.12em;margin-bottom:10px;">COMMUNITY</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.25em;text-transform:uppercase;margin-bottom:28px;">LMS Dev Hub</div>
+      <div style="background:linear-gradient(135deg,rgba(200,240,74,.06),rgba(74,240,200,.04));border:1px solid rgba(200,240,74,.2);border-radius:3px;padding:24px;margin-bottom:24px;">
+        <div style="font-family:var(--vt);font-size:22px;color:var(--accent);letter-spacing:.15em;margin-bottom:8px;">COMING SOON</div>
+        <div style="font-size:10px;color:var(--text2);line-height:1.8;letter-spacing:.04em;">The Community hub is in development.<br>Connect with other devs, share your<br>projects, and collaborate across teams.</div>
+      </div>
+      <button onclick="document.getElementById('community-modal').remove()" style="background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:10px;padding:9px 30px;cursor:pointer;border-radius:2px;letter-spacing:.1em;">← Back</button>
+    </div>`;
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+
+
 function importRootFile(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
@@ -1500,6 +1691,7 @@ function downloadFile(content,filename,type){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=filename;a.click();URL.revokeObjectURL(a.href);
 }
 
+function triggerImportRoot(){document.getElementById('import-root-file').click();}
 function triggerImportTasks(){document.getElementById('import-tasks-file').click();}
 function importTasksFileBtn(){document.getElementById('import-tasks-file').click();}
 
@@ -1540,6 +1732,108 @@ function gdriveExportAll(){
 }
 
 // ====================================================
+// IMPORT TO EXISTING PROJECT FLOW
+// ====================================================
+function openImportToProjectPicker(blob){
+  // Show a modal where user picks which existing project to import into, then append/overwrite
+  if(!roots.length){toast('No local projects exist. Create one first.');return;}
+  const old=document.getElementById('itp-modal');if(old)old.remove();
+  const modal=document.createElement('div');
+  modal.id='itp-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9600;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);';
+  modal.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:3px;padding:28px;max-width:480px;width:93%;font-family:var(--font);max-height:85vh;overflow-y:auto;">
+      <div style="font-family:var(--vt);font-size:22px;color:var(--accent);letter-spacing:.1em;margin-bottom:4px;">IMPORT TO PROJECT</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.12em;margin-bottom:6px;">Importing: <span style="color:var(--text);">${escHtml(blob.root?.name||blob._name||'file')}</span></div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.1em;margin-bottom:18px;line-height:1.6;">Select which project to import into, then choose Append or Overwrite.</div>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:6px;">SELECT TARGET PROJECT</label>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:18px;max-height:220px;overflow-y:auto;" id="itp-proj-list">
+        ${roots.map(r=>`
+          <label style="display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:9px 12px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <input type="radio" name="itp-proj" value="${r.id}" style="accent-color:var(--accent);">
+            <div style="width:8px;height:8px;border-radius:50%;background:${r.color||'#c8f04a'};flex-shrink:0;"></div>
+            <span style="font-size:11px;color:var(--text);flex:1;">${escHtml(r.name)}</span>
+            <span style="font-size:9px;color:var(--text3);">${escHtml(r.engine||'')}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button onclick="applyImportToProject('append','${escHtml(blob._itp_key||'_tmp_')}')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.08),rgba(74,240,200,.04));border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:10px;padding:12px 10px;cursor:pointer;border-radius:2px;letter-spacing:.04em;">
+          <div style="font-size:11px;margin-bottom:3px;">⊕ Append</div>
+          <div style="font-size:8px;color:var(--text3);line-height:1.5;">Add imported data alongside existing — nothing removed.</div>
+        </button>
+        <button onclick="applyImportToProject('overwrite','${escHtml(blob._itp_key||'_tmp_')}')" style="flex:1;background:linear-gradient(135deg,rgba(240,74,74,.08),rgba(240,74,74,.03));border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:10px;padding:12px 10px;cursor:pointer;border-radius:2px;letter-spacing:.04em;">
+          <div style="font-size:11px;margin-bottom:3px;">⊘ Overwrite</div>
+          <div style="font-size:8px;color:var(--text3);line-height:1.5;">Replace the selected project with the imported data.</div>
+        </button>
+      </div>
+      <button onclick="document.getElementById('itp-modal').remove();_itpBlobStore={};" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:9px;cursor:pointer;letter-spacing:.08em;width:100%;text-align:center;padding:4px;">Cancel</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+let _itpBlobStore={};
+
+function applyImportToProject(mode,blobKey){
+  const blob=_itpBlobStore[blobKey];
+  if(!blob){toast('Import data lost — try again');return;}
+  const sel=document.querySelector('input[name="itp-proj"]:checked');
+  if(!sel){toast('Select a project first');return;}
+  const targetId=sel.value;
+  const targetRoot=roots.find(r=>r.id===targetId);
+  if(!targetRoot){toast('Project not found');return;}
+  document.getElementById('itp-modal').remove();
+
+  if(blob._type==='lmsroot'){
+    const importedData=blob.data||newProjectData();
+    if(blob.phases){
+      if(!importedData.customPhases)importedData.customPhases={main:[],sub:[]};
+      if(blob.phases.main?.length)importedData.customPhases.main=[...blob.phases.main];
+      if(blob.phases.sub?.length)importedData.customPhases.sub=[...blob.phases.sub];
+    }
+    if(mode==='overwrite'){
+      // Replace the target project's data entirely but keep name/color/engine
+      saveRootData(targetId,importedData);
+      if(activeRootId===targetId)D=getRootData(targetId);
+      toast('✓ Overwrote "'+targetRoot.name+'" with imported data');
+    } else {
+      // Append — merge scripts, bugs, notes, versions etc.
+      const existing=getRootData(targetId);
+      existing.scripts=[...(existing.scripts||[]),...(importedData.scripts||[])];
+      existing.bugs=[...(existing.bugs||[]),...(importedData.bugs||[])];
+      existing.notes=[...(existing.notes||[]),...(importedData.notes||[])];
+      existing.versions=[...(existing.versions||[]),...(importedData.versions||[])];
+      existing.survivors=[...(existing.survivors||[]),...(importedData.survivors||[])];
+      existing.assets=[...(existing.assets||[]),...(importedData.assets||[])];
+      // Merge phases
+      if(!existing.customPhases)existing.customPhases={main:[],sub:[]};
+      const existIds=new Set([...existing.customPhases.main,...existing.customPhases.sub].map(p=>p.id));
+      (importedData.customPhases?.main||[]).forEach(p=>{if(!existIds.has(p.id))existing.customPhases.main.push(p);});
+      (importedData.customPhases?.sub||[]).forEach(p=>{if(!existIds.has(p.id))existing.customPhases.sub.push(p);});
+      saveRootData(targetId,existing);
+      if(activeRootId===targetId)D=getRootData(targetId);
+      toast('✓ Appended imported data into "'+targetRoot.name+'"');
+    }
+  } else if(blob._type==='lmstasks'){
+    const existing=getRootData(targetId);
+    if(!existing.customPhases)existing.customPhases={main:[],sub:[]};
+    if(mode==='overwrite'){
+      existing.customPhases.main=blob.main?blob.main.map(p=>({...p})):[];
+      existing.customPhases.sub=blob.sub?blob.sub.map(p=>({...p,_subPhase:true})):[];
+    } else {
+      const existIds=new Set([...existing.customPhases.main,...existing.customPhases.sub].map(p=>p.id));
+      (blob.main||[]).forEach(p=>{if(!existIds.has(p.id))existing.customPhases.main.push({...p});});
+      (blob.sub||[]).forEach(p=>{if(!existIds.has(p.id))existing.customPhases.sub.push({...p,_subPhase:true});});
+    }
+    saveRootData(targetId,existing);
+    if(activeRootId===targetId){D=getRootData(targetId);buildPhaseGrids();updateGlobal();}
+    toast('✓ '+(mode==='overwrite'?'Overwrote':'Appended')+' phases into "'+targetRoot.name+'"');
+  }
+  delete _itpBlobStore[blobKey];
+  renderRootGrid();
+}
+
+// ====================================================
 // IMPORT MODAL — overwrite / append + dashboard notice
 // ====================================================
 function showImportModal(type,label){
@@ -1565,6 +1859,14 @@ function showImportModal(type,label){
     overwriteDesc='All current projects are removed and replaced with everything in the backup file.';
   }
 
+  // For root/tasks imports, allow "Import to Project" option
+  const showImportToProj=(type==='root'||type==='tasks')&&roots.length>0;
+  const importToProjBtn=showImportToProj?`
+    <button onclick="triggerImportToProject()" style="background:linear-gradient(135deg,rgba(74,154,240,.12),rgba(74,154,240,.06));border:1px solid #4a9af0;color:#4a9af0;font-family:var(--font);font-size:10px;padding:12px 16px;cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">
+      <div style="font-size:12px;margin-bottom:4px;">⇒ Import to Project</div>
+      <div style="font-size:9px;color:var(--text3);line-height:1.5;">Choose any existing project and append or overwrite it — regardless of the imported file's name.</div>
+    </button>`:'';
+
   const modal=document.createElement('div');
   modal.id='import-mode-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
@@ -1581,10 +1883,22 @@ function showImportModal(type,label){
           <div style="font-size:12px;margin-bottom:4px;">${overwriteTitle}</div>
           <div style="font-size:9px;color:var(--text3);line-height:1.5;">${overwriteDesc}</div>
         </button>
+        ${importToProjBtn}
       </div>
       <button onclick="document.getElementById('import-mode-modal').remove();_pendingImportBlob=null;_pendingImportType=null;" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:9px;cursor:pointer;letter-spacing:.08em;width:100%;text-align:center;padding:4px;">Cancel</button>
     </div>`;
   document.body.appendChild(modal);
+}
+
+function triggerImportToProject(){
+  const modal=document.getElementById('import-mode-modal');if(modal)modal.remove();
+  if(!_pendingImportBlob){toast('Nothing to import');return;}
+  const blob=_pendingImportBlob;
+  const blobKey='itp_'+Date.now();
+  _itpBlobStore[blobKey]=blob;
+  blob._itp_key=blobKey;
+  _pendingImportBlob=null;_pendingImportType=null;
+  openImportToProjectPicker(blob);
 }
 
 function applyImport(mode){
@@ -2838,6 +3152,85 @@ let srvState = {
   shortId: '',
 };
 
+// Multi-server support — up to 5 simultaneous server connections
+// Each entry: {serverKey, serverName, username, isHost, myId, shortId, pollInterval}
+let multiServers = []; // loaded from localStorage on init
+const MAX_SERVERS = 5;
+
+function saveMultiServers(){
+  try{localStorage.setItem('lms_multi_servers',JSON.stringify(multiServers.map(s=>({serverKey:s.serverKey,serverName:s.serverName,username:s.username,isHost:s.isHost,myId:s.myId,shortId:s.shortId}))));}catch(e){}
+}
+async function loadMultiServers(){
+  try{
+    const saved=localStorage.getItem('lms_multi_servers');
+    if(!saved)return;
+    const arr=JSON.parse(saved);
+    for(const sv of arr){
+      if(getSrvDbUrl()){
+        const meta=await fbGet('/servers/'+sv.serverKey+'/meta');
+        if(meta&&!meta.deleted){
+          multiServers.push({...sv,pollInterval:null});
+          await fbSet('/servers/'+sv.serverKey+'/members/'+sv.myId,{name:sv.username,lastSeen:Date.now(),isHost:sv.isHost,uid:sv.myId});
+        }
+      }
+    }
+    saveMultiServers();
+  }catch(e){}
+}
+
+function getServerById(serverKey){return multiServers.find(s=>s.serverKey===serverKey)||null;}
+function isConnectedToServer(serverKey){return multiServers.some(s=>s.serverKey===serverKey);}
+
+// Add a new server connection to the multi-server list
+function addMultiServer(sv){
+  if(multiServers.length>=MAX_SERVERS){
+    toast('You already have '+MAX_SERVERS+' servers. Leave one to add another.');
+    return false;
+  }
+  const existing=multiServers.findIndex(s=>s.serverKey===sv.serverKey);
+  if(existing>=0)multiServers[existing]={...sv,pollInterval:multiServers[existing].pollInterval};
+  else multiServers.push({...sv,pollInterval:null});
+  saveMultiServers();
+  return true;
+}
+
+function removeMultiServer(serverKey){
+  const idx=multiServers.findIndex(s=>s.serverKey===serverKey);
+  if(idx>=0){
+    if(multiServers[idx].pollInterval)clearInterval(multiServers[idx].pollInterval);
+    multiServers.splice(idx,1);
+    saveMultiServers();
+  }
+}
+
+// Start per-server heartbeat
+function startServerHeartbeat(serverKey){
+  const sv=getServerById(serverKey);
+  if(!sv)return;
+  if(sv.pollInterval)clearInterval(sv.pollInterval);
+  sv.pollInterval=setInterval(async()=>{
+    const meta=await fbGet('/servers/'+serverKey+'/meta');
+    if(!meta||meta.deleted){
+      toast('⚠ Server "'+sv.serverName+'" was deleted by the host.');
+      const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
+      localStorage.setItem('lms_created_servers',JSON.stringify(localCreated.filter(s=>s.name.toLowerCase()!==sv.serverName?.toLowerCase())));
+      const localRecent=JSON.parse(localStorage.getItem('lms_recent_servers')||'[]');
+      localStorage.setItem('lms_recent_servers',JSON.stringify(localRecent.filter(s=>s.name.toLowerCase()!==sv.serverName?.toLowerCase())));
+      removeMultiServer(serverKey);
+      // If we were in a project on this server, go home
+      if(srvState.connected&&srvState.serverKey===serverKey){
+        srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
+        localStorage.removeItem('lms_active_server');
+        if(document.getElementById('app-shell').classList.contains('visible'))goHome();
+        else renderRootGrid();
+      } else renderRootGrid();
+      return;
+    }
+    await fbPatch('/servers/'+serverKey+'/members/'+sv.myId,{lastSeen:Date.now()});
+    if(document.getElementById('root-screen-wrap').style.display!=='none') renderRootGrid();
+  },7000);
+}
+
 // =====================================================
 // ACCOUNT SYSTEM
 // =====================================================
@@ -3618,9 +4011,16 @@ function logoutUser(){
   currentUser=null;
   localStorage.removeItem('lms_session');
   localStorage.removeItem('lms_active_server');
-  // Disconnect server if connected
+  localStorage.removeItem('lms_multi_servers');
+  // Disconnect all servers
+  multiServers.forEach(sv=>{
+    if(sv.pollInterval)clearInterval(sv.pollInterval);
+    if(sv.myId&&getSrvDbUrl())fbDelete('/servers/'+sv.serverKey+'/members/'+sv.myId);
+  });
+  multiServers.length=0;
+  // Disconnect srvState if connected
   if(srvState.connected){
-    fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
+    if(srvState.serverKey&&srvState.myId&&getSrvDbUrl()) fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
     stopSrvPolling();
     srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
   }
@@ -3698,6 +4098,8 @@ loadRoots();
     renderRootGrid();
     updateAccountChip();
     addLogoutBtn();
+    // Load multi-server connections
+    if(getSrvDbUrl()) loadMultiServers().then(()=>{if(multiServers.length>0)renderRootGrid();});
   } else {
     document.getElementById('login-screen').style.display='flex';
     if(!getSrvDbUrl()){
@@ -3832,9 +4234,19 @@ function copyServerInvite(){
 // ---- UI helpers ----
 function openServerHub(){
   document.getElementById('server-hub-overlay').style.display='block';
+  // Reset manual-open state so lobby panel starts collapsed if already connected
+  const lobbyPanel=document.getElementById('srv-lobby-panel');
+  if(lobbyPanel){lobbyPanel.dataset.manualOpen='0';lobbyPanel.style.display='none';}
+  const addBtn=document.getElementById('srv-add-another-btn');
+  if(addBtn)addBtn.textContent='+ JOIN / HOST ANOTHER SERVER';
   renderSrvStatus();
   loadRecentServers();
   loadCreatedServers();
+  // Update capacity bar
+  const capText=document.getElementById('srv-capacity-text');
+  const capFill=document.getElementById('srv-capacity-fill');
+  if(capText){capText.textContent=multiServers.length+' / '+MAX_SERVERS;capText.style.color=multiServers.length>=MAX_SERVERS?'var(--accent3)':'var(--accent2)';}
+  if(capFill){capFill.style.width=(multiServers.length/MAX_SERVERS*100)+'%';capFill.style.background=multiServers.length>=MAX_SERVERS?'var(--accent3)':'var(--accent2)';}
   if(currentUser){
     const dn=currentUser.displayName||currentUser.username;
     const hl=document.getElementById('host-as-label');const jl=document.getElementById('join-as-label');
@@ -3872,19 +4284,54 @@ function switchSrvTab(tab){
 
 function renderSrvStatus(){
   const dot=document.getElementById('srv-status-dot');
-  const dbBtn=document.getElementById('srv-db-setup-btn');if(dbBtn){dbBtn.style.display=srvState.connected?'none':'inline-block';dbBtn.textContent=getSrvDbUrl()?'✓ DB Ready':'⚙ DB Setup';dbBtn.style.color=getSrvDbUrl()?'var(--accent)':'var(--text3)';dbBtn.style.borderColor=getSrvDbUrl()?'var(--accent)':'var(--border2)';}
+  const dbBtn=document.getElementById('srv-db-setup-btn');if(dbBtn){dbBtn.style.display=(srvState.connected||multiServers.length>0)?'none':'inline-block';dbBtn.textContent=getSrvDbUrl()?'✓ DB Ready':'⚙ DB Setup';dbBtn.style.color=getSrvDbUrl()?'var(--accent)':'var(--text3)';dbBtn.style.borderColor=getSrvDbUrl()?'var(--accent)':'var(--border2)';}
   const txt=document.getElementById('srv-status-txt');
   const discBtn=document.getElementById('srv-disconnect-btn');
   const lobbyPanel=document.getElementById('srv-lobby-panel');
   const activePanel=document.getElementById('srv-active-panel');
+
+  const totalConnected=multiServers.length;
+
   if(srvState.connected){
     dot.style.background='var(--accent2)';
     dot.style.boxShadow='0 0 8px var(--accent2)';
     const idLabel=srvState.shortId?' · ID: '+srvState.shortId:'';
-    txt.textContent='Connected to: '+srvState.serverName+' as '+srvState.username+(srvState.isHost?' [HOST]':'')+idLabel;
+    const extraLabel=totalConnected>1?' · '+totalConnected+'/'+MAX_SERVERS+' servers':'';
+    txt.textContent='Connected to: '+srvState.serverName+' as '+srvState.username+(srvState.isHost?' [HOST]':'')+idLabel+extraLabel;
     discBtn.style.display='inline-block';
-    lobbyPanel.style.display='none';
+    if(lobbyPanel.dataset.manualOpen!=='1')lobbyPanel.style.display='none';
     activePanel.style.display='block';
+    const addAnotherWrap=document.getElementById('srv-add-another-wrap');
+    if(addAnotherWrap)addAnotherWrap.style.display=multiServers.length>=MAX_SERVERS?'none':'block';
+    // Inject multi-server switcher if multiple servers
+    let switcherEl=document.getElementById('srv-switcher');
+    if(totalConnected>1){
+      if(!switcherEl){
+        switcherEl=document.createElement('div');
+        switcherEl.id='srv-switcher';
+        switcherEl.style.cssText='display:flex;gap:6px;flex-wrap:wrap;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:6px;';
+        const statusWrap=txt.parentElement;
+        if(statusWrap)statusWrap.appendChild(switcherEl);
+      }
+      switcherEl.innerHTML=multiServers.map(sv=>{
+        const active=sv.serverKey===srvState.serverKey;
+        return `<button onclick="switchActiveServer('${sv.serverKey}')" style="background:${active?'linear-gradient(135deg,rgba(74,240,200,.15),rgba(74,240,200,.07))':'var(--bg3)'};border:1px solid ${active?'var(--accent2)':'var(--border)'};color:${active?'var(--accent2)':'var(--text3)'};font-family:var(--font);font-size:8px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">${escHtml(sv.serverName)}${sv.isHost?' ⚡':''}</button>`;
+      }).join('');
+    } else if(switcherEl){switcherEl.remove();}
+  } else if(totalConnected>0){
+    // Multi-servers exist but srvState not set — pick first
+    const sv=multiServers[0];
+    dot.style.background='var(--accent2)';
+    dot.style.boxShadow='0 0 8px var(--accent2)';
+    txt.textContent=totalConnected+' server'+(totalConnected>1?'s':'')+' active · '+multiServers.map(s=>s.serverName).join(', ');
+    discBtn.style.display='inline-block';
+    if(lobbyPanel.dataset.manualOpen!=='1')lobbyPanel.style.display='none';
+    activePanel.style.display='block';
+    const addAnotherWrap2=document.getElementById('srv-add-another-wrap');
+    if(addAnotherWrap2)addAnotherWrap2.style.display=totalConnected>=MAX_SERVERS?'none':'block';
+    // Auto-set srvState to first server
+    srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId};
+    localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId}));
   } else {
     dot.style.background='#444';
     dot.style.boxShadow='none';
@@ -3892,6 +4339,40 @@ function renderSrvStatus(){
     discBtn.style.display='none';
     lobbyPanel.style.display='block';
     activePanel.style.display='none';
+    const switcherEl=document.getElementById('srv-switcher');
+    if(switcherEl)switcherEl.remove();
+  }
+}
+
+function switchActiveServer(serverKey){
+  const sv=getServerById(serverKey);
+  if(!sv)return;
+  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,activeProjId:null};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId}));
+  renderSrvStatus();
+  renderActiveServer();
+  renderRootGrid();
+}
+
+// Toggle the join/host panel while already connected to servers
+function toggleAddAnotherServer(){
+  const lobbyPanel=document.getElementById('srv-lobby-panel');
+  const btn=document.getElementById('srv-add-another-btn');
+  if(!lobbyPanel)return;
+  const isOpen=lobbyPanel.dataset.manualOpen==='1';
+  if(isOpen){
+    lobbyPanel.style.display='none';
+    lobbyPanel.dataset.manualOpen='0';
+    if(btn)btn.textContent='+ JOIN / HOST ANOTHER SERVER';
+  } else {
+    lobbyPanel.style.display='block';
+    lobbyPanel.dataset.manualOpen='1';
+    if(btn)btn.textContent='▲ COLLAPSE';
+    // Update capacity bar whenever panel is opened
+    const capText=document.getElementById('srv-capacity-text');
+    const capFill=document.getElementById('srv-capacity-fill');
+    if(capText){capText.textContent=multiServers.length+' / '+MAX_SERVERS;capText.style.color=multiServers.length>=MAX_SERVERS?'var(--accent3)':'var(--accent2)';}
+    if(capFill){capFill.style.width=(multiServers.length/MAX_SERVERS*100)+'%';capFill.style.background=multiServers.length>=MAX_SERVERS?'var(--accent3)':'var(--accent2)';}
   }
 }
 
@@ -3906,6 +4387,12 @@ async function hostServer(){
   if(!username||!serverName||!pass){toast('Fill all fields');return;}
   if(pass!==pass2){toast('Passwords do not match');return;}
 
+  // Check if already at max servers
+  if(multiServers.length>=MAX_SERVERS){
+    toast('You already have '+MAX_SERVERS+' servers running. Leave one to create another.');
+    return;
+  }
+
   toast('Creating server…');
   const serverKey=hashStr(serverName.toLowerCase());
   const passHash=await hashPass(pass);
@@ -3913,7 +4400,7 @@ async function hostServer(){
 
   // Check if server already exists
   const existing=await fbGet('/servers/'+serverKey+'/meta');
-  if(existing && existing.passHash){
+  if(existing && existing.passHash && !existing.deleted){
     toast('Server name taken — try another');
     return;
   }
@@ -3924,21 +4411,26 @@ async function hostServer(){
   const shortIdClean=shortId.replace(/-/g,'');
 
   // Create server
-  await fbSet('/servers/'+serverKey+'/meta',{name:serverName,passHash,createdAt:now,hostId:myId,shortId:shortId,visibility:serverType});
+  await fbSet('/servers/'+serverKey+'/meta',{name:serverName,passHash,createdAt:now,hostId:myId,shortId:shortId,visibility:serverType,deleted:false});
   await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:now,isHost:true,uid:myId});
   await fbSet('/servers/'+serverKey+'/projects',{});
   // Store reverse-lookup index for short ID joining
   await fbSet('/serverIds/'+shortIdClean,serverKey);
 
-  // Save state
-  srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null,shortId:shortId};
+  // Add to multi-server list
+  const sv={serverKey,serverName,username,isHost:true,myId,shortId};
+  addMultiServer(sv);
+  startServerHeartbeat(serverKey);
+
+  // Also set as active srvState for current session context
+  srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null,shortId};
   localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName,username,isHost:true,myId,shortId}));
   saveRecentServer(serverName,pass);
   saveCreatedServer(serverName,pass);
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
-  toast('Server launched: '+serverName);
+  toast('Server launched: '+serverName+' ('+multiServers.length+'/'+MAX_SERVERS+')');
   // Close hub, go back to root screen with server projects visible
   closeServerHub();
   renderRootGrid();
@@ -3975,9 +4467,28 @@ async function joinServer(){
   if(!meta){toast('Server not found');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
   if(meta.passHash!==passHash){toast('Wrong password');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
 
+  // Block non-host from joining private servers
+  const myIdCheck=currentUser?.uid;
+  if(meta.visibility==='private'&&meta.hostId&&meta.hostId!==myIdCheck){
+    toast('This is a private server — only the owner can access it');
+    if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);
+    return;
+  }
+
   const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
   const isHost=!!(meta.hostId && meta.hostId===myId);
   await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost,uid:myId});
+
+  // Check multi-server limit (only for new servers, not re-joining)
+  if(!isConnectedToServer(serverKey)&&multiServers.length>=MAX_SERVERS){
+    toast('You already have '+MAX_SERVERS+' servers. Leave one to join another.');
+    if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);
+    return;
+  }
+
+  const sv={serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||''};
+  addMultiServer(sv);
+  startServerHeartbeat(serverKey);
 
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||''};
   localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||''}));
@@ -3986,7 +4497,7 @@ async function joinServer(){
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
-  toast('Joined server: '+meta.name+(isHost?' [HOST]':''));
+  toast('Joined server: '+meta.name+(isHost?' [HOST]':'')+(multiServers.length>1?' ('+multiServers.length+'/'+MAX_SERVERS+' servers)':''));
   closeServerHub();
   renderRootGrid();
 }
@@ -4015,9 +4526,28 @@ async function joinServerById(){
   if(!meta){toast('Server not found');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
   if(meta.passHash!==passHash){toast('Wrong password');if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);return;}
 
+  // Block non-host from joining private servers
+  const myIdByIdCheck=currentUser?.uid;
+  if(meta.visibility==='private'&&meta.hostId&&meta.hostId!==myIdByIdCheck){
+    toast('This is a private server — only the owner can access it');
+    if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);
+    return;
+  }
+
   const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
   const isHost=!!(meta.hostId && meta.hostId===myId);
   await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost,uid:myId});
+
+  // Check multi-server limit
+  if(!isConnectedToServer(serverKey)&&multiServers.length>=MAX_SERVERS){
+    toast('You already have '+MAX_SERVERS+' servers. Leave one to join another.');
+    if(joinUrlRaw&&joinUrlRaw!==prevUrl)setSrvDbUrl(prevUrl);
+    return;
+  }
+
+  const sv={serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw};
+  addMultiServer(sv);
+  startServerHeartbeat(serverKey);
 
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||shortIdRaw};
   localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw}));
@@ -4032,17 +4562,23 @@ async function joinServerById(){
 }
 
 // ---- DISCONNECT ----
-async function disconnectServer(){
-  if(!srvState.connected)return;
+async function disconnectServer(serverKeyToLeave){
+  const key=serverKeyToLeave||srvState.serverKey;
+  if(!key)return;
+  const sv=getServerById(key)||srvState;
   // Remove member presence
-  await fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
-  stopSrvPolling();
-  srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0};
-  localStorage.removeItem('lms_active_server');
-  renderSrvStatus();
-  document.getElementById('srv-active-panel').style.display='none';
-  document.getElementById('srv-lobby-panel').style.display='block';
-  toast('Left server');
+  if(sv.myId)await fbDelete('/servers/'+key+'/members/'+sv.myId);
+  removeMultiServer(key);
+  // If this was the active session server, clear srvState
+  if(srvState.serverKey===key){
+    stopSrvPolling();
+    srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
+    localStorage.removeItem('lms_active_server');
+    renderSrvStatus();
+    document.getElementById('srv-active-panel').style.display='none';
+    document.getElementById('srv-lobby-panel').style.display='block';
+  }
+  toast('Left server'+(sv.serverName?' "'+sv.serverName+'"':''));
   renderRootGrid();
 }
 
@@ -4051,6 +4587,23 @@ function startSrvHeartbeat(){
   stopSrvPolling();
   srvState.pollInterval=setInterval(async()=>{
     if(!srvState.connected)return;
+    // Check if server was deleted (tombstone)
+    const meta=await fbGet('/servers/'+srvState.serverKey+'/meta');
+    if(!meta||meta.deleted){
+      toast('⚠ This server was deleted by the host. You have been disconnected.');
+      stopSrvPolling();
+      // Remove local state
+      const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
+      localStorage.setItem('lms_created_servers',JSON.stringify(localCreated.filter(s=>s.name.toLowerCase()!==srvState.serverName?.toLowerCase())));
+      const localRecent=JSON.parse(localStorage.getItem('lms_recent_servers')||'[]');
+      localStorage.setItem('lms_recent_servers',JSON.stringify(localRecent.filter(s=>s.name.toLowerCase()!==srvState.serverName?.toLowerCase())));
+      srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
+      localStorage.removeItem('lms_active_server');
+      // If inside a server project, send user home
+      if(document.getElementById('app-shell').classList.contains('visible')){goHome();}
+      else{renderRootGrid();}
+      return;
+    }
     // Keep presence alive
     await fbPatch('/servers/'+srvState.serverKey+'/members/'+srvState.myId,{lastSeen:Date.now()});
     // Refresh hub if open
@@ -4202,6 +4755,9 @@ async function confirmDeleteServer(){
     const typed=(document.getElementById('del-srv-inp').value||'').trim();
     if(typed!=='delete '+code){toast('Confirmation did not match — cancelled');closeModal();return;}
     toast('Deleting server…');
+    // Write tombstone FIRST so connected members detect the deletion
+    await fbSet('/servers/'+srvState.serverKey+'/meta/deleted',true);
+    await fbSet('/servers/'+srvState.serverKey+'/meta/deletedAt',Date.now());
     // Remove shortId reverse-index
     if(srvState.shortId){
       const clean=srvState.shortId.replace(/-/g,'');
@@ -4221,6 +4777,7 @@ async function confirmDeleteServer(){
     localStorage.setItem('lms_recent_servers',JSON.stringify(localRecent.filter(s=>s.name.toLowerCase()!==deletedName.toLowerCase())));
     closeModal();
     stopSrvPolling();
+    removeMultiServer(srvState.serverKey);
     localStorage.removeItem('lms_active_server');
     srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
     closeServerHub();
@@ -4327,7 +4884,7 @@ async function renderRootServerProjects(){
       <div class="rc-prog"><div class="rc-prog-bar"><div class="rc-prog-fill" style="width:${pct}%;background:${col}"></div></div><div class="rc-prog-txt">${pct}% complete</div></div>
       <div class="rc-actions">
         <button class="rc-action-btn" onclick="event.stopPropagation();exportServerRoot('${id}')">Export</button>
-        ${srvState.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();deleteSrvProject('' + id + '')" style="color:var(--accent3);">Delete</button>`:''}
+        ${srvState.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();deleteSrvProject('${id}')" style="color:var(--accent3);">Delete</button>`:''}
       </div>`;
     card.addEventListener('click',()=>openSrvProject(id));
     grid.appendChild(card);
@@ -5509,15 +6066,38 @@ function saveCreatedServer(name,pass){
 }
 
 function loadCreatedServers(){
-  const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
   const block=document.getElementById('srv-created-block');
   const list=document.getElementById('srv-created-list');
   if(!block||!list)return;
 
-  async function _render(created){
+  async function _verifyAndRender(created){
     if(!created.length){block.style.display='none';return;}
+    // Verify each server still exists in Firebase
+    const verified=[];
+    for(const s of created){
+      if(getSrvDbUrl()){
+        const key=hashStr(s.name.toLowerCase());
+        const meta=await fbGet('/servers/'+key+'/meta');
+        if(meta){verified.push(s);}
+      } else {
+        verified.push(s);
+      }
+    }
+    // Prune stale servers from localStorage
+    if(verified.length!==created.length){
+      localStorage.setItem('lms_created_servers',JSON.stringify(verified));
+      if(currentUser&&getSrvDbUrl()){
+        // Also prune from Firebase account store
+        const deletedNames=created.filter(s=>!verified.find(v=>v.name===s.name)).map(s=>s.name);
+        deletedNames.forEach(name=>{
+          const fbKey=name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+          fbDelete('/accounts/'+currentUser.uid+'/createdServers/'+fbKey).catch(()=>{});
+        });
+      }
+    }
+    if(!verified.length){block.style.display='none';return;}
     block.style.display='block';
-    list.innerHTML=created.map(s=>`
+    list.innerHTML=verified.map(s=>`
       <div style="background:var(--bg2);border:1px solid rgba(200,240,74,.2);border-radius:2px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="quickJoin('${escHtml(s.name)}','${escHtml(s.pass)}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(200,240,74,.2)'">
         <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>
         <div style="font-size:11px;color:var(--text);flex:1;">${escHtml(s.name)}</div>
@@ -5527,16 +6107,16 @@ function loadCreatedServers(){
     `).join('');
   }
 
+  const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
   if(localCreated.length){
-    _render(localCreated);
+    _verifyAndRender(localCreated);
   } else if(currentUser&&getSrvDbUrl()){
     // Try loading from Firebase (cross-browser)
     fbGet('/accounts/'+currentUser.uid+'/createdServers').then(fbCreated=>{
       if(fbCreated){
         const arr=Object.values(fbCreated).sort((a,b)=>b.ts-a.ts);
-        // Sync back to localStorage
         localStorage.setItem('lms_created_servers',JSON.stringify(arr.slice(0,10)));
-        _render(arr);
+        _verifyAndRender(arr);
       } else {
         block.style.display='none';
       }
@@ -5700,9 +6280,13 @@ document.addEventListener('keydown', function(e){
         <button id="srv-change-pw-btn" onclick="promptChangeServerPassword()" style="display:none;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.color='var(--accent4)';this.style.borderColor='var(--accent4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">🔑 Change Password</button>
         <button id="srv-delete-server-btn" onclick="confirmDeleteServer()" style="display:none;background:none;border:1px solid rgba(240,74,74,.5);color:var(--accent3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">🗑 Delete Server</button>
       </div>
+      <!-- Add another server toggle -->
+      <div style="margin-top:14px;text-align:center;" id="srv-add-another-wrap">
+        <button id="srv-add-another-btn" onclick="toggleAddAnotherServer()" style="background:linear-gradient(135deg,rgba(200,240,74,.07),rgba(74,240,200,.04));border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:5px 16px;cursor:pointer;border-radius:1px;letter-spacing:.1em;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">+ JOIN / HOST ANOTHER SERVER</button>
+      </div>
     </div>
 
-    <!-- Join/Create tabs (shown when disconnected) -->
+    <!-- Join/Create tabs (always in DOM; shown/collapsed via toggleAddAnotherServer when already connected) -->
     <div id="srv-lobby-panel">
       <div style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
         <button id="srv-tab-host" onclick="switchSrvTab('host')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">⚡ HOST SERVER</button>
@@ -5714,6 +6298,11 @@ document.addEventListener('keydown', function(e){
         <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;">
           <div style="font-family:var(--vt);font-size:16px;color:var(--accent);margin-bottom:14px;letter-spacing:.08em;">CREATE A SERVER</div>
           <div style="font-size:9px;color:var(--text3);margin-bottom:12px;padding:6px 10px;background:var(--bg3);border-radius:2px;border:1px solid var(--border);">Hosting as <strong style="color:var(--accent);" id="host-as-label">you</strong></div>
+          <div id="srv-capacity-bar" style="font-size:9px;letter-spacing:.1em;padding:6px 10px;background:var(--bg3);border-radius:2px;border:1px solid var(--border);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            <span style="color:var(--text3);">SERVER SLOTS:</span>
+            <span id="srv-capacity-text" style="color:var(--accent2);">0 / 5</span>
+            <div style="flex:1;height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;margin-left:4px;"><div id="srv-capacity-fill" style="height:4px;background:var(--accent2);border-radius:2px;width:0%;transition:width .3s;"></div></div>
+          </div>
           <!-- Server Type -->
           <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:6px;">SERVER TYPE</label>
           <div style="display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:2px;overflow:hidden;">

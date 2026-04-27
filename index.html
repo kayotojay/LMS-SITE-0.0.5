@@ -523,8 +523,10 @@ select option{background:var(--bg2);}
     <div style="font-family:var(--vt);font-size:52px;letter-spacing:.12em;line-height:1;background:linear-gradient(135deg,#c8f04a,#4af0c8,#a04af0,#c8f04a);background-size:300% 300%;animation:gradShift 6s ease infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;">LMS</div>
     <div style="font-size:9px;color:var(--text3);letter-spacing:.3em;text-transform:uppercase;margin-bottom:24px;">Dev Hub — Sign In</div>
 
-    <div id="login-db-warning" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:3px;padding:10px 14px;margin-bottom:16px;font-size:10px;color:var(--accent3);letter-spacing:.06em;line-height:1.6;">
-      ⚠ Database not configured.<br><button onclick="openFirebaseSetup()" style="background:none;border:none;color:var(--accent3);font-family:var(--font);font-size:10px;cursor:pointer;text-decoration:underline;padding:0;margin-top:4px;display:block;width:100%;">Click here to set up Firebase →</button>
+    <div id="login-db-warning" style="display:none;background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:3px;padding:14px 16px;margin-bottom:16px;letter-spacing:.06em;line-height:1.6;">
+      <div style="font-size:11px;color:var(--accent3);font-weight:bold;margin-bottom:6px;">⚠ NO DATABASE CONFIGURED</div>
+      <div style="font-size:9px;color:var(--text2);margin-bottom:10px;line-height:1.7;">You need a free Firebase Realtime Database before you can create an account or sign in. It only takes ~2 minutes.</div>
+      <button onclick="openFirebaseSetup()" style="width:100%;padding:9px;background:rgba(240,74,74,.15);border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:.08em;" onmouseover="this.style.background='rgba(240,74,74,.25)'" onmouseout="this.style.background='rgba(240,74,74,.15)'">⚙ Set Up Database First →</button>
     </div>
 
     <!-- Wrappable body for verification panel swapping -->
@@ -568,7 +570,7 @@ select option{background:var(--bg2);}
     </div><!-- end login-body-wrap -->
 
     <div style="margin-top:16px;">
-      <button onclick="openFirebaseSetup()" style="background:none;border:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:9px;padding:4px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">⚙ DB Setup</button>
+      <button onclick="openFirebaseSetup()" id="login-db-setup-btn" style="background:none;border:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:9px;padding:4px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">⚙ DB Setup</button>
     </div>
   </div>
 </div>
@@ -2611,6 +2613,17 @@ function renderAccountSettings(){
         ? `<button onclick="promptChangePassword()" class="btn accent" style="width:100%;padding:9px;font-size:11px;letter-spacing:.1em;">Change Password</button>`
         : `<div style="font-size:9px;color:var(--accent3);">Password change limit reached (3 per 25 days). Try again in ${passRl.daysLeft} day(s).</div>`}
     </div>
+    <!-- Database -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;margin-bottom:14px;">
+      <div style="font-size:8px;color:var(--text3);letter-spacing:.22em;margin-bottom:14px;">DATABASE</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:11px;color:var(--text);margin-bottom:2px;">Firebase Database</div>
+          <div style="font-size:9px;color:var(--text3);word-break:break-all;margin-top:2px;">${getSrvDbUrl()?`<span style="color:var(--accent);">✓ Connected</span> <span style="color:var(--text3);">${escHtml(getSrvDbUrl())}</span>`:'<span style="color:var(--accent3);">⚠ Not configured</span>'}</div>
+        </div>
+        <button onclick="closeAccountSettings();openFirebaseSetup();" style="background:none;border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:9px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;white-space:nowrap;" onmouseover="this.style.background='rgba(74,240,200,.1)'" onmouseout="this.style.background='none'">⚙ Change DB</button>
+      </div>
+    </div>
     <!-- Danger zone -->
     <div style="background:var(--bg2);border:1px solid rgba(240,74,74,.3);border-radius:3px;padding:18px;">
       <div style="font-size:8px;color:var(--accent3);letter-spacing:.22em;margin-bottom:14px;">DANGER ZONE</div>
@@ -3245,7 +3258,12 @@ loadRoots();
     addLogoutBtn();
   } else {
     document.getElementById('login-screen').style.display='flex';
-    if(!getSrvDbUrl()){document.getElementById('login-db-warning').style.display='block';}
+    if(!getSrvDbUrl()){
+      document.getElementById('login-db-warning').style.display='block';
+      const btn=document.getElementById('login-db-setup-btn');
+      if(btn){btn.style.color='var(--accent2)';btn.style.borderColor='var(--accent2)';btn.style.boxShadow='0 0 10px rgba(74,240,200,.15)';}
+      setTimeout(()=>openFirebaseSetup(), 300);
+    }
   }
 })();
 
@@ -5350,7 +5368,7 @@ document.addEventListener('keydown', function(e){
 </div>
 
 <!-- FIREBASE SETUP MODAL -->
-<div id="firebase-setup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:3000;overflow-y:auto;backdrop-filter:blur(8px);">
+<div id="firebase-setup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9000;overflow-y:auto;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);">
   <div style="max-width:540px;margin:60px auto;padding:0 20px 60px;">
     <div style="text-align:center;margin-bottom:28px;">
       <div style="font-family:var(--vt);font-size:40px;color:var(--accent2);letter-spacing:.1em;">DATABASE SETUP</div>

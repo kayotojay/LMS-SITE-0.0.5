@@ -408,7 +408,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .version-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;border-left:2px solid var(--vc,#c8f04a);}
 
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(3px);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:9500;backdrop-filter:blur(3px);}
 .modal-overlay.show{display:flex;}
 .modal{background:var(--bg2);border:1px solid var(--border2);padding:20px;min-width:320px;max-width:520px;width:93%;border-radius:3px;box-shadow:0 20px 60px rgba(0,0,0,.7);animation:fadeUp .2s ease;max-height:90vh;overflow-y:auto;}
 .modal-title{font-family:var(--vt);font-size:18px;color:var(--accent);letter-spacing:.08em;margin-bottom:14px;}
@@ -841,7 +841,7 @@ select option{background:var(--bg2);}
     <!-- Server-only nav — hidden when solo -->
     <div class="nav-section" id="solo-server-nav" style="display:none;">
       <div class="nav-label" style="color:var(--accent2);">Server</div>
-      <div class="nav-item" onclick="nav('chat')"><div class="nav-dot" style="background:var(--accent2);animation:glowPulse 2s infinite;"></div>Team Chat</div>
+      <div class="nav-item" onclick="if(srvState.connected){nav('chat');}else{toast('Connect to a server to use Team Chat');}"><div class="nav-dot" style="background:var(--accent2);animation:glowPulse 2s infinite;"></div>Team Chat</div>
     </div>
     <div class="sidebar-footer">
       <span id="sidebar-footer">solo dev</span>
@@ -1638,7 +1638,11 @@ const BLOCK_TYPES=[
 // NAV
 // =====================================================
 function nav(page){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>{
+    p.classList.remove('active');
+    // Explicitly hide — clears any inline display:flex set by chat activation
+    p.style.display='none';
+  });
   document.querySelectorAll('.nav-item,.nav-subitem').forEach(n=>n.classList.remove('active'));
   let pageEl=document.getElementById('page-'+page);
   if(!pageEl&&page.startsWith('custom_')){
@@ -1647,7 +1651,7 @@ function nav(page){
   }
   if(pageEl){
     if(page==='chat'){pageEl.style.display='flex';pageEl.classList.add('active');}
-    else{pageEl.style.display='';pageEl.classList.add('active');}
+    else{pageEl.style.display='block';pageEl.classList.add('active');}
   }
   const navEl=document.querySelector(`[onclick="nav('${page}')"]`)||document.getElementById('navitem-'+page);
   if(navEl)navEl.classList.add('active');
@@ -1665,10 +1669,15 @@ function nav(page){
   if(page==='assets')renderAssets();
   if(page==='bugs')renderBugs();
   if(page==='chat'){
+    if(!srvState.connected){toast('Connect to a server to use Team Chat');return;}
     const chatPage=document.getElementById('page-chat');
     if(chatPage){chatPage.style.display='flex';chatPage.classList.add('active');}
     renderSoloChat();
     srvBroadcastActivity('team chat');
+  } else {
+    // Make sure chat page is always hidden when on any other page
+    const chatPage=document.getElementById('page-chat');
+    if(chatPage){chatPage.style.display='none';chatPage.classList.remove('active');}
   }
 }
 
@@ -1814,8 +1823,8 @@ function timerToggle(){
     const dur=Math.floor((Date.now()-timerStart)/1000);
     if(dur>10){
       if(!D.sessions)D.sessions=[];
-      D.sessions.push({id:'ses_'+Date.now(),start:timerStart,duration:dur,date:new Date().toLocaleDateString(),ts:new Date().toLocaleString()});
-      save();logActivity('Session: '+fmtDur(dur),'#c8f04a');
+      D.sessions.push({id:'ses_'+Date.now(),start:timerStart,duration:dur,date:new Date().toLocaleDateString(),ts:new Date().toLocaleString(),loggedBy:currentUser?(currentUser.displayName||currentUser.username):'unknown'});
+      save();logActivity('Session: '+fmtDur(dur)+' ('+((currentUser&&(currentUser.displayName||currentUser.username))||'you')+')','#c8f04a');
     }
     document.getElementById('timer-start-btn').textContent='Start Session';
     document.getElementById('an-timer-display').className='timer-display';
@@ -1854,8 +1863,9 @@ function openLogSession(){
     const note=document.getElementById('ms-note').value;
     if(!D.sessions)D.sessions=[];
     const ds=new Date(dateStr);
-    D.sessions.push({id:'ses_'+Date.now(),start:ds.getTime(),duration:dur,date:ds.toLocaleDateString(),ts:ds.toLocaleDateString(),note});
-    save();closeModal();renderAnalytics();toast('Session logged: '+fmtDur(dur));
+    const loggedBy=currentUser?(currentUser.displayName||currentUser.username):'unknown';
+    D.sessions.push({id:'ses_'+Date.now(),start:ds.getTime(),duration:dur,date:ds.toLocaleDateString(),ts:ds.toLocaleDateString(),note,loggedBy});
+    save();closeModal();renderAnalytics();logActivity('Session logged: '+fmtDur(dur)+' by '+loggedBy,'#c8f04a');toast('Session logged: '+fmtDur(dur));
   },accent:true}]);
 }
 
@@ -1934,7 +1944,7 @@ function renderSessionList(sessions){
   el.innerHTML='';
   sessions.slice().reverse().slice(0,30).forEach(s=>{
     const row=document.createElement('div');row.className='session-row';
-    row.innerHTML=`<div class="session-dot"></div><span class="session-proj">${escHtml(s.note||'Dev session')}</span><span class="session-dur">${fmtDur(s.duration)}</span><span class="session-date">${s.date}</span><button class="xbtn" onclick="deleteSession('${s.id}')">x</button>`;
+    row.innerHTML=`<div class="session-dot"></div><span class="session-proj">${escHtml(s.note||'Dev session')}</span><span class="session-dur">${fmtDur(s.duration)}</span><span class="session-date">${s.date}</span>${s.loggedBy?`<span style="font-size:9px;color:var(--text3);letter-spacing:.05em;">by ${escHtml(s.loggedBy)}</span>`:''}<button class="xbtn" onclick="deleteSession('${s.id}')">x</button>`;
     el.appendChild(row);
   });
 }
@@ -3386,6 +3396,7 @@ async function _finalizeCreateAccount(username,displayName,email,password){
 function logoutUser(){
   currentUser=null;
   localStorage.removeItem('lms_session');
+  localStorage.removeItem('lms_active_server');
   // Disconnect server if connected
   if(srvState.connected){
     fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
@@ -3437,6 +3448,24 @@ loadRoots();
   if(currentUser){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('root-screen-wrap').style.display='block';
+    // Attempt to restore server connection from previous session
+    const savedSrv=localStorage.getItem('lms_active_server');
+    if(savedSrv&&getSrvDbUrl()){
+      try{
+        const sv=JSON.parse(savedSrv);
+        // Verify server still exists
+        const meta=await fbGet('/servers/'+sv.serverKey+'/meta');
+        if(meta){
+          // Re-register presence
+          const isHost=!!(meta.hostId&&meta.hostId===sv.myId);
+          await fbSet('/servers/'+sv.serverKey+'/members/'+sv.myId,{name:sv.username,lastSeen:Date.now(),isHost,uid:sv.myId});
+          srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:meta.name,username:sv.username,isHost,myId:sv.myId,activeProjId:null,shortId:sv.shortId||meta.shortId||''};
+          startSrvHeartbeat();
+        } else {
+          localStorage.removeItem('lms_active_server');
+        }
+      }catch(e){localStorage.removeItem('lms_active_server');}
+    }
     renderRootGrid();
     addLogoutBtn();
   } else {
@@ -3505,6 +3534,25 @@ async function fbPush(path,data){
 }
 async function fbDelete(path){
   try{await fetch(getSrvDbUrl()+path+'.json',{method:'DELETE'});return true;}catch(e){return false;}
+}
+
+// ---- SERVER TYPE SELECTION ----
+function selectSrvType(type){
+  document.getElementById('host-server-type').value=type;
+  const pubBtn=document.getElementById('srv-type-public');
+  const privBtn=document.getElementById('srv-type-private');
+  const desc=document.getElementById('srv-type-desc');
+  const activeStyle='background:linear-gradient(135deg,rgba(74,240,200,.15),rgba(74,240,200,.07));color:var(--accent2);';
+  const inactiveStyle='background:var(--bg3);color:var(--text3);';
+  if(type==='public'){
+    pubBtn.style.cssText=pubBtn.style.cssText.replace(/background:[^;]+;color:[^;]+;/,'')+activeStyle;
+    privBtn.style.cssText=privBtn.style.cssText.replace(/background:[^;]+;color:[^;]+;/,'')+inactiveStyle;
+    desc.innerHTML='<strong style="color:var(--accent2);">Public:</strong> Share with your team. Others can join with the server name + password.';
+  } else {
+    privBtn.style.cssText=privBtn.style.cssText.replace(/background:[^;]+;color:[^;]+;/,'')+activeStyle.replace('var(--accent2)','var(--accent5)');
+    pubBtn.style.cssText=pubBtn.style.cssText.replace(/background:[^;]+;color:[^;]+;/,'')+inactiveStyle;
+    desc.innerHTML='<strong style="color:var(--accent5);">Private Cloud:</strong> Just for you. Acts as your personal cloud backup — only accessible with your credentials. Perfect for solo projects you want synced across devices.';
+  }
 }
 
 // ---- JOIN METHOD TOGGLE ----
@@ -3608,6 +3656,7 @@ async function hostServer(){
   toast('Creating server…');
   const serverKey=hashStr(serverName.toLowerCase());
   const passHash=await hashPass(pass);
+  const serverType=(document.getElementById('host-server-type')?.value)||'public';
 
   // Check if server already exists
   const existing=await fbGet('/servers/'+serverKey+'/meta');
@@ -3622,7 +3671,7 @@ async function hostServer(){
   const shortIdClean=shortId.replace(/-/g,'');
 
   // Create server
-  await fbSet('/servers/'+serverKey+'/meta',{name:serverName,passHash,createdAt:now,hostId:myId,shortId:shortId});
+  await fbSet('/servers/'+serverKey+'/meta',{name:serverName,passHash,createdAt:now,hostId:myId,shortId:shortId,visibility:serverType});
   await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:now,isHost:true,uid:myId});
   await fbSet('/servers/'+serverKey+'/projects',{});
   // Store reverse-lookup index for short ID joining
@@ -3630,6 +3679,7 @@ async function hostServer(){
 
   // Save state
   srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null,shortId:shortId};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName,username,isHost:true,myId,shortId}));
   saveRecentServer(serverName,pass);
   saveCreatedServer(serverName,pass);
   startSrvHeartbeat();
@@ -3664,7 +3714,10 @@ async function joinServer(){
   await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost,uid:myId});
 
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||''};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||''}));
   saveRecentServer(serverName,pass);
+  // If you're the host, make sure it appears in "Servers You Created"
+  if(isHost)saveCreatedServer(meta.name,pass);
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
@@ -3697,7 +3750,10 @@ async function joinServerById(){
   await fbSet('/servers/'+serverKey+'/members/'+myId,{name:username,lastSeen:Date.now(),isHost,uid:myId});
 
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||shortIdRaw};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw}));
   saveRecentServer(meta.name,pass);
+  // If you're the host, make sure it appears in "Servers You Created"
+  if(isHost)saveCreatedServer(meta.name,pass);
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
@@ -3713,6 +3769,7 @@ async function disconnectServer(){
   await fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
   stopSrvPolling();
   srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0};
+  localStorage.removeItem('lms_active_server');
   renderSrvStatus();
   document.getElementById('srv-active-panel').style.display='none';
   document.getElementById('srv-lobby-panel').style.display='block';
@@ -3766,9 +3823,21 @@ async function renderActiveServer(){
   const countEl=document.getElementById('srv-member-count');
   document.getElementById('srv-active-name').textContent=srvState.serverName.toUpperCase();
   countEl.textContent=onlineMembers.length+' online';
+  // Show server type badge
+  const meta=await fbGet('/servers/'+srvState.serverKey+'/meta');
+  const visibility=(meta&&meta.visibility)||'public';
+  const srvNameEl=document.getElementById('srv-active-name');
+  if(srvNameEl){
+    const badge=visibility==='private'
+      ?`<span style="font-size:8px;padding:1px 6px;border:1px solid var(--accent5);color:var(--accent5);border-radius:1px;letter-spacing:.08em;margin-left:8px;">🔒 PRIVATE</span>`
+      :`<span style="font-size:8px;padding:1px 6px;border:1px solid var(--accent2);color:var(--accent2);border-radius:1px;letter-spacing:.08em;margin-left:8px;">⚡ PUBLIC</span>`;
+    srvNameEl.innerHTML=escHtml(srvState.serverName.toUpperCase())+badge;
+  }
   // Show delete server button only for host
   const delSrvBtn=document.getElementById('srv-delete-server-btn');
   if(delSrvBtn)delSrvBtn.style.display=srvState.isHost?'inline-block':'none';
+  const chgPwBtn=document.getElementById('srv-change-pw-btn');
+  if(chgPwBtn)chgPwBtn.style.display=srvState.isHost?'inline-block':'none';
   // Show server ID if available
   const idWrap=document.getElementById('srv-active-id-wrap');
   const idEl=document.getElementById('srv-active-id');
@@ -3817,6 +3886,40 @@ async function clearHostNotifs(){
   renderActiveServer();
 }
 
+// ---- CHANGE SERVER PASSWORD ----
+async function promptChangeServerPassword(serverName,currentPass){
+  openModal('Change Server Password',`
+    <div style="font-size:9px;color:var(--text3);margin-bottom:10px;letter-spacing:.1em;">Server: <strong style="color:var(--accent);">${escHtml(serverName||srvState.serverName)}</strong></div>
+    <label class="modal-label">CURRENT PASSWORD</label>
+    <input id="csp-current" class="modal-inp" type="password" placeholder="Current server password" style="margin-bottom:10px;" value="${escHtml(currentPass||'')}">
+    <label class="modal-label">NEW PASSWORD</label>
+    <input id="csp-new1" class="modal-inp" type="password" placeholder="New server password" style="margin-bottom:10px;">
+    <label class="modal-label">CONFIRM NEW PASSWORD</label>
+    <input id="csp-new2" class="modal-inp" type="password" placeholder="Confirm new password" style="margin-bottom:10px;">
+    <div id="csp-err" style="display:none;background:rgba(240,74,74,.1);border:1px solid var(--accent3);border-radius:2px;padding:8px 12px;font-size:10px;color:var(--accent3);"></div>
+  `,[{label:'Cancel',action:closeModal},{label:'Change Password',action:async()=>{
+    const cur=document.getElementById('csp-current').value;
+    const n1=document.getElementById('csp-new1').value;
+    const n2=document.getElementById('csp-new2').value;
+    const errEl=document.getElementById('csp-err');
+    if(!cur||!n1||!n2){errEl.textContent='Fill in all fields.';errEl.style.display='block';return;}
+    if(n1!==n2){errEl.textContent='New passwords do not match.';errEl.style.display='block';return;}
+    if(n1.length<4){errEl.textContent='Password must be at least 4 characters.';errEl.style.display='block';return;}
+    const srvKey=serverName?hashStr(serverName.toLowerCase()):srvState.serverKey;
+    const curHash=await hashPass(cur);
+    const meta=await fbGet('/servers/'+srvKey+'/meta');
+    if(!meta){errEl.textContent='Server not found.';errEl.style.display='block';return;}
+    if(meta.passHash!==curHash){errEl.textContent='Current password is incorrect.';errEl.style.display='block';return;}
+    const newHash=await hashPass(n1);
+    await fbPatch('/servers/'+srvKey+'/meta',{passHash:newHash});
+    // Update localStorage and Firebase cache
+    saveCreatedServer(serverName||srvState.serverName,n1);
+    closeModal();
+    toast('✓ Server password changed!');
+    loadCreatedServers();
+  },accent:true}]);
+}
+
 async function confirmDeleteServer(){
   if(!srvState.isHost){toast('Only the host can delete this server');return;}
   const code=Math.floor(100000+Math.random()*900000)+'';
@@ -3836,8 +3939,20 @@ async function confirmDeleteServer(){
       await fbDelete('/serverIds/'+clean);
     }
     await fbDelete('/servers/'+srvState.serverKey);
+    // Remove from "Servers You Created" lists (localStorage + Firebase)
+    const deletedName=srvState.serverName;
+    const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
+    localStorage.setItem('lms_created_servers',JSON.stringify(localCreated.filter(s=>s.name.toLowerCase()!==deletedName.toLowerCase())));
+    if(currentUser&&getSrvDbUrl()){
+      const fbKey=deletedName.toLowerCase().replace(/[^a-z0-9]/g,'_');
+      fbDelete('/accounts/'+currentUser.uid+'/createdServers/'+fbKey).catch(()=>{});
+    }
+    // Also remove from recent servers
+    const localRecent=JSON.parse(localStorage.getItem('lms_recent_servers')||'[]');
+    localStorage.setItem('lms_recent_servers',JSON.stringify(localRecent.filter(s=>s.name.toLowerCase()!==deletedName.toLowerCase())));
     closeModal();
     stopSrvPolling();
+    localStorage.removeItem('lms_active_server');
     srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
     closeServerHub();
     renderRootGrid();
@@ -4022,6 +4137,7 @@ async function createSrvProject(){
   toast('Project created: '+name);
   renderActiveServer();
   renderRootGrid();
+  renderRootServerProjects();
 }
 
 async function deleteSrvProject(id){
@@ -5115,22 +5231,49 @@ function saveCreatedServer(name,pass){
   const filtered=created.filter(s=>s.name.toLowerCase()!==name.toLowerCase());
   filtered.unshift({name,pass,ts:Date.now()});
   localStorage.setItem('lms_created_servers',JSON.stringify(filtered.slice(0,10)));
+  // Also persist in Firebase under the user's account so it works across browsers
+  if(currentUser&&getSrvDbUrl()){
+    const key=name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+    fbSet('/accounts/'+currentUser.uid+'/createdServers/'+key,{name,pass,ts:Date.now()}).catch(()=>{});
+  }
 }
 
 function loadCreatedServers(){
-  const created=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
+  const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
   const block=document.getElementById('srv-created-block');
   const list=document.getElementById('srv-created-list');
   if(!block||!list)return;
-  if(!created.length){block.style.display='none';return;}
-  block.style.display='block';
-  list.innerHTML=created.map(s=>`
-    <div style="background:var(--bg2);border:1px solid rgba(200,240,74,.2);border-radius:2px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="quickJoin('${escHtml(s.name)}','${escHtml(s.pass)}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(200,240,74,.2)'">
-      <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>
-      <div style="font-size:11px;color:var(--text);flex:1;">${escHtml(s.name)}</div>
-      <div style="font-size:9px;color:var(--accent);letter-spacing:.05em;">Rejoin as Host →</div>
-    </div>
-  `).join('');
+
+  async function _render(created){
+    if(!created.length){block.style.display='none';return;}
+    block.style.display='block';
+    list.innerHTML=created.map(s=>`
+      <div style="background:var(--bg2);border:1px solid rgba(200,240,74,.2);border-radius:2px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="quickJoin('${escHtml(s.name)}','${escHtml(s.pass)}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(200,240,74,.2)'">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>
+        <div style="font-size:11px;color:var(--text);flex:1;">${escHtml(s.name)}</div>
+        <button onclick="event.stopPropagation();promptChangeServerPassword('${escHtml(s.name)}','${escHtml(s.pass)}')" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 7px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" title="Change server password">⚙ Pwd</button>
+        <div style="font-size:9px;color:var(--accent);letter-spacing:.05em;">Rejoin as Host →</div>
+      </div>
+    `).join('');
+  }
+
+  if(localCreated.length){
+    _render(localCreated);
+  } else if(currentUser&&getSrvDbUrl()){
+    // Try loading from Firebase (cross-browser)
+    fbGet('/accounts/'+currentUser.uid+'/createdServers').then(fbCreated=>{
+      if(fbCreated){
+        const arr=Object.values(fbCreated).sort((a,b)=>b.ts-a.ts);
+        // Sync back to localStorage
+        localStorage.setItem('lms_created_servers',JSON.stringify(arr.slice(0,10)));
+        _render(arr);
+      } else {
+        block.style.display='none';
+      }
+    }).catch(()=>{block.style.display='none';});
+  } else {
+    block.style.display='none';
+  }
 }
 
 function loadRecentServers(){
@@ -5283,6 +5426,7 @@ document.addEventListener('keydown', function(e){
       </div>
       <div style="text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         <button onclick="disconnectServer()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">Leave Server</button>
+        <button id="srv-change-pw-btn" onclick="promptChangeServerPassword()" style="display:none;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.color='var(--accent4)';this.style.borderColor='var(--accent4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">🔑 Change Password</button>
         <button id="srv-delete-server-btn" onclick="confirmDeleteServer()" style="display:none;background:none;border:1px solid rgba(240,74,74,.5);color:var(--accent3);font-family:var(--font);font-size:10px;padding:7px 20px;cursor:pointer;border-radius:1px;letter-spacing:.08em;">🗑 Delete Server</button>
       </div>
     </div>
@@ -5299,6 +5443,20 @@ document.addEventListener('keydown', function(e){
         <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:18px;">
           <div style="font-family:var(--vt);font-size:16px;color:var(--accent);margin-bottom:14px;letter-spacing:.08em;">CREATE A SERVER</div>
           <div style="font-size:9px;color:var(--text3);margin-bottom:12px;padding:6px 10px;background:var(--bg3);border-radius:2px;border:1px solid var(--border);">Hosting as <strong style="color:var(--accent);" id="host-as-label">you</strong></div>
+          <!-- Server Type -->
+          <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:6px;">SERVER TYPE</label>
+          <div style="display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:2px;overflow:hidden;">
+            <button id="srv-type-public" onclick="selectSrvType('public')" style="flex:1;background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent2);font-family:var(--font);font-size:9px;padding:8px;cursor:pointer;letter-spacing:.06em;">
+              ⚡ Public — Team
+            </button>
+            <button id="srv-type-private" onclick="selectSrvType('private')" style="flex:1;background:var(--bg3);border:none;color:var(--text3);font-family:var(--font);font-size:9px;padding:8px;cursor:pointer;letter-spacing:.06em;">
+              🔒 Private — Personal Cloud
+            </button>
+          </div>
+          <div id="srv-type-desc" style="font-size:9px;color:var(--text3);margin-bottom:12px;padding:6px 10px;background:var(--bg3);border-radius:2px;border:1px solid var(--border);line-height:1.6;">
+            <strong style="color:var(--accent2);">Public:</strong> Share with your team. Others can join with the server name + password.
+          </div>
+          <input type="hidden" id="host-server-type" value="public">
           <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER NAME</label>
           <input id="host-servername" class="modal-inp" placeholder="e.g. Project Chimera, The Lab" style="margin-bottom:10px;">
           <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">SERVER PASSWORD</label>

@@ -46,6 +46,127 @@
   --accent:#f04a4a;--accent2:#f0a04a;
   --inp-bg:#0c0505;
 }
+/* ---- NEW DARK THEMES ---- */
+[data-theme="ocean"]{
+  --bg:#03080f;--bg2:#060d18;--bg3:#0a1420;--bg4:#0e1c2c;
+  --border:#122030;--border2:#1e3450;
+  --text:#b0d8f0;--text2:#6aa8d0;--text3:#3a6888;
+  --accent:#4ab0f0;--accent2:#a04af0;--accent3:#f04a4a;--accent4:#f0a04a;--accent5:#c8f04a;--accent6:#4af0c8;
+  --inp-bg:#020609;
+}
+[data-theme="ember"]{
+  --bg:#0d0800;--bg2:#170f00;--bg3:#201400;--bg4:#2a1a00;
+  --border:#302000;--border2:#503400;
+  --text:#f0d8a0;--text2:#c89848;--text3:#806030;
+  --accent:#f0a020;--accent2:#f06020;--accent3:#f04a4a;--accent4:#c8f04a;--accent5:#a04af0;--accent6:#4af0c8;
+  --inp-bg:#0a0600;
+}
+[data-theme="void"]{
+  --bg:#040408;--bg2:#07070e;--bg3:#0b0b16;--bg4:#0f0f1e;
+  --border:#141428;--border2:#28283e;
+  --text:#d0c8f8;--text2:#8878c8;--text3:#504878;
+  --accent:#a04af0;--accent2:#4a4af0;--accent3:#f04a9a;--accent4:#f0a04a;--accent5:#c8f04a;--accent6:#4af0c8;
+  --inp-bg:#020206;
+}
+[data-theme="matrix"]{
+  --bg:#000a00;--bg2:#001400;--bg3:#001e00;--bg4:#002800;
+  --border:#003000;--border2:#005000;
+  --text:#00e040;--text2:#00a030;--text3:#006020;
+  --accent:#00ff60;--accent2:#80ff20;--accent3:#ff4040;--accent4:#ffcc00;--accent5:#00ccff;--accent6:#ff80ff;
+  --inp-bg:#000800;
+}
+[data-theme="steel"]{
+  --bg:#0a0c10;--bg2:#111418;--bg3:#181c22;--bg4:#1f242c;
+  --border:#242a34;--border2:#364050;
+  --text:#c0ccd8;--text2:#8090a8;--text3:#506070;
+  --accent:#4a90d0;--accent2:#60c8e0;--accent3:#e05050;--accent4:#e0a040;--accent5:#a060d0;--accent6:#50d090;
+  --inp-bg:#080a0e;
+}
+[data-theme="sakura"]{
+  --bg:#0e0810;--bg2:#160c18;--bg3:#1e1022;--bg4:#26142c;
+  --border:#301830;--border2:#502850;
+  --text:#f0c8e8;--text2:#c888b8;--text3:#885878;
+  --accent:#f060c0;--accent2:#f0a0d0;--accent3:#f04a4a;--accent4:#f0d04a;--accent5:#a04af0;--accent6:#4af0c8;
+  --inp-bg:#0c060e;
+}
+[data-theme="solar"]{
+  --bg:#0a0600;--bg2:#140c00;--bg3:#1e1200;--bg4:#281800;
+  --border:#342000;--border2:#503400;
+  --text:#fff0c0;--text2:#e0c060;--text3:#a07830;
+  --accent:#ffc020;--accent2:#ff8020;--accent3:#ff4040;--accent4:#c8f04a;--accent5:#a04af0;--accent6:#4af0c8;
+  --inp-bg:#080400;
+}
+/* ---- NEW LIGHT THEMES ---- */
+[data-theme="paper"]{
+  --bg:#f8f4ee;--bg2:#f0ebe2;--bg3:#e8e0d4;--bg4:#ddd6c8;
+  --border:#ccc4b4;--border2:#aaa090;
+  --text:#2a2018;--text2:#4a3828;--text3:#7a6850;
+  --accent:#c04000;--accent2:#006080;--accent3:#c02040;--accent4:#806000;--accent5:#604080;--accent6:#008040;
+  --inp-bg:#fdfaf6;
+}
+[data-theme="arctic"]{
+  --bg:#eef4f8;--bg2:#e4eef6;--bg3:#d8e8f2;--bg4:#cce0ec;
+  --border:#b8d0e0;--border2:#90b4cc;
+  --text:#102030;--text2:#204060;--text3:#507090;
+  --accent:#0060b0;--accent2:#0090c0;--accent3:#c02040;--accent4:#c07000;--accent5:#6040b0;--accent6:#008060;
+  --inp-bg:#f4f8fc;
+}
+[data-theme="mint"]{
+  --bg:#eef8f4;--bg2:#e2f2ec;--bg3:#d4ece4;--bg4:#c4e4d8;
+  --border:#a8d0c4;--border2:#80b4a4;
+  --text:#082820;--text2:#206040;--text3:#409060;
+  --accent:#008060;--accent2:#00a890;--accent3:#c04050;--accent4:#908000;--accent5:#604090;--accent6:#0080b0;
+  --inp-bg:#f4fcf8;
+}
+/* ---- FONT OVERRIDES ---- */
+[data-font="pixel"] { --font:'VT323',monospace; font-size:14px; }
+[data-font="mono"] { --font:'Share Tech Mono',monospace; }
+[data-font="sans"] { --font:system-ui,sans-serif; }
+[data-font="serif"] { --font:Georgia,serif; }
+[data-font="slab"] { --font:'Courier New',Courier,monospace; }
+/* ---- HOME LAYOUT STYLES ---- */
+[data-layout="compact"] .root-card { padding:10px 12px; }
+[data-layout="compact"] .rc-name { font-size:14px; }
+[data-layout="compact"] .rc-icon { width:24px;height:24px;font-size:13px; }
+[data-layout="compact"] .root-grid { grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px; }
+[data-layout="compact"] .rs-logo { font-size:38px; }
+[data-layout="compact"] .rs-action-grid { grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px; }
+[data-layout="compact"] .rs-action-card { padding:10px; }
+
+[data-layout="retro"] .root-card { border-radius:0;border:2px solid var(--accent);box-shadow:4px 4px 0 var(--accent); }
+[data-layout="retro"] .root-card:hover { transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--accent); }
+[data-layout="retro"] .root-card::before { display:none; }
+[data-layout="retro"] .rs-logo { font-family:'VT323',monospace;font-size:72px;letter-spacing:.2em;-webkit-text-fill-color:var(--accent);background:none; }
+[data-layout="retro"] .rs-action-card { border-radius:0;border:2px solid var(--border2); }
+[data-layout="retro"] .rc-name { font-family:'VT323',monospace;font-size:22px; }
+[data-layout="retro"] #root-screen { background:var(--bg);background-image:repeating-linear-gradient(0deg,rgba(200,240,74,.03),rgba(200,240,74,.03) 1px,transparent 1px,transparent 3px); }
+
+[data-layout="godot"] .root-card { border-radius:6px;background:var(--bg3);border:1px solid var(--border2); }
+[data-layout="godot"] .root-card::before { border-radius:6px 6px 0 0;height:3px; }
+[data-layout="godot"] .rc-name { font-family:system-ui,sans-serif;font-size:14px;font-weight:600; }
+[data-layout="godot"] .rc-engine { font-size:10px;letter-spacing:.05em; }
+[data-layout="godot"] .root-grid { grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); }
+[data-layout="godot"] .rs-logo { font-family:system-ui,sans-serif;font-size:42px;font-weight:800;letter-spacing:-.02em;-webkit-text-fill-color:var(--accent);background:none; }
+[data-layout="godot"] .sidebar { background:var(--bg2);border-right:1px solid var(--border); }
+[data-layout="godot"] .nav-item { border-radius:4px;margin:1px 6px; }
+[data-layout="godot"] .nav-item.active { background:rgba(var(--accent-rgb,200,240,74),.12); }
+
+[data-layout="unity"] .root-card { border-radius:0;background:var(--bg2);border:1px solid var(--border2);border-top:none; }
+[data-layout="unity"] .root-card::before { height:2px;border-radius:0; }
+[data-layout="unity"] .rc-name { font-family:system-ui,sans-serif;font-size:13px;font-weight:600;text-transform:none; }
+[data-layout="unity"] .root-grid { grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--border); }
+[data-layout="unity"] .rs-logo { font-family:system-ui,sans-serif;font-size:36px;font-weight:900;letter-spacing:-.03em;-webkit-text-fill-color:var(--text);background:none; }
+[data-layout="unity"] #root-screen { padding:0; }
+[data-layout="unity"] .rs-header { background:var(--bg2);border-bottom:1px solid var(--border);width:100%;padding:16px 24px;margin:0;text-align:left; }
+
+[data-layout="minimal"] .root-card { border:none;border-bottom:1px solid var(--border);border-radius:0;background:transparent;box-shadow:none; }
+[data-layout="minimal"] .root-card::before { display:none; }
+[data-layout="minimal"] .root-card::after { display:none; }
+[data-layout="minimal"] .root-card:hover { transform:none;border-bottom-color:var(--accent);box-shadow:none;background:var(--bg2); }
+[data-layout="minimal"] .root-grid { grid-template-columns:1fr;gap:0;max-width:700px; }
+[data-layout="minimal"] .rc-icon { display:none; }
+[data-layout="minimal"] .rs-logo { font-size:28px;letter-spacing:.3em; }
+[data-layout="minimal"] #root-screen { padding:40px 24px; }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 #root-screen-wrap{height:100%;overflow-y:auto;}
@@ -798,13 +919,27 @@ select option{background:var(--bg2);}
         <div class="settings-grid">
           <!-- THEME -->
           <div class="settings-section">
-            <h3>Theme</h3>
+            <h3>Color Theme</h3>
+            <div style="font-size:8px;color:var(--text3);letter-spacing:.18em;margin-bottom:6px;">— DARK —</div>
             <div class="theme-grid" id="theme-grid">
               <button class="theme-btn" onclick="setTheme('')" data-t="">Dark</button>
               <button class="theme-btn" onclick="setTheme('dim')" data-t="dim">Dim</button>
-              <button class="theme-btn" onclick="setTheme('light')" data-t="light">Light</button>
               <button class="theme-btn" onclick="setTheme('forest')" data-t="forest">Forest</button>
               <button class="theme-btn" onclick="setTheme('blood')" data-t="blood">Blood</button>
+              <button class="theme-btn" onclick="setTheme('ocean')" data-t="ocean">Ocean</button>
+              <button class="theme-btn" onclick="setTheme('ember')" data-t="ember">Ember</button>
+              <button class="theme-btn" onclick="setTheme('void')" data-t="void">Void</button>
+              <button class="theme-btn" onclick="setTheme('matrix')" data-t="matrix">Matrix</button>
+              <button class="theme-btn" onclick="setTheme('steel')" data-t="steel">Steel</button>
+              <button class="theme-btn" onclick="setTheme('sakura')" data-t="sakura">Sakura</button>
+              <button class="theme-btn" onclick="setTheme('solar')" data-t="solar">Solar</button>
+            </div>
+            <div style="font-size:8px;color:var(--text3);letter-spacing:.18em;margin:10px 0 6px;">— LIGHT —</div>
+            <div class="theme-grid">
+              <button class="theme-btn" onclick="setTheme('light')" data-t="light">Light</button>
+              <button class="theme-btn" onclick="setTheme('paper')" data-t="paper">Paper</button>
+              <button class="theme-btn" onclick="setTheme('arctic')" data-t="arctic">Arctic</button>
+              <button class="theme-btn" onclick="setTheme('mint')" data-t="mint">Mint</button>
             </div>
             <div class="divider"></div>
             <div class="setting-row">
@@ -818,6 +953,26 @@ select option{background:var(--bg2);}
             <div class="setting-row">
               <div><div class="setting-label">Compact Sidebar</div><div class="setting-sub">Narrower nav panel</div></div>
               <div class="toggle" id="toggle-compact" onclick="toggleCompact(this)"></div>
+            </div>
+            <div class="divider"></div>
+            <h3 style="margin-bottom:10px;">Font</h3>
+            <div class="theme-grid" id="font-grid">
+              <button class="theme-btn font-btn" onclick="setFont('mono')" data-f="mono" style="font-family:'Share Tech Mono',monospace;">Mono</button>
+              <button class="theme-btn font-btn" onclick="setFont('pixel')" data-f="pixel" style="font-family:'VT323',monospace;font-size:14px;">Pixel</button>
+              <button class="theme-btn font-btn" onclick="setFont('sans')" data-f="sans" style="font-family:system-ui,sans-serif;">Sans</button>
+              <button class="theme-btn font-btn" onclick="setFont('serif')" data-f="serif" style="font-family:Georgia,serif;">Serif</button>
+              <button class="theme-btn font-btn" onclick="setFont('slab')" data-f="slab" style="font-family:'Courier New',monospace;">Slab</button>
+            </div>
+            <div class="divider"></div>
+            <h3 style="margin-bottom:10px;">Home Layout</h3>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:8px;">Changes card layout, spacing, and UI style of the home screen.</div>
+            <div class="theme-grid" id="layout-grid">
+              <button class="theme-btn layout-btn" onclick="setLayout('')" data-l="">Default</button>
+              <button class="theme-btn layout-btn" onclick="setLayout('compact')" data-l="compact">Compact</button>
+              <button class="theme-btn layout-btn" onclick="setLayout('retro')" data-l="retro">Retro</button>
+              <button class="theme-btn layout-btn" onclick="setLayout('godot')" data-l="godot">Godot</button>
+              <button class="theme-btn layout-btn" onclick="setLayout('unity')" data-l="unity">Unity</button>
+              <button class="theme-btn layout-btn" onclick="setLayout('minimal')" data-l="minimal">Minimal</button>
             </div>
           </div>
 <!-- DATA -->
@@ -1004,7 +1159,7 @@ const PHASE_COLORS=['#c8f04a','#4af0c8','#f04a4a','#f0a04a','#a04af0','#4a9af0']
 let roots=[];
 let activeRootId=null;
 let D=null;
-let SETTINGS={theme:'',accent:'#c8f04a',scanlines:false,compact:false};
+let SETTINGS={theme:'',accent:'#c8f04a',scanlines:false,compact:false,font:'mono',layout:''};
 
 // =====================================================
 // SETTINGS
@@ -1017,11 +1172,15 @@ function saveSettings(){try{localStorage.setItem(SETTINGS_SK,JSON.stringify(SETT
 
 function applySettings(){
   document.documentElement.setAttribute('data-theme',SETTINGS.theme||'');
+  document.documentElement.setAttribute('data-font',SETTINGS.font||'mono');
+  document.documentElement.setAttribute('data-layout',SETTINGS.layout||'');
   document.documentElement.style.setProperty('--accent',SETTINGS.accent||'#c8f04a');
   document.getElementById('scanline-overlay').style.display=SETTINGS.scanlines?'block':'none';
   document.documentElement.style.setProperty('--sidebar',SETTINGS.compact?'170px':'220px');
   // Update theme buttons
   document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===(SETTINGS.theme||'')));
+  document.querySelectorAll('.font-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===(SETTINGS.font||'mono')));
+  document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.l===(SETTINGS.layout||'')));
   const ap=document.getElementById('accent-color-pick');if(ap)ap.value=SETTINGS.accent||'#c8f04a';
   const ts=document.getElementById('toggle-scanlines');if(ts)ts.classList.toggle('on',SETTINGS.scanlines);
   const tc=document.getElementById('toggle-compact');if(tc)tc.classList.toggle('on',SETTINGS.compact);
@@ -1031,6 +1190,8 @@ function setTheme(t){SETTINGS.theme=t;saveSettings();applySettings();}
 function setAccent(v){SETTINGS.accent=v;saveSettings();applySettings();}
 function toggleScanlines(el){SETTINGS.scanlines=!SETTINGS.scanlines;saveSettings();applySettings();}
 function toggleCompact(el){SETTINGS.compact=!SETTINGS.compact;saveSettings();applySettings();}
+function setFont(f){SETTINGS.font=f;saveSettings();applySettings();}
+function setLayout(l){SETTINGS.layout=l;saveSettings();applySettings();}
 
 // =====================================================
 // ROOT MANAGEMENT
@@ -1227,14 +1388,30 @@ function save(){
 }
 
 function openRootSettings(){
-  // Open the hub settings modal
+  const darkThemes=[['','Dark'],['dim','Dim'],['forest','Forest'],['blood','Blood'],['ocean','Ocean'],['ember','Ember'],['void','Void'],['matrix','Matrix'],['steel','Steel'],['sakura','Sakura'],['solar','Solar']];
+  const lightThemes=[['light','Light'],['paper','Paper'],['arctic','Arctic'],['mint','Mint']];
+  const fonts=[['mono','Mono'],['pixel','Pixel'],['sans','Sans'],['serif','Serif'],['slab','Slab']];
+  const layouts=[['','Default'],['compact','Compact'],['retro','Retro'],['godot','Godot'],['unity','Unity'],['minimal','Minimal']];
   openModal('Hub Settings',`
-    <label class="modal-label">Theme</label>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
-      ${[['','Dark'],['dim','Dim'],['light','Light'],['forest','Forest'],['blood','Blood']].map(([t,l])=>`<button class="theme-btn${(SETTINGS.theme||'')==t?' active':''}" onclick="setTheme('${t}');document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">${l}</button>`).join('')}
+    <label class="modal-label">Theme — Dark</label>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+      ${darkThemes.map(([t,l])=>`<button class="theme-btn${(SETTINGS.theme||'')==t?' active':''}" data-t="${t}" onclick="setTheme('${t}');document.querySelectorAll('#modal-body .theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t==='${t}'));">${l}</button>`).join('')}
+    </div>
+    <label class="modal-label">Theme — Light</label>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;">
+      ${lightThemes.map(([t,l])=>`<button class="theme-btn${(SETTINGS.theme||'')==t?' active':''}" data-t="${t}" onclick="setTheme('${t}');document.querySelectorAll('#modal-body .theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t==='${t}'));">${l}</button>`).join('')}
     </div>
     <label class="modal-label">Accent Color</label>
-    <div class="color-row">${ACCENT_COLORS.map(c=>`<div class="color-opt${SETTINGS.accent===c?' selected':''}" style="background:${c}" onclick="setAccent('${c}');document.querySelectorAll('#modal-body .color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected');"></div>`).join('')}</div>
+    <div class="color-row" style="margin-bottom:12px;">${ACCENT_COLORS.map(c=>`<div class="color-opt${SETTINGS.accent===c?' selected':''}" style="background:${c}" onclick="setAccent('${c}');document.querySelectorAll('#modal-body .color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected');"></div>`).join('')}</div>
+    <label class="modal-label">Font</label>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;">
+      ${fonts.map(([f,l])=>`<button class="theme-btn font-btn${(SETTINGS.font||'mono')==f?' active':''}" data-f="${f}" onclick="setFont('${f}');document.querySelectorAll('#modal-body .font-btn').forEach(b=>b.classList.toggle('active',b.dataset.f==='${f}'));">${l}</button>`).join('')}
+    </div>
+    <label class="modal-label">Home Layout</label>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px;">
+      ${layouts.map(([v,l])=>`<button class="theme-btn layout-btn${(SETTINGS.layout||'')==v?' active':''}" data-l="${v}" onclick="setLayout('${v}');document.querySelectorAll('#modal-body .layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.l==='${v}'));">${l}</button>`).join('')}
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-top:4px;">Layout changes card style, spacing, and home screen structure.</div>
   `,[{label:'Close',action:closeModal}]);
 }
 
@@ -1503,9 +1680,10 @@ function renderFolders(){
   const el=document.getElementById('folder-list');
   if(!D.folders.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);">No folders yet</div>';return;}
   el.innerHTML='';
-  D.folders.forEach((f,fi)=>{const count=D.scripts.filter(s=>s.folder===f.id).length;const card=document.createElement('div');card.className='folder-card'+(activeFolder===f.id?' active-folder':'');card.innerHTML=`<div class="folder-icon"></div><div class="folder-name">${escHtml(f.name)}</div><div class="folder-count">${count} script${count!==1?'s':''}</div>`;card.addEventListener('click',()=>{activeFolder=f.id;activeScript=null;renderFolders();renderScripts();});el.appendChild(card);});
+  D.folders.forEach((f,fi)=>{const count=D.scripts.filter(s=>s.folder===f.id).length;const card=document.createElement('div');card.className='folder-card'+(activeFolder===f.id?' active-folder':'');card.innerHTML=`<div class="folder-icon"></div><div class="folder-name" style="flex:1;">${escHtml(f.name)}</div><div class="folder-count">${count} script${count!==1?'s':''}</div><button class="xbtn" title="Delete folder" style="margin-left:6px;flex-shrink:0;" onclick="deleteFolder('${f.id}',event)">×</button>`;card.addEventListener('click',()=>{activeFolder=f.id;activeScript=null;renderFolders();renderScripts();});el.appendChild(card);});
 }
 function createFolder(){const inp=document.getElementById('new-folder-inp');const name=inp.value.trim();if(!name)return;D.folders.push({id:'f'+Date.now(),name});inp.value='';save();renderFolders();logActivity('Folder: '+name,'#f0a04a');}
+function deleteFolder(id,e){if(e)e.stopPropagation();const f=D.folders.find(x=>x.id===id);if(!f)return;openModal('Delete Folder',`<p style="font-size:11px;color:var(--text2);line-height:1.7;">Delete folder <strong style="color:var(--accent3);">${escHtml(f.name)}</strong>?<br><span style="color:var(--accent3);">This will also delete all ${D.scripts.filter(s=>s.folder===id).length} scripts inside it.</span></p>`,[{label:'Cancel',action:closeModal},{label:'Delete',action:()=>{D.scripts=D.scripts.filter(s=>s.folder!==id);D.folders=D.folders.filter(x=>x.id!==id);if(activeFolder===id){activeFolder=null;activeScript=null;}save();closeModal();renderFolders();renderScripts();updateGlobal();toast('Folder deleted');},danger:true}]);}
 function renderScripts(){
   const el=document.getElementById('script-content');if(!activeFolder){el.innerHTML='<div style="font-size:11px;color:var(--text3);">Select a folder</div>';return;}
   const scripts=D.scripts.filter(s=>s.folder===activeFolder);el.innerHTML='';
@@ -2189,17 +2367,22 @@ function deleteSelectedNode(){
 function attachScript(nodeId){
   const scene=getActiveScene();if(!scene)return;
   const node=scene.nodes[nodeId];if(!node)return;
+  const vaultScripts=D.scripts||[];
+  const vaultOpts=vaultScripts.length
+    ? vaultScripts.map(s=>`<option value="${s.id}">${escHtml(s.name)} ${escHtml(s.version||'')}</option>`).join('')
+    : '';
+  const vaultSection=vaultScripts.length
+    ? `<label class="modal-label" style="margin-top:12px;">— OR IMPORT FROM SCRIPT VAULT —</label>
+       <select class="modal-select" id="scr-vault-pick" onchange="(function(){const v=document.getElementById('scr-vault-pick').value;if(!v)return;const s=D.scripts.find(x=>x.id===v);if(s){document.getElementById('scr-name').value=s.name;document.getElementById('scr-code').value=s.code||'';}})()">
+         <option value="">— Pick from vault —</option>${vaultOpts}
+       </select>`
+    : `<div style="font-size:9px;color:var(--text3);margin-top:8px;">No scripts in vault yet — write one below or add to Script Vault first.</div>`;
   openModal('Attach Script',`
     <label class="modal-label">Script Name</label>
     <input class="modal-inp" id="scr-name" placeholder="e.g. Player.gd, EnemyAI.gd" value="${escHtml(node.name+'.gd')}">
-    <label class="modal-label">Initial Code</label>
-    <textarea class="modal-inp" id="scr-code" style="min-height:120px;font-family:var(--font);font-size:10px;" placeholder="extends ${escHtml(node.type)}
-  
-func _ready():
-  pass
-
-func _process(delta):
-  pass"></textarea>
+    ${vaultSection}
+    <label class="modal-label" style="margin-top:12px;">Code</label>
+    <textarea class="modal-inp" id="scr-code" style="min-height:120px;font-family:var(--font);font-size:10px;" placeholder="extends ${escHtml(node.type)}&#10;&#10;func _ready():&#10;  pass&#10;&#10;func _process(delta):&#10;  pass"></textarea>
   `,[{label:'Cancel',action:closeModal},{label:'Attach',action:()=>{
     const name=document.getElementById('scr-name').value.trim()||node.name+'.gd';
     const code=document.getElementById('scr-code').value;
@@ -3358,7 +3541,7 @@ function openServerHub(){
   document.getElementById('server-hub-overlay').style.display='block';
   renderSrvStatus();
   loadRecentServers();
-  // Show display name in host/join labels
+  loadCreatedServers();
   if(currentUser){
     const dn=currentUser.displayName||currentUser.username;
     const hl=document.getElementById('host-as-label');const jl=document.getElementById('join-as-label');
@@ -3448,6 +3631,7 @@ async function hostServer(){
   // Save state
   srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null,shortId:shortId};
   saveRecentServer(serverName,pass);
+  saveCreatedServer(serverName,pass);
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
@@ -4926,6 +5110,29 @@ function saveRecentServer(name,pass){
   localStorage.setItem('lms_recent_servers',JSON.stringify(filtered.slice(0,5)));
 }
 
+function saveCreatedServer(name,pass){
+  const created=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
+  const filtered=created.filter(s=>s.name.toLowerCase()!==name.toLowerCase());
+  filtered.unshift({name,pass,ts:Date.now()});
+  localStorage.setItem('lms_created_servers',JSON.stringify(filtered.slice(0,10)));
+}
+
+function loadCreatedServers(){
+  const created=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
+  const block=document.getElementById('srv-created-block');
+  const list=document.getElementById('srv-created-list');
+  if(!block||!list)return;
+  if(!created.length){block.style.display='none';return;}
+  block.style.display='block';
+  list.innerHTML=created.map(s=>`
+    <div style="background:var(--bg2);border:1px solid rgba(200,240,74,.2);border-radius:2px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="quickJoin('${escHtml(s.name)}','${escHtml(s.pass)}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(200,240,74,.2)'">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>
+      <div style="font-size:11px;color:var(--text);flex:1;">${escHtml(s.name)}</div>
+      <div style="font-size:9px;color:var(--accent);letter-spacing:.05em;">Rejoin as Host →</div>
+    </div>
+  `).join('');
+}
+
 function loadRecentServers(){
   const recent=JSON.parse(localStorage.getItem('lms_recent_servers')||'[]');
   const block=document.getElementById('srv-recent-block');
@@ -5133,6 +5340,11 @@ document.addEventListener('keydown', function(e){
       <div id="srv-recent-block" style="margin-top:16px;display:none;">
         <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;margin-bottom:8px;">RECENTLY JOINED</div>
         <div id="srv-recent-list"></div>
+      </div>
+      <!-- Servers created -->
+      <div id="srv-created-block" style="margin-top:14px;display:none;">
+        <div style="font-size:8px;color:var(--accent);letter-spacing:.2em;margin-bottom:8px;">⚡ SERVERS YOU CREATED</div>
+        <div id="srv-created-list"></div>
       </div>
     </div>
   </div>

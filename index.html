@@ -580,7 +580,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12
 .status-txt{font-size:9px;color:var(--text3);letter-spacing:.1em;}
 .topbar-icon-btn{background:none;border:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:9px;padding:3px 8px;cursor:pointer;border-radius:1px;transition:all .15s;letter-spacing:.06em;}
 .topbar-icon-btn:hover{color:var(--accent);border-color:var(--accent);}
-.content{flex:1;overflow-y:auto;padding:14px 16px;}
+.content{flex:1;overflow-y:auto;padding:14px 16px;min-height:0;}
+.site-footer{flex-shrink:0;width:100%;padding:12px 16px;background:var(--bg);border-top:2px solid var(--border2);display:flex;align-items:center;justify-content:center;box-shadow:0 -6px 24px rgba(0,0,0,0.5);}
+.site-footer span{font-size:11px;color:var(--text2);letter-spacing:.08em;font-family:var(--font);user-select:none;}
 
 /* PAGES */
 .page{display:none;}
@@ -1148,6 +1150,7 @@ select option{background:var(--bg2);}
   <!-- Footer -->
   <footer style="position:relative;z-index:1;width:100%;max-width:960px;margin-top:auto;padding:28px 0 20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px;">
     <div style="font-family:var(--vt);font-size:14px;color:var(--text3);letter-spacing:.12em;">LMS // DEV HUB</div>
+    <div style="font-size:9px;color:var(--text3);letter-spacing:.1em;">&copy; 2026 J. Gonzales &mdash; All rights reserved.</div>
     <div style="display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text3);letter-spacing:.1em;">
       <span>SUPPORT:</span>
       <a href="mailto:support@lmsdevhub.com" style="color:var(--accent2);text-decoration:none;letter-spacing:.08em;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">support@lmsdevhub.com</a>
@@ -2672,9 +2675,12 @@ function renderSiteUpdates(){
 
   const now = Date.now();
   const visible = data.filter(u => {
-    if(!u.visible_duration) return true; // no timer = always visible
+    // Hard delete_after date (server-set, no localStorage needed)
+    if(u.delete_after && new Date(u.delete_after).getTime() < now) return false;
+    // Existing per-user visible_duration logic
+    if(!u.visible_duration) return true;
     const firstSeen = seen[u.id];
-    if(!firstSeen) return true; // not seen yet = show it
+    if(!firstSeen) return true;
     return (now - firstSeen) < (u.visible_duration * 1000);
   });
 
@@ -9162,6 +9168,7 @@ document.addEventListener('keydown', function(e){
         </div>
 
       </div><!-- end .content -->
+      <footer class="site-footer"><span>&copy; 2026 J. Gonzales &mdash; All rights reserved.</span></footer>
     </div><!-- end .main -->
   </div>
 </div>

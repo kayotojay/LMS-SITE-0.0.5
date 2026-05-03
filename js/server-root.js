@@ -26,11 +26,8 @@ function saveCreatedServer(name,pass){
   filtered.unshift({name,pass,ts:Date.now(),dbUrl,dbKey});
   localStorage.setItem('lms_created_servers',JSON.stringify(filtered.slice(0,10)));
   // Also persist in Firebase under the user's account so it works across browsers
-  if(currentUser&&getSrvDbUrl()){
-    const key=name.toLowerCase().replace(/[^a-z0-9]/g,'_');
-    fbSet('/accounts/'+currentUser.uid+'/createdServers/'+key,{name,pass,ts:Date.now()}).catch(()=>{});
   }
-}
+
 
 function loadCreatedServers(){
   const block=document.getElementById('srv-created-block');
@@ -53,13 +50,22 @@ function loadCreatedServers(){
   }
 
   // Always try DB first when user is logged in — localStorage may be stale
-  if(currentUser&&getSrvDbUrl()){
-    fbGet('/accounts/'+currentUser.uid+'/createdServers').then(fbCreated=>{
-      const arr=fbCreated?Object.values(fbCreated).sort((a,b)=>b.ts-a.ts):[];
-      const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
-      // Merge: DB is source of truth, fill any gaps from localStorage
-      const merged=[...arr];
-      for(const ls of localCreated){
+if(currentUser&&getSrvDbUrl()){
+    // Query Supabase servers table directly — host_id is the source of truth
+    const url=getSrvDbUrl()+'/rest/v1/servers?host_id=eq.'+encodeURIComponent(currentUser.uid)+'&deleted=eq.false&select=key,name,pass_hash,created_at';
+    fetch(url,{headers:sbHeaders({'Accept':'application/json'})}).then(async r=>{
+      const dbServers=r.ok?await r.json():[];
+      const local=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
+      // Merge: DB rows + local cache (local has the plaintext pass, DB has hash)
+      const merged=Array.isArray(dbServers)?dbServers.map(row=>({
+        name:row.name,
+        pass:local.find(l=>l.name.toLowerCase()===row.name.toLowerCase())?.pass||_getPassCache(row.name)?.pass||'',
+        ts:row.created_at||0,
+        dbUrl:getSrvDbUrl(),
+        dbKey:SRV_ANON_KEY
+      })):[];
+      // Add any local entries not yet in DB
+      for(const ls of local){
         if(!merged.find(m=>m.name.toLowerCase()===ls.name.toLowerCase()))merged.push(ls);
       }
       merged.sort((a,b)=>b.ts-a.ts);
@@ -70,12 +76,7 @@ function loadCreatedServers(){
       if(local.length)_renderCreatedList(local);
       else{block.style.display='none';_checkMineEmpty();}
     });
-  } else {
-    const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
-    if(localCreated.length)_renderCreatedList(localCreated);
-    else{block.style.display='none';_checkMineEmpty();}
-  }
-}
+}}
 
 // ---- ROOT SCREEN: MY SERVERS SECTION ----
 // Password cache: stored separately in localStorage keyed by server name hash

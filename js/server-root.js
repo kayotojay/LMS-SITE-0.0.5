@@ -25,9 +25,12 @@ function saveCreatedServer(name,pass){
   const dbKey=srvState._dbKey||SRV_ANON_KEY;
   filtered.unshift({name,pass,ts:Date.now(),dbUrl,dbKey});
   localStorage.setItem('lms_created_servers',JSON.stringify(filtered.slice(0,10)));
-  // Also persist in Firebase under the user's account so it works across browsers
+    // Persist to DB so Mine tab works cross-browser
+    if(currentUser&&getSrvDbUrl()){
+      const fbKey=name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+      fbSet('/accounts/'+currentUser.uid+'/createdServers/'+fbKey,{name,pass,ts:Date.now(),dbUrl:srvState._dbUrl||getSrvDbUrl(),dbKey:srvState._dbKey||SRV_ANON_KEY}).catch(()=>{});
+    }
   }
-
 
 function loadCreatedServers(){
   const block=document.getElementById('srv-created-block');

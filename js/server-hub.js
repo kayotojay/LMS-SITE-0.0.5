@@ -295,7 +295,9 @@ async function joinServer(){
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||'',_dbUrl:targetDbUrl,_dbKey:targetDbKey};
   localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||'',dbUrl:targetDbUrl,dbKey:targetDbKey}));
   saveRecentServer(serverName,pass);
-  if(isHost)saveCreatedServer(meta.name,pass);
+  if(isHost||meta.hostId===myId)saveCreatedServer(meta.name,pass);
+  const _svForCreated={serverKey,serverName:meta.name,pass,dbUrl:targetDbUrl,dbKey:targetDbKey};
+  if(isHost) localStorage.setItem('lms_created_'+serverKey, JSON.stringify(_svForCreated));
   _savePassCache(meta.name,pass,targetDbUrl,targetDbKey);
   startSrvHeartbeat();
   renderSrvStatus();
@@ -489,7 +491,11 @@ async function joinServerById(){
   srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||shortIdRaw,_dbUrl:targetDbUrl,_dbKey:targetDbKey};
   localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw,dbUrl:targetDbUrl,dbKey:targetDbKey}));
   saveRecentServer(meta.name,pass);
-  if(isHost)saveCreatedServer(meta.name,pass);
+  // REPLACE WITH:
+  if(isHost||meta.hostId===myId)saveCreatedServer(meta.name,pass);
+  // AND also store it in the per-server slot so it appears in My Servers:
+  const _svForCreated={serverKey,serverName:meta.name,pass,dbUrl:targetDbUrl,dbKey:targetDbKey};
+  if(isHost) localStorage.setItem('lms_created_'+serverKey, JSON.stringify(_svForCreated));
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();

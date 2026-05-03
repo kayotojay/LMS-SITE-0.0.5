@@ -267,7 +267,7 @@ async function fbSet(path,data){
     }
     const dbData=_toDb(meta,data);
     let conflictCol='';
-    if(table==='members') conflictCol='uid';
+    if(table==='members') conflictCol=(meta._type==='member'?'uid,server_key':'uid');
     else if(table==='projects') conflictCol='project_id';
     else if(table==='servers') conflictCol='key';
     else if(table==='server_ids') conflictCol='short_id';

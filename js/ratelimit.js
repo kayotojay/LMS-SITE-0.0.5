@@ -65,7 +65,15 @@ async function doLogin(){
   const passHash=await hashPass(password);
   const accounts=await fbGet('/accounts')||{};
   // Match by username OR email
-  let entry=Object.values(accounts).find(a=>a.username.toLowerCase()===identifier.toLowerCase());
+  let entry=Object.values(accounts).find(a=>
+    a.username&&a.username.toLowerCase()===identifier.toLowerCase()
+  );
+  if(!entry){
+    // Try display_name fallback (member row may have display_name overwriting username)
+    entry=Object.values(accounts).find(a=>
+      a.displayName&&a.displayName.toLowerCase()===identifier.toLowerCase()
+    );
+  }
   if(!entry&&identifier.includes('@')){
     entry=Object.values(accounts).find(a=>a.email&&a.email===identifier.toLowerCase());
   }

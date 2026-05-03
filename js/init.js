@@ -13,9 +13,11 @@ loadRoots();
       // If Firebase is unreachable, we trust the local session — don't log them out
       if(getSrvDbUrl()&&currentUser?.uid){
         try{
-          const acc=await fbGet('/accounts/'+currentUser.uid);
+          // Look up by username — uid in localStorage may be stale/wrong on new devices
+          const allAccounts=await fbGet('/accounts')||{};
+          const acc=Object.values(allAccounts).find(a=>a.username===currentUser.username)||null;
           if(acc){
-            // Refresh display name and email from server
+            currentUser.uid=acc.uid; // Always sync uid from DB — this is what host_id is keyed on
             currentUser.displayName=acc.displayName||acc.username||currentUser.displayName;
             currentUser.email=acc.email||currentUser.email||'';
             currentUser.username=acc.username||currentUser.username;

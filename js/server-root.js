@@ -263,7 +263,7 @@ async function rsQuickConnectServer(name,pass,isCreated,dbUrl,dbKey){
     toast('Private server — only the owner can access it');return;
   }
 
-  const memberData={uid:myId,server_key:serverKey,name:username,displayName:username,username:username,lastSeen:now,isHost,createdAt:now,email:currentUser?.email||'',activity:null,inProject:null};
+  const memberData={uid:myId,server_key:serverKey,name:username, displayName:username, username:currentUser?.username||username,lastSeen:now,isHost,createdAt:now,email:currentUser?.email||'',activity:null,inProject:null};
   await _withServerCreds(targetDbUrl,targetDbKey,()=>fbSet('/servers/'+serverKey+'/members/'+myId,memberData));
 
   const sv={serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||'',dbUrl:targetDbUrl,dbKey:targetDbKey};

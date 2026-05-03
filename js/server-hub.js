@@ -280,7 +280,7 @@ async function joinServer(){
   }
 
   const memberData={
-    uid:myId,server_key:serverKey,name:username,displayName:username,username:username,
+    uid:myId,server_key:serverKey,name:username, displayName:username, username:currentUser?.username||username,
     lastSeen:now,isHost:isHost,createdAt:now,email:currentUser?.email||'',activity:null,inProject:null
   };
 
@@ -479,7 +479,7 @@ async function joinServerById(){
     return;
   }
 
-  await _withServerCreds(targetDbUrl,targetDbKey,()=>fbSet('/servers/'+serverKey+'/members/'+myId,{uid:myId,server_key:serverKey,name:username,displayName:username,username:username,lastSeen:Date.now(),isHost,createdAt:Date.now(),email:currentUser?.email||'',activity:null,inProject:null}));
+  await _withServerCreds(targetDbUrl,targetDbKey,()=>fbSet('/servers/'+serverKey+'/members/'+myId,{uid:myId,server_key:serverKey,name:username, displayName:username, username:currentUser?.username||username,lastSeen:Date.now(),isHost,createdAt:Date.now(),email:currentUser?.email||'',activity:null,inProject:null}));
 
   // Store per-server credentials — do NOT touch SRV_DB_URL / SRV_ANON_KEY
   const sv={serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw,dbUrl:targetDbUrl,dbKey:targetDbKey};

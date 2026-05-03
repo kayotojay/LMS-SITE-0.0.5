@@ -440,3 +440,18 @@ document.addEventListener('keydown', function(e){
     if(hub && hub.style.display !== 'none'){ closeServerHub(); return; }
   }
 });
+
+(function startRootSyncPoll(){
+  setInterval(async()=>{
+    if(!currentUser || !getSrvDbUrl()) return;
+    // Only run when root screen is visible (not inside a project or hub overlay)
+    const rootVisible = document.getElementById('root-screen-wrap')?.style.display !== 'none';
+    const hubOpen = document.getElementById('server-hub-overlay')?.style.display !== 'none';
+    const appOpen = document.getElementById('app-shell')?.classList.contains('visible');
+    if(!rootVisible || appOpen) return;
+    // Re-query DB and update My Servers grid silently
+    renderRootMyServers();
+    // If hub is open too, refresh the mine tab
+    if(hubOpen){ loadCreatedServers(); loadRecentServers(); }
+  }, 20000); // 20s — short enough to feel live, long enough not to spam Supabase
+})();

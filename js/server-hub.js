@@ -1044,3 +1044,40 @@ async function deleteSrvProject(id){
     closeModal();toast('Project deleted');renderActiveServer();renderRootGrid();
   },danger:true}]);
 }
+
+// ---- DB SYNC: re-check servers when tab regains visibility or focus ----
+// Catches Opera, cross-browser tab switches, and device changes
+(function initServerSyncListeners(){
+  let _lastSync = 0;
+  const SYNC_COOLDOWN = 15000; // 15s minimum between syncs
+
+  function _syncIfStale(){
+    if(!currentUser || !getSrvDbUrl()) return;
+    const now = Date.now();
+    if(now - _lastSync < SYNC_COOLDOWN) return;
+    _lastSync = now;
+
+    // Always re-sync the root My Servers grid
+    renderRootMyServers();
+
+    // If the hub overlay is open, also refresh the Mine tab lists
+    const hub = document.getElementById('server-hub-overlay');
+    if(hub && hub.style.display !== 'none'){
+      loadCreatedServers();
+      loadRecentServers();
+    }
+  }
+
+  // Fires when tab becomes visible again (Opera, Chrome, Firefox, Safari)
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') _syncIfStale();
+  });
+
+  // Fires when window regains focus (covers Opera's edge cases)
+  window.addEventListener('focus', _syncIfStale);
+
+  // Fires on back/forward navigation (bfcache restore — Opera specific)
+  window.addEventListener('pageshow', (e)=>{
+    if(e.persisted) _syncIfStale(); // persisted = restored from bfcache
+  });
+})();

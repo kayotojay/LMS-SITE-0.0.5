@@ -53,6 +53,7 @@ loadRoots();
     renderRootGrid();
     updateAccountChip();
     addLogoutBtn();
+    if(getSrvDbUrl()) renderRootMyServers();
     // Load multi-server connections
     if(getSrvDbUrl()) loadMultiServers().then(()=>{if(multiServers.length>0)renderRootGrid();});
   } else {

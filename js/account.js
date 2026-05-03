@@ -144,7 +144,66 @@ function closeAccountSettings(){
   const m=document.getElementById('account-settings-modal');
   if(m)m.style.display='none';
 }
+function openDataDisclaimer(){
+  const existing=document.getElementById('data-disclaimer-modal');
+  if(existing){existing.style.display='flex';return;}
+  const m=document.createElement('div');
+  m.id='data-disclaimer-modal';
+  m.style.cssText='display:flex;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:7500;align-items:center;justify-content:center;overflow-y:auto;';
+  m.innerHTML=`
+    <div style="max-width:440px;width:93%;padding:28px 26px 32px;background:var(--bg);border:1px solid rgba(240,200,74,.3);border-radius:3px;box-shadow:0 0 40px rgba(0,0,0,.6);">
+      <div style="font-family:var(--vt);font-size:22px;color:rgba(240,200,74,.9);letter-spacing:.12em;margin-bottom:4px;">! IMPORTANT</div>
+      <div style="font-size:8px;color:var(--text3);letter-spacing:.25em;margin-bottom:22px;">HOW YOUR DATA IS STORED</div>
 
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:2px;padding:14px 16px;">
+          <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;margin-bottom:8px;">LOCAL PROJECTS</div>
+          <div style="font-size:10px;color:var(--text2);line-height:1.75;">
+            Projects you create locally are stored in <span style="color:var(--accent);font-family:var(--vt);">this browser's localStorage</span> only. They are tied to the account you are logged into <em>on this specific browser and machine</em>.
+          </div>
+          <div style="margin-top:8px;font-size:9px;color:rgba(240,200,74,.7);line-height:1.6;">
+            ⚠ Switching to a different browser, a different device, or logging into a new account will <strong style="color:rgba(240,200,74,.95);">not</strong> carry over your local projects. They stay on the machine and browser they were created on.
+          </div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:2px;padding:14px 16px;">
+          <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;margin-bottom:8px;">SERVER BACKUPS</div>
+          <div style="font-size:10px;color:var(--text2);line-height:1.75;">
+            Server backups and timed snapshots are also stored <span style="color:var(--accent);font-family:var(--vt);">locally per browser</span>. A backup taken in Chrome will not appear in Firefox, and vice versa — even on the same account.
+          </div>
+          <div style="margin-top:8px;font-size:9px;color:rgba(240,200,74,.7);line-height:1.6;">
+            ⚠ Always use the same browser if you want your backup history to remain accessible.
+          </div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:2px;padding:14px 16px;">
+          <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;margin-bottom:8px;">DATABASE & ACCOUNTS</div>
+          <div style="font-size:10px;color:var(--text2);line-height:1.75;">
+            Your account, servers, and server projects are stored in the <span style="color:var(--accent2);font-family:var(--vt);">Supabase database</span> you have configured — these are accessible from any browser or device as long as you use the same DB credentials.
+          </div>
+          <div style="margin-top:8px;font-size:9px;color:rgba(240,74,74,.8);line-height:1.6;">
+            ⚠ When switching accounts, always ensure the correct Supabase URL and anon key are configured. Using the wrong database on a different account can create duplicate entries, cause data conflicts, or trigger unintended deletions.
+          </div>
+        </div>
+
+        <div style="background:rgba(74,240,200,.04);border:1px solid rgba(74,240,200,.15);border-radius:2px;padding:10px 14px;">
+          <div style="font-size:9px;color:var(--text3);line-height:1.7;letter-spacing:.04em;">
+            <span style="color:var(--accent2);">✓ Safe across browsers:</span> Account login, server data, server projects, member list<br>
+            <span style="color:rgba(240,200,74,.8);">⚠ Browser-local only:</span> Local projects, server backups, pass cache, settings
+          </div>
+        </div>
+
+      </div>
+
+      <div style="text-align:center;margin-top:22px;">
+        <button onclick="document.getElementById('data-disclaimer-modal').style.display='none'" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;">✕ Got it, close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  // Close on backdrop click
+  m.addEventListener('click',e=>{if(e.target===m)m.style.display='none';});
+}
 function renderAccountSettings(){
   const el=document.getElementById('acct-settings-body');if(!el||!currentUser)return;
   const emailRl=currentUser.uid?checkRateLimit('email_'+currentUser.uid,3,25):{allowed:true,used:0,max:3};
@@ -197,6 +256,9 @@ function renderAccountSettings(){
           <div style="font-size:9px;color:var(--text3);word-break:break-all;margin-top:2px;">${getSrvDbUrl()?`<span style="color:var(--accent);">✓ Connected</span> <span style="color:var(--text3);">${escHtml(getSrvDbUrl())}</span>`:'<span style="color:var(--accent3);">⚠ Not configured</span>'}</div>
         </div>
         <button onclick="closeAccountSettings();openSupabaseSetup();" style="background:none;border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:9px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;white-space:nowrap;" onmouseover="this.style.background='rgba(74,240,200,.1)'" onmouseout="this.style.background='none'">⚙ Change DB</button>
+      </div>
+            <div style="margin-top:10px;padding:8px 10px;background:rgba(240,200,74,.06);border:1px solid rgba(240,200,74,.18);border-radius:2px;font-size:8px;color:rgba(240,200,74,.75);line-height:1.7;letter-spacing:.04em;">
+        ⚠ Each account should use the same Supabase project URL and key across all browsers. Using a different DB on the same account will create duplicate entries and may cause unexpected deletions or data conflicts.
       </div>
     </div>
     <!-- Danger zone -->

@@ -22,7 +22,7 @@ function nav(page){
   }
   const navEl=document.querySelector(`[onclick="nav('${page}')"]`)||document.getElementById('navitem-'+page);
   if(navEl)navEl.classList.add('active');
-  const titleMap={'dash':'Dashboard','main-tasks':'Main Phases','sub-tasks':'Sub Phases','vault':'Script Vault','versions':'Versions','settings':'Settings','analytics':'Dev Time Tracker','scene-tree':'Scene Tree','gdd':'Game Design Doc','assets':'Asset Tracker','bugs':'Bug Tracker'};
+  const titleMap={'dash':'Dashboard','main-tasks':'Main Phases','sub-tasks':'Sub Phases','canvas':'Canvas Mode','vault':'Script Vault','versions':'Versions','settings':'Settings','analytics':'Dev Time Tracker','scene-tree':'Scene Tree','gdd':'Game Design Doc','assets':'Asset Tracker','bugs':'Bug Tracker'};
   let title=titleMap[page]||'';
   if(!title&&page.startsWith('custom_')){
     const pfx2='custom_';const rest2=page.slice(pfx2.length);const subMk2=rest2.lastIndexOf('_sub_');const _secId2=subMk2>=0?rest2.slice(0,subMk2):rest2;const _subId2=subMk2>=0?rest2.slice(subMk2+1):null;const sec=D?.customSections?.find(s=>s.id===_secId2);const sub=sec?.subsections?.find(s=>s.id===_subId2);

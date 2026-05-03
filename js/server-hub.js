@@ -264,7 +264,8 @@ async function joinServer(){
   if(meta.passHash!==passHash){toast('Wrong password');return;}
 
   const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
-  const isHost=!!(meta.hostId && meta.hostId===myId);
+  const _createdEntry=localStorage.getItem('lms_created_'+serverKey);
+  const isHost=!!(meta.hostId && meta.hostId===myId)||!!(_createdEntry);
   const now=Date.now();
 
   // Block non-host from joining private servers
@@ -467,7 +468,8 @@ async function joinServerById(){
   if(meta.passHash!==passHash){toast('Wrong password');return;}
 
   const myId=currentUser?.uid||('user_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
-  const isHost=!!(meta.hostId && meta.hostId===myId);
+  const _createdEntry=localStorage.getItem('lms_created_'+serverKey);
+  const isHost=!!(meta.hostId && meta.hostId===myId)||!!(_createdEntry);
 
   // Block non-host from joining private servers
   if(meta.visibility==='private'&&meta.hostId&&meta.hostId!==myId){

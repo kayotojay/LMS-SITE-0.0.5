@@ -63,6 +63,36 @@ function buildPhaseCard(ph,storeKey){
 function buildPhaseGrids(){
   const mg=document.getElementById('main-phase-grid');const sg=document.getElementById('sub-phase-grid');
   mg.innerHTML='';sg.innerHTML='';
+  // Inject Canvas Mode button into Main Phases toolbar
+  const mainToolbar=document.querySelector('#page-main-tasks .toolbar');
+  if(mainToolbar&&!mainToolbar.querySelector('.canvas-mode-btn')){
+    const cvsBtnMain=document.createElement('button');
+    cvsBtnMain.className='btn canvas-mode-btn';
+    cvsBtnMain.innerHTML='⬡ Canvas Mode';
+    cvsBtnMain.title='Switch to draggable canvas view';
+    cvsBtnMain.style.cssText='margin-left:auto;border-color:var(--accent2);color:var(--accent2);';
+    cvsBtnMain.addEventListener('click',()=>{ nav('canvas'); initCanvas('main'); });
+    mainToolbar.appendChild(cvsBtnMain);
+  }
+  // Inject Canvas Mode button into Sub Phases toolbar (create one if missing)
+  const subPage=document.getElementById('page-sub-tasks');
+  if(subPage&&!subPage.querySelector('.canvas-mode-btn')){
+    let subToolbar=subPage.querySelector('.toolbar');
+    if(!subToolbar){
+      subToolbar=document.createElement('div');
+      subToolbar.className='toolbar';
+      const hdr=subPage.querySelector('.section-hdr');
+      if(hdr) hdr.insertAdjacentElement('afterend',subToolbar);
+      else subPage.prepend(subToolbar);
+    }
+    const cvsBtnSub=document.createElement('button');
+    cvsBtnSub.className='btn canvas-mode-btn';
+    cvsBtnSub.innerHTML='⬡ Canvas Mode';
+    cvsBtnSub.title='Switch to draggable canvas view';
+    cvsBtnSub.style.cssText='margin-left:auto;border-color:var(--accent2);color:var(--accent2);';
+    cvsBtnSub.addEventListener('click',()=>{ nav('canvas'); initCanvas('sub'); });
+    subToolbar.appendChild(cvsBtnSub);
+  }
   const phases=getPhases();
   const addRow=document.createElement('div');addRow.style.gridColumn='1/-1';
   addRow.innerHTML=`<div style="display:flex;gap:8px;align-items:center;padding:8px 0;flex-wrap:wrap;">

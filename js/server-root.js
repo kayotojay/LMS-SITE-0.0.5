@@ -275,7 +275,7 @@ async function rsQuickConnectServer(name,pass,isCreated,dbUrl,dbKey){
   // Cache the working password so reconnect is seamless next time
   _savePassCache(meta.name,pass,targetDbUrl,targetDbKey);
   saveRecentServer(name,pass);
-  if(isHost)saveCreatedServer(meta.name,pass);
+  if(isHost){saveCreatedServer(meta.name,pass);bakInitialSnapshot(serverKey,meta.name);}
   startSrvHeartbeat();
   renderRootGrid();
   toast('Connected to '+meta.name+(isHost?' [HOST]':''));

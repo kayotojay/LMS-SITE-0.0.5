@@ -391,6 +391,7 @@ async function hostServer(){
   saveRecentServer(serverName,pass);
   saveCreatedServer(serverName,pass);
   _savePassCache(serverName,pass,getSrvDbUrl(),SRV_ANON_KEY);
+  bakInitialSnapshot(serverKey,serverName);
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
@@ -402,6 +403,7 @@ async function hostServer(){
 // Also add this heartbeat enhancement to detect deleted members
 function startSrvHeartbeat(){
   stopSrvPolling();
+  if(srvState.isHost)bakStartTimers(srvState.serverKey,srvState.serverName);
   srvState.pollInterval=setInterval(async()=>{
     if(!srvState.connected)return;
     const _hUrl=srvState._dbUrl||getSrvDbUrl();const _hKey=srvState._dbKey||SRV_ANON_KEY;
@@ -522,6 +524,7 @@ function stopSrvPolling(){
   if(srvState.pollInterval)clearInterval(srvState.pollInterval);
   if(srvState.chatPollInterval)clearInterval(srvState.chatPollInterval);
   srvState.pollInterval=null;srvState.chatPollInterval=null;
+  bakStopTimers();
 }
 
 // ---- RENDER ACTIVE SERVER ----
@@ -689,6 +692,7 @@ async function confirmDeleteServer(){
     const typed=(document.getElementById('del-srv-inp').value||'').trim();
     if(typed!=='delete '+code){toast('Confirmation did not match — cancelled');closeModal();return;}
     toast('Deleting server…');
+    bakFreeze(srvState.serverKey);
     // Write tombstone FIRST so connected members detect the deletion
     await fbSet('/servers/'+srvState.serverKey+'/meta/deleted',true);
     await fbSet('/servers/'+srvState.serverKey+'/meta/deletedAt',Date.now());

@@ -91,6 +91,8 @@ async function syncProjData(fullRender=false){
   const proj=await fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId);
   speProjData=proj;
   if(!proj){toast('Project not found');closeSrvProjEditor();return;}
+  // Live backup — silently update on every sync (host only)
+  if(srvState.isHost&&srvState.serverKey)bakUpdateLive(srvState.serverKey,srvState.serverName);
 
   // Update header
   document.getElementById('spe-title').textContent=proj.name.toUpperCase();

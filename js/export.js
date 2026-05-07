@@ -35,7 +35,7 @@ function openCommunity(){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(16px);';
   modal.innerHTML=`
     <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:3px;padding:48px 40px;max-width:420px;width:90%;font-family:var(--font);text-align:center;position:relative;">
-      <div style="font-family:var(--vt);font-size:48px;letter-spacing:.1em;background:linear-gradient(135deg,#c8f04a,#4af0c8,#a04af0,#c8f04a);background-size:300% 300%;animation:gradShift 5s ease infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;">🌐</div>
+      <div style="font-family:var(--vt);font-size:48px;letter-spacing:.1em;background:linear-gradient(135deg,#c8f04a,#4af0c8,#a04af0,#c8f04a);background-size:300% 300%;animation:gradShift 5s ease infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
       <div style="font-family:var(--vt);font-size:30px;color:var(--text);letter-spacing:.12em;margin-bottom:10px;">COMMUNITY</div>
       <div style="font-size:9px;color:var(--text3);letter-spacing:.25em;text-transform:uppercase;margin-bottom:28px;">LMS Dev Hub</div>
       <div style="background:linear-gradient(135deg,rgba(200,240,74,.06),rgba(74,240,200,.04));border:1px solid rgba(200,240,74,.2);border-radius:3px;padding:24px;margin-bottom:24px;">
@@ -194,7 +194,7 @@ function applyImportToProject(mode,blobKey){
       // Replace the target project's data entirely but keep name/color/engine
       saveRootData(targetId,importedData);
       if(activeRootId===targetId)D=getRootData(targetId);
-      toast('✓ Overwrote "'+targetRoot.name+'" with imported data');
+      toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Overwrote "'+targetRoot.name+'" with imported data');
     } else {
       // Append — merge scripts, bugs, notes, versions etc.
       const existing=getRootData(targetId);
@@ -211,7 +211,7 @@ function applyImportToProject(mode,blobKey){
       (importedData.customPhases?.sub||[]).forEach(p=>{if(!existIds.has(p.id))existing.customPhases.sub.push(p);});
       saveRootData(targetId,existing);
       if(activeRootId===targetId)D=getRootData(targetId);
-      toast('✓ Appended imported data into "'+targetRoot.name+'"');
+      toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Appended imported data into "'+targetRoot.name+'"');
     }
   } else if(blob._type==='lmstasks'){
     const existing=getRootData(targetId);
@@ -226,7 +226,7 @@ function applyImportToProject(mode,blobKey){
     }
     saveRootData(targetId,existing);
     if(activeRootId===targetId){D=getRootData(targetId);buildPhaseGrids();updateGlobal();}
-    toast('✓ '+(mode==='overwrite'?'Overwrote':'Appended')+' phases into "'+targetRoot.name+'"');
+    toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>'+(mode==='overwrite'?'Overwrote':'Appended')+' phases into "'+targetRoot.name+'"');
   }
   delete _itpBlobStore[blobKey];
   renderRootGrid();
@@ -362,6 +362,8 @@ function applyImport(mode){
         (blob.sub||[]).forEach(ph=>{if(!existing.has(ph.id)){D.customPhases.sub.push({...ph,_subPhase:true});report.tasks.sub.push({title:ph.title,action:'added'});}});
       }
       save();buildPhaseGrids();updateGlobal();
+      const mainCount=(blob.main||[]).length;const subCount=(blob.sub||[]).length;
+      logActivity('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Imported '+(blob._name||'tasks')+': '+mainCount+' main, '+subCount+' sub phases ('+(mode==='overwrite'?'overwrite':'append')+')','#c8f04a');
 
     } else if(type==='backup'){
       if(mode==='overwrite'){
@@ -428,7 +430,7 @@ function showImportReport(report,type,mode){
       <div style="font-family:var(--vt);font-size:22px;color:var(--accent);letter-spacing:.1em;margin-bottom:4px;">IMPORT COMPLETE</div>
       <div style="font-size:9px;color:var(--text3);letter-spacing:.15em;margin-bottom:20px;">${mode.toUpperCase()} MODE · ${type.toUpperCase()}</div>
       ${lines.join('')}
-      <button onclick="document.getElementById('import-report-modal').remove()" style="margin-top:18px;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:10px;padding:9px 24px;cursor:pointer;border-radius:2px;width:100%;letter-spacing:.08em;">✓ Done</button>
+      <button onclick="document.getElementById('import-report-modal').remove()" style="margin-top:18px;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:10px;padding:9px 24px;cursor:pointer;border-radius:2px;width:100%;letter-spacing:.08em;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Done</button>
     </div>`;
   document.body.appendChild(modal);
 }
@@ -445,5 +447,5 @@ function renderImportLogBadge(){
   if(rootCount)summary.push(rootCount+' project'+(rootCount!==1?'s':''));
   if(taskCount)summary.push(taskCount+' phase'+(taskCount!==1?'s':''));
   el.style.display='flex';
-  el.innerHTML=`<span style="color:var(--accent);margin-right:6px;">⬆</span><span style="flex:1;">Last import: <strong>${summary.join(', ')||'nothing new'}</strong> · ${last.mode} · ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span><button onclick="localStorage.removeItem('lms_import_log');renderImportLogBadge();" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:9px;font-family:var(--font);">✕</button>`;
+  el.innerHTML=`<span style="color:var(--accent);margin-right:6px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><span style="flex:1;">Last import: <strong>${summary.join(', ')||'nothing new'}</strong> · ${last.mode} · ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span><button onclick="localStorage.removeItem('lms_import_log');renderImportLogBadge();" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:9px;font-family:var(--font);">✕</button>`;
 }

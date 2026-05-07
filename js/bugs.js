@@ -13,7 +13,7 @@ function renderBugs(){
   let bugs=D.bugs;
   if(sf!=='all')bugs=bugs.filter(b=>b.severity===sf);
   if(stf!=='all')bugs=bugs.filter(b=>b.status===stf);
-  if(!bugs.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;">No bugs logged! Either youre perfect or haven\'t started testing. 🎉</div>';return;}
+  if(!bugs.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;">No bugs logged! Either youre perfect or haven\'t started testing. <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 10l-8-4V7"/></svg></div>';return;}
   el.innerHTML='';
   bugs.forEach(bug=>{
     const orig_i=D.bugs.indexOf(bug);

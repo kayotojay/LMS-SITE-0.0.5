@@ -1,0 +1,194 @@
+/* ══════════════════════════════════════════════════════
+   CANVAS MODE v4 — snap-to-grid + collapse/expand
+   Replace the old canvas style block with this entire file
+   ══════════════════════════════════════════════════════ */
+
+/* ── Container & toolbar ─────────────────────────── */
+#canvas-container{display:flex;flex-direction:column;width:100%;height:100%;background:var(--bg);overflow:hidden;}
+#canvas-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;z-index:10;flex-wrap:wrap;}
+.cvs-tbtn{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:9px;padding:4px 10px;cursor:pointer;letter-spacing:.08em;border-radius:1px;transition:all .15s;white-space:nowrap;}
+.cvs-tbtn:hover{border-color:var(--accent);color:var(--accent);}
+.cvs-tbtn-active{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(200,240,74,.08)!important;}
+.cvs-tbtn.active{border-color:var(--accent2)!important;color:var(--accent2)!important;background:rgba(74,160,240,.10)!important;}
+.cvs-sep{width:1px;height:16px;background:var(--border);flex-shrink:0;}
+.cvs-badge{font-size:8px;padding:2px 5px;border-radius:1px;letter-spacing:.08em;flex-shrink:0;}
+
+/* ── Viewport ────────────────────────────────────── */
+/* Default: dot grid */
+.cvs-vp{
+  flex:1;position:relative;overflow:hidden;cursor:grab;
+  background:var(--bg);
+  background-image:radial-gradient(circle,var(--border) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+/* Snap mode: line grid (20px = GRID constant) */
+.cvs-vp.cvs-vp-grid{
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size:20px 20px;
+  background-color:var(--bg);
+}
+.cvs-vp:active{cursor:grabbing;}
+
+/* Snap indicator badge in corner */
+.cvs-vp::after{
+  content:'FREE';
+  position:absolute;bottom:10px;right:12px;
+  font-size:8px;letter-spacing:.1em;color:var(--text3);
+  border:1px solid var(--border);padding:2px 6px;border-radius:1px;
+  pointer-events:none;opacity:.5;
+}
+.cvs-vp.cvs-vp-grid::after{content:'SNAP 20px';}
+
+#canvas-world{position:absolute;top:0;left:0;width:0;height:0;transform-origin:0 0;}
+#page-canvas.active{display:flex!important;flex-direction:column;padding:0;height:calc(100vh - 40px);}
+
+/* ══════════════════════════════════════════════════
+   OVERVIEW — Database Table Cards
+   ══════════════════════════════════════════════════ */
+.cvs-db-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:2px;
+  box-shadow:0 2px 12px rgba(0,0,0,.35);
+  transition:box-shadow .18s,border-color .18s;
+  overflow:hidden;cursor:default;position:absolute;
+}
+.cvs-db-card:hover{border-color:var(--border2);box-shadow:0 6px 24px rgba(0,0,0,.5);}
+.cvs-db-card-done{border-color:rgba(74,240,200,.4)!important;}
+.cvs-db-card-collapsed .cvs-db-body{display:none!important;}
+
+/* Card header */
+.cvs-db-hdr{
+  display:flex;align-items:center;gap:5px;padding:0 8px;height:32px;
+  cursor:grab;user-select:none;font-family:var(--font);
+  border-bottom:1px solid rgba(0,0,0,.18);position:relative;
+}
+.cvs-db-hdr:active{cursor:grabbing;}
+
+/* Collapse chevron */
+.cvs-db-chevron{
+  font-size:9px;flex-shrink:0;cursor:pointer;width:12px;text-align:center;
+  opacity:.7;transition:opacity .15s;
+}
+.cvs-db-chevron:hover{opacity:1;}
+
+.cvs-db-hdr-badge{font-size:7px;letter-spacing:.1em;background:rgba(0,0,0,.2);padding:1px 5px;border-radius:1px;flex-shrink:0;}
+.cvs-db-hdr-title{font-size:10px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cvs-db-hdr-prog{font-size:8px;opacity:.7;flex-shrink:0;letter-spacing:.04em;margin-left:auto;}
+
+/* Card body */
+.cvs-db-body{overflow:hidden;}
+
+/* Task rows */
+.cvs-db-row{
+  display:flex;align-items:center;gap:7px;padding:0 10px;height:22px;
+  border-bottom:1px solid var(--border);font-family:var(--font);font-size:9px;
+  color:var(--text2);letter-spacing:.04em;white-space:nowrap;overflow:hidden;
+}
+.cvs-db-row:last-child{border-bottom:none;}
+.cvs-db-row-icon{font-size:8px;color:var(--text3);flex-shrink:0;width:10px;text-align:center;}
+.cvs-db-row-text{flex:1;overflow:hidden;text-overflow:ellipsis;}
+.cvs-db-row-done .cvs-db-row-icon{color:var(--accent2);}
+.cvs-db-row-done .cvs-db-row-text{color:var(--text3);text-decoration:line-through;}
+.cvs-db-row-more{justify-content:center;border-top:1px dashed var(--border);background:rgba(0,0,0,.08);}
+
+/* ══════════════════════════════════════════════════
+   DRILL-IN — Task Node Cards
+   ══════════════════════════════════════════════════ */
+.cvs-dn{
+  background:var(--bg2);border:1px solid var(--border);border-radius:2px;
+  box-shadow:0 2px 12px rgba(0,0,0,.35);
+  transition:box-shadow .18s,border-color .18s;
+  overflow:visible;position:absolute;
+}
+.cvs-dn:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.5);}
+.cvs-dn:hover .cvs-dn-port{opacity:.7;}
+.cvs-dn:hover .cvs-dn-delconn{opacity:1;}
+.cvs-dn-done{border-color:rgba(74,240,200,.35)!important;}
+.cvs-dn-dragging{box-shadow:0 14px 44px rgba(0,0,0,.65);opacity:.92;cursor:grabbing;}
+
+.cvs-dn-hdr{
+  display:flex;align-items:center;gap:6px;padding:0 8px;height:28px;
+  cursor:grab;user-select:none;font-family:var(--font);
+  border-bottom:1px solid rgba(0,0,0,.18);position:relative;border-radius:2px 2px 0 0;
+}
+.cvs-dn-hdr:active{cursor:grabbing;}
+.cvs-dn-badge{font-size:7px;letter-spacing:.1em;background:rgba(0,0,0,.2);padding:1px 5px;border-radius:1px;flex-shrink:0;}
+
+.cvs-dn-body{display:flex;align-items:center;gap:7px;padding:0 8px;height:26px;position:relative;}
+.cvs-dn-lbl{font-size:10px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.cvs-dn-lbl.done{color:var(--text3);text-decoration:line-through;}
+
+/* Port handle */
+.cvs-dn-port{
+  position:absolute;right:-7px;top:50%;transform:translateY(-50%);
+  width:13px;height:13px;border-radius:50%;
+  background:var(--bg3);border:2px solid var(--accent);
+  cursor:crosshair;opacity:0;transition:opacity .15s,transform .15s;z-index:20;
+}
+.cvs-dn-port:hover{opacity:1!important;transform:translateY(-50%) scale(1.3);background:var(--accent);}
+
+/* Remove connection button */
+.cvs-dn-delconn{
+  position:absolute;right:5px;bottom:3px;background:none;border:1px solid var(--border);
+  color:var(--text3);font-size:10px;padding:0 3px;cursor:pointer;border-radius:1px;
+  opacity:0;transition:all .15s;font-family:var(--font);line-height:1.4;
+}
+.cvs-dn-delconn:hover{border-color:var(--accent3);color:var(--accent3);}
+
+/* ── Waypoint drag handle ────────────────────────── */
+.cvs-wp-handle{
+  position:absolute;width:12px;height:12px;border-radius:50%;
+  background:var(--bg2);border:2px solid var(--accent2);
+  box-shadow:0 1px 6px rgba(0,0,0,.4);cursor:move;z-index:30;
+  transition:transform .12s,background .12s;
+}
+.cvs-wp-handle:hover{background:var(--accent2);transform:scale(1.35);}
+
+/* ══════════════════════════════════════════════════
+   DEADLINES
+   ══════════════════════════════════════════════════ */
+
+/* Overview card — deadline date chip on each row */
+.cvs-db-row-dl{
+  font-size:8px;letter-spacing:.06em;padding:1px 5px;border-radius:1px;
+  border:1px solid var(--border);flex-shrink:0;white-space:nowrap;
+  font-family:var(--font);
+}
+
+/* Overview card header — overdue pulse dot */
+@keyframes cvsDlPulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:.5;transform:scale(1.5);}
+}
+
+/* Drill node — status badge in header */
+.cvs-dn-dl-badge{
+  font-size:7px;letter-spacing:.08em;padding:1px 5px;border-radius:1px;
+  border:1px solid transparent;white-space:nowrap;flex-shrink:0;
+  font-family:var(--font);margin-left:auto;
+}
+
+/* Drill node — deadline row */
+.cvs-dn-dl-row{
+  display:flex;align-items:center;gap:5px;padding:0 8px;height:24px;
+  border-top:1px solid rgba(0,0,0,.15);background:rgba(0,0,0,.1);
+}
+.cvs-dn-dl-label{
+  font-size:10px;color:var(--text3);flex-shrink:0;cursor:default;
+}
+.cvs-dn-dl-input{
+  flex:1;min-width:0;background:transparent;border:none;
+  border-bottom:1px solid var(--border);color:var(--text2);
+  font-family:var(--font);font-size:9px;letter-spacing:.04em;
+  padding:1px 2px;cursor:pointer;outline:none;
+  color-scheme:dark;
+}
+.cvs-dn-dl-input:hover{border-bottom-color:var(--accent);}
+.cvs-dn-dl-input:focus{border-bottom-color:var(--accent);color:var(--text);}
+.cvs-dn-dl-clear{
+  background:none;border:none;color:var(--text3);font-size:10px;
+  cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;
+  transition:color .12s;
+}
+.cvs-dn-dl-clear:hover{color:var(--accent3);}

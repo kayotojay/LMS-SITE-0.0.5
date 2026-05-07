@@ -54,7 +54,7 @@ let pendingAccount=null;
 let pendingVerifyUid=null; // for email login verification
 
 async function doLogin(){
-  if(!getSrvDbUrl()){
+  if(false){
     document.getElementById('login-db-warning').style.display='block';
     showLoginError('Please set SUPABASE_URL and SUPABASE_ANON_KEY in the script first.');return;
   }
@@ -91,7 +91,7 @@ async function doLogin(){
 }
 
 async function doCreateAccount(){
-  if(!getSrvDbUrl()){
+  if(false){
     document.getElementById('login-db-warning').style.display='block';
     showLoginError('Please set SUPABASE_URL and SUPABASE_ANON_KEY in the script first.');return;
   }
@@ -149,12 +149,12 @@ function logoutUser(){
   // Disconnect all servers
   multiServers.forEach(sv=>{
     if(sv.pollInterval)clearInterval(sv.pollInterval);
-    if(sv.myId&&getSrvDbUrl())fbDelete('/servers/'+sv.serverKey+'/members/'+sv.myId);
+    if(sv.myId&&CFG_URL)fbDelete('/servers/'+sv.serverKey+'/members/'+sv.myId);
   });
   multiServers.length=0;
   // Disconnect srvState if connected
   if(srvState.connected){
-    if(srvState.serverKey&&srvState.myId&&getSrvDbUrl()) fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
+    if(srvState.serverKey&&srvState.myId&&CFG_URL) fbDelete('/servers/'+srvState.serverKey+'/members/'+srvState.myId);
     stopSrvPolling();
     _srvMetaCache=null;_srvMetaCacheKey=null;srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
   }

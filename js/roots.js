@@ -22,7 +22,7 @@ function getRootData(id){
 function saveRootData(id,data){const sk='lms_proj_'+id;try{localStorage.setItem(sk,JSON.stringify(data));}catch(e){}}
 
 function newProjectData(){
-  return{mainTasks:{},subTasks:{},customPhases:{main:[],sub:[]},folders:[],scripts:[],versions:[],survivors:[],notes:[],lore:[],activity:[],customSections:[],sessions:[],scenes:[],sceneFolders:[],gddSections:[],assets:[],bugs:[]};
+  return{mainTasks:{},subTasks:{},customPhases:{main:[],sub:[]},folders:[],scripts:[],versions:[],survivors:[],notes:[],lore:[],activity:[],customSections:[],sessions:[],scenes:[],sceneFolders:[],gddSections:[],assets:[],bugs:[],customNodes:[],taskAssignments:[]};
 }
 
 function calcProgress(data,phases){
@@ -72,7 +72,7 @@ function renderServerSidebar(){
     item.innerHTML=`
       <div class="rs-srv-item-name">${escHtml(sv.serverName)}</div>
       ${sv.isHost?'<span class="rs-srv-item-badge" style="color:var(--accent);border:1px solid var(--accent);background:rgba(200,240,74,.07);">HOST</span>':'<span class="rs-srv-item-badge" style="color:var(--text3);border:1px solid var(--border2);">MEMBER</span>'}
-      <button class="rs-srv-item-leave" onclick="event.stopPropagation();confirmLeaveServer('${sv.serverKey}')" title="Leave server (keeps membership)">✕</button>
+      <button class="rs-srv-item-leave" onclick="event.stopPropagation();confirmLeaveServer('${sv.serverKey}')" title="Leave server (keeps membership)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     `;
     item.addEventListener('click',()=>selectSidebarServer(sv.serverKey));
     sidebar.appendChild(item);
@@ -210,8 +210,8 @@ function renderRootGrid(){
     card.style.setProperty('--card-color',col);
     card.style.setProperty('--card-glow',`rgba(${hexToRgb(col)},.05)`);
     const hostBtn=srvState.connected&&srvState.isHost
-      ? `<button class="rc-action-btn" style="color:var(--accent2);border-color:var(--accent2);margin-right:auto;" onclick="event.stopPropagation();hostExistingProjectOnServer('${root.id}')">⚡ Publish to Server</button>`
-      : `<button class="rc-action-btn" style="color:var(--accent2);margin-right:auto;opacity:.7;" onclick="event.stopPropagation();promptPublishToServer('${root.id}')">⚡ Publish to Server</button>`;
+      ? `<button class="rc-action-btn" style="color:var(--accent2);border-color:var(--accent2);margin-right:auto;" onclick="event.stopPropagation();hostExistingProjectOnServer('${root.id}')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Publish to Server</button>`
+      : `<button class="rc-action-btn" style="color:var(--accent2);margin-right:auto;opacity:.7;" onclick="event.stopPropagation();promptPublishToServer('${root.id}')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Publish to Server</button>`;
     card.innerHTML=`
       <div class="rc-top">
         <div class="rc-icon" style="background:linear-gradient(135deg,${col}40,${col}10);color:${col};">${(root.name||'P').charAt(0).toUpperCase()}</div>
@@ -227,7 +227,7 @@ function renderRootGrid(){
       ${SETTINGS.showCreatedDate!==false?`<div class="rc-date">Created ${root.created||'—'}</div>`:''}
       <div class="rc-actions">
         ${hostBtn}
-        <button class="rc-action-btn" onclick="event.stopPropagation();openEditSoloProjectInfo('${root.id}')">✎ Info</button>
+        <button class="rc-action-btn" onclick="event.stopPropagation();openEditSoloProjectInfo('${root.id}')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Info</button>
         <button class="rc-action-btn" onclick="event.stopPropagation();exportRoot('${root.id}')">Export</button>
         <button class="rc-action-btn" onclick="event.stopPropagation();confirmDeleteRoot('${root.id}')">Delete</button>
       </div>`;
@@ -285,7 +285,7 @@ async function renderAllServerSections(){
           <div style="width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 6px var(--accent2);flex-shrink:0;animation:glowPulse 2s infinite;"></div>
           <div style="font-size:9px;color:var(--accent2);letter-spacing:.25em;text-transform:uppercase;">${escHtml(sv.serverName)}${typeLabel}</div>
           <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--accent2),transparent);opacity:.25;"></div>
-          <button onclick="openServerHubForServer('${sv.serverKey}')" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">Hub ⚡</button>
+          <button onclick="openServerHubForServer('${sv.serverKey}')" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">Hub <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></button>
           <button onclick="openCreateServerProjectFor('${sv.serverKey}')" style="background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:9px;padding:4px 14px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">+ New</button>
           <button onclick="disconnectServer('${sv.serverKey}')" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Leave</button>
         </div>
@@ -336,7 +336,7 @@ async function _renderServerSection(sv,grid,empty){
     </div>`;
   if(empty)empty.style.display='none';
 
-  const _rUrl=sv.dbUrl||getSrvDbUrl();const _rKey=sv.dbKey||SRV_ANON_KEY;
+  const _rUrl=CFG_URL;const _rKey=CFG_KEY;
   const projects=await _withServerCreds(_rUrl,_rKey,()=>fbGet('/servers/'+sv.serverKey+'/projects'))||{};
   const members=await _withServerCreds(_rUrl,_rKey,()=>fbGet('/servers/'+sv.serverKey+'/members'))||{};
   const now=Date.now();
@@ -385,7 +385,7 @@ async function _renderServerSection(sv,grid,empty){
       ${proj.createdBy?`<div style="font-size:8px;color:var(--text3);margin-top:6px;letter-spacing:.04em;">by <strong style="color:var(--accent);font-weight:normal;">${escHtml(proj.createdBy)}</strong>${proj.createdAt?' · '+new Date(proj.createdAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):''}</div>`:''}
       <div class="rc-actions">
         <button class="rc-action-btn" onclick="event.stopPropagation();exportServerRootFor('${sv.serverKey}','${id}')">Export</button>
-        ${sv.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();openEditProjectMetaFor('${sv.serverKey}','${id}')">✎ Info</button>`:''}
+        ${sv.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();openEditProjectMetaFor('${sv.serverKey}','${id}')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Info</button>`:''}
         ${sv.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();deleteSrvProjectFor('${sv.serverKey}','${id}')" style="color:var(--accent3);">Delete</button>`:''}
       </div>`;
     card.addEventListener('click',()=>openSrvProjectFrom(sv,id));
@@ -440,9 +440,9 @@ async function deleteSrvProjectFor(serverKey,projId){
 
 // Open a server project from a specific server connection
 async function openSrvProjectFrom(sv,projId){
-  // Set srvState to this server temporarily
-  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,activeProjId:projId};
-  localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId}));
+  // Set srvState to this server — must include _dbUrl/_dbKey so project fetch uses correct credentials
+  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,activeProjId:projId,_dbUrl:sv.dbUrl||null,_dbKey:sv.dbKey||null};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,dbUrl:sv.dbUrl||'',dbKey:sv.dbKey||''}));
   await openSrvProject(projId);
 }
 
@@ -527,6 +527,7 @@ function save(){
       sessions:D.sessions||[],
       scenes:D.scenes||[],
       sceneFolders:D.sceneFolders||[],
+      customNodes:D.customNodes||[],
       gddSections:D.gddSections||[],
       assets:D.assets||[],
       lore:D.lore||[],
@@ -542,10 +543,9 @@ function save(){
     fbData.bugs=bugs;
     const notes={};(D.notes||[]).forEach((n,i)=>{notes['n_'+i]={title:n.title||'Note',content:n.content||''};});
     fbData.notes=notes;
-    const _svUrl=srvState._dbUrl||getSrvDbUrl();const _svKey=srvState._dbKey||SRV_ANON_KEY;
+    const _svUrl=CFG_URL;const _svKey=CFG_KEY;
     _withServerCreds(_svUrl,_svKey,()=>fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId, {_dataOnly:true, data:JSON.stringify(fbData)}));
   } else {
     if(activeRootId) saveRootData(activeRootId,D);
   }
 }
-

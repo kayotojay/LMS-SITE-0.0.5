@@ -5,13 +5,195 @@
 // ========================================
 
 // =====================================================
-// INVITE LINK ENCODE / DECODE
+// NOTIFICATION SOUND ENGINE
+// =====================================================
+const _notifAudio={ctx:null,get(){if(!this.ctx)try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return this.ctx;}};
+function playChatSound(type='incoming'){
+  const ctx=_notifAudio.get();if(!ctx)return;
+  try{
+    if(type==='incoming'){
+      // Gentle "ping" — two tones
+      const o1=ctx.createOscillator(),g1=ctx.createGain();
+      o1.connect(g1);g1.connect(ctx.destination);
+      o1.frequency.setValueAtTime(880,ctx.currentTime);
+      o1.frequency.setValueAtTime(1320,ctx.currentTime+0.05);
+      g1.gain.setValueAtTime(0.08,ctx.currentTime);
+      g1.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.25);
+      o1.start();o1.stop(ctx.currentTime+0.25);
+    } else if(type==='outgoing'){
+      // Soft "pop"
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type='sine';o.frequency.setValueAtTime(660,ctx.currentTime);
+      g.gain.setValueAtTime(0.05,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.12);
+      o.start();o.stop(ctx.currentTime+0.12);
+    } else if(type==='typing'){
+      // Soft tick
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type='sine';o.frequency.setValueAtTime(1100,ctx.currentTime);
+      g.gain.setValueAtTime(0.025,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.06);
+      o.start();o.stop(ctx.currentTime+0.06);
+    } else if(type==='alert'){
+      // Host alert — descending double beep
+      [0,0.15].forEach((delay,i)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);
+        o.type='square';o.frequency.setValueAtTime(880-(i*180),ctx.currentTime+delay);
+        g.gain.setValueAtTime(0.04,ctx.currentTime+delay);
+        g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+0.18);
+        o.start(ctx.currentTime+delay);o.stop(ctx.currentTime+delay+0.18);
+      });
+    }
+  }catch(e){}
+}
+
+// =====================================================
+// TYPING INDICATOR STATE
+// =====================================================
+let _typingTimeout=null;
+let _lastTypingTs=0;
+let _typingIndicatorShown={};  // uid -> name of who's typing
+
+async function _setTyping(isTyping){
+  if(!srvState.connected||!srvState.activeProjId||!srvState.myId)return;
+  try{
+    await _withServerCreds(CFG_URL,CFG_KEY,()=>fbSet(
+      '/servers/'+srvState.serverKey+'/typing/'+srvState.activeProjId+'/'+srvState.myId,
+      isTyping?{name:srvState.username,ts:Date.now()}:null
+    ));
+  }catch(e){}
+}
+
+function handleChatInput(e){
+  const now=Date.now();
+  if(now-_lastTypingTs>2000){_lastTypingTs=now;_setTyping(true);}
+  clearTimeout(_typingTimeout);
+  _typingTimeout=setTimeout(()=>{_setTyping(false);_lastTypingTs=0;},3000);
+  if(e.key==='Enter'){clearTimeout(_typingTimeout);_setTyping(false);_lastTypingTs=0;}
+}
+
+async function _pollTypingIndicator(){
+  if(!srvState.connected||!srvState.activeProjId)return;
+  try{
+    const typing=await _withServerCreds(CFG_URL,CFG_KEY,()=>fbGet(
+      '/servers/'+srvState.serverKey+'/typing/'+srvState.activeProjId
+    ))||{};
+    const now=Date.now();
+    const others=Object.entries(typing)
+      .filter(([uid,v])=>uid!==srvState.myId&&v&&(now-v.ts)<5000)
+      .map(([,v])=>v.name);
+    const el=document.getElementById('solo-typing-indicator');
+    if(el){
+      if(others.length){
+        const names=others.slice(0,3).join(', ');
+        el.textContent=names+(others.length===1?' is typing…':' are typing…');
+        el.style.display='block';
+        // Typing sound — only tick once per new person
+        const key=others.join(',');
+        if(key!==el.dataset.lastKey){el.dataset.lastKey=key;playChatSound('typing');}
+      } else {
+        el.style.display='none';el.dataset.lastKey='';
+      }
+    }
+  }catch(e){}
+}
+
+// =====================================================
+// CHAT NOTIFICATION BANNER
+// =====================================================
+let _lastKnownChatTs=0;
+let _chatNotifBannerTimeout=null;
+
+function showChatNotifBanner(senderName,msgPreview){
+  const inChat=document.getElementById('page-chat')?.classList.contains('active');
+  let banner=document.getElementById('srv-chat-notif-banner');
+  if(!banner){
+    banner=document.createElement('div');
+    banner.id='srv-chat-notif-banner';
+    banner.style.cssText='position:fixed;bottom:18px;right:18px;z-index:8000;background:var(--bg2);border:1px solid var(--accent2);border-radius:3px;padding:12px 16px;max-width:280px;box-shadow:0 4px 20px rgba(0,0,0,.5);cursor:pointer;animation:fadeUp .2s ease;';
+    banner.onclick=()=>{banner.remove();nav('chat');};
+    document.body.appendChild(banner);
+  }
+  if(inChat){
+    // In-chat: subtle side flash
+    banner.style.borderColor='var(--accent)';
+    banner.innerHTML=`<div style="font-size:9px;color:var(--accent);letter-spacing:.1em;margin-bottom:3px;">NEW MESSAGE</div><div style="font-size:10px;color:var(--text);"><strong>${escHtml(senderName)}:</strong> ${escHtml(msgPreview.substring(0,60))}</div>`;
+    playChatSound('incoming');
+  } else {
+    // Not in chat: prominent banner with nav prompt
+    banner.style.borderColor='var(--accent2)';
+    banner.innerHTML=`<div style="font-size:9px;color:var(--accent2);letter-spacing:.1em;margin-bottom:4px;display:flex;align-items:center;gap:5px;"><ion-icon name="chatbubble-sharp" style="font-size:11px;"></ion-icon> TEAM CHAT — NEW MESSAGE</div><div style="font-size:10px;color:var(--text);margin-bottom:6px;"><strong>${escHtml(senderName)}:</strong> ${escHtml(msgPreview.substring(0,60))}</div><div style="font-size:8px;color:var(--text3);letter-spacing:.06em;">Click to open Team Chat</div>`;
+    playChatSound('incoming');
+  }
+  clearTimeout(_chatNotifBannerTimeout);
+  _chatNotifBannerTimeout=setTimeout(()=>{if(banner.parentNode)banner.remove();},6000);
+}
+
+// =====================================================
+// SERVER ALERT SYSTEM (host broadcasts)
+// =====================================================
+async function sendHostAlert(msg,type){
+  if(!srvState.connected||!srvState.isHost)return;
+  await _withServerCreds(CFG_URL,CFG_KEY,()=>fbPush('/servers/'+srvState.serverKey+'/serverAlerts',{
+    msg,type:type||'info',by:srvState.username,ts:Date.now(),seen:{}
+  }));
+  toast('Alert sent to all members');
+}
+
+let _lastAlertTs=0;
+async function _pollServerAlerts(){
+  if(!srvState.connected)return;
+  try{
+    const alerts=await _withServerCreds(CFG_URL,CFG_KEY,()=>fbGet('/servers/'+srvState.serverKey+'/serverAlerts'))||{};
+    const myId=srvState.myId||'';
+    const newAlerts=Object.entries(alerts)
+      .map(([k,v])=>({...v,_key:k}))
+      .filter(a=>a.ts>_lastAlertTs&&!a.seen?.[myId]&&a.by!==srvState.username)
+      .sort((a,b)=>a.ts-b.ts);
+    if(newAlerts.length){
+      _lastAlertTs=Math.max(...newAlerts.map(a=>a.ts));
+      newAlerts.forEach(a=>{
+        showServerAlertBanner(a);
+        // Mark seen
+        _withServerCreds(CFG_URL,CFG_KEY,()=>fbSet('/servers/'+srvState.serverKey+'/serverAlerts/'+a._key+'/seen/'+myId,true)).catch(()=>{});
+      });
+      _renderNotifTabBadge();
+    }
+  }catch(e){}
+}
+
+function showServerAlertBanner(alert){
+  playChatSound('alert');
+  const banner=document.createElement('div');
+  const colors={info:'var(--accent2)',warn:'var(--accent4)',danger:'var(--accent3)',success:'var(--accent)'};
+  const color=colors[alert.type]||colors.info;
+  banner.style.cssText=`position:fixed;top:18px;right:18px;z-index:8000;background:var(--bg2);border:1px solid ${color};border-radius:3px;padding:14px 18px;max-width:320px;box-shadow:0 4px 24px rgba(0,0,0,.55);animation:fadeUp .2s ease;`;
+  banner.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><ion-icon name="megaphone-sharp" style="font-size:14px;color:${color};"></ion-icon><div style="font-size:9px;color:${color};letter-spacing:.12em;flex:1;">SERVER ALERT from ${escHtml(alert.by)}</div><button onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button></div><div style="font-size:11px;color:var(--text);line-height:1.5;">${escHtml(alert.msg)}</div>`;
+  document.body.appendChild(banner);
+  setTimeout(()=>{if(banner.parentNode)banner.remove();},12000);
+}
+
+function _renderNotifTabBadge(){
+  const btn=document.getElementById('srv-tab-notifs');
+  if(!btn)return;
+  // Count unread — just pulse
+  btn.style.color='var(--accent3)';
+  btn.innerHTML=btn.innerHTML.replace(/ ●/g,'')+' ●';
+}
+
+
 // Encodes host DB URL + anon key + server name into a
 // non-obvious scrambled string. Paste into Join tab to
 // auto-fill host database credentials.
 // =====================================================
-function lmsEncodeInvite(dbUrl, anonKey, serverName, shortId){
-  const payload=JSON.stringify({u:dbUrl,k:anonKey,s:serverName,i:shortId||''});
+
+// Holds decoded invite creds in memory so they survive input clearing
+let _pendingInviteCreds = null;
+function lmsEncodeInvite(serverName, shortId){
+  const payload=JSON.stringify({s:serverName,i:shortId||''});
   const b64=btoa(unescape(encodeURIComponent(payload)));
   const rotated=b64.split('').map((c,i)=>{
     const code=c.charCodeAt(0);
@@ -44,30 +226,28 @@ function detectAndApplyInvite(val){
   const keyInp=document.getElementById('join-anon-key');
   const nameInp=document.getElementById('join-servername');
   const idInp=document.getElementById('join-server-id');
-  if(urlInp) urlInp.value=decoded.u||'';
-  if(keyInp) keyInp.value=decoded.k||'';
+  if(urlInp){urlInp.value=decoded.u||'';urlInp.style.display='none';}
+  if(keyInp){keyInp.value=decoded.k||'';keyInp.style.display='none';}
   if(nameInp&&decoded.s) nameInp.value=decoded.s;
   if(idInp&&decoded.i) idInp.value=decoded.i;
-  updateJoinDbHint();
-  toast('✓ Invite decoded — enter the server password to join');
+  // Store in memory so joinServer can use them even if inputs get cleared
+  _pendingInviteCreds={shortId:decoded.i||''};
+  const _hint=document.getElementById('join-db-hint');if(_hint)_hint.style.display='none';
+  toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Invite decoded — enter the server password to join');
   setTimeout(()=>{const pw=document.getElementById('join-password');if(pw)pw.focus();},200);
   const inviteRow=document.getElementById('join-invite-row');
   if(inviteRow)inviteRow.style.display='none';
   const decodedBadge=document.getElementById('join-decoded-badge');
   if(decodedBadge){
     decodedBadge.style.display='flex';
-    const short=((decoded.u||'').replace('https://','').split('.')[0]).substring(0,18);
-    decodedBadge.querySelector('span').textContent='DB: '+short+'... · Server: '+(decoded.s||'?');
+    decodedBadge.querySelector('span').textContent='Server: '+(decoded.s||'?');
   }
   return true;
 }
 
 // ---- COPY INVITE LINK (encoded — host only) ----
 function copyServerInvite(){
-  const dbUrl=getSrvDbUrl();
-  const anonKey=SRV_ANON_KEY;
-  if(!dbUrl||!anonKey){toast('No database configured');return;}
-  const encoded=lmsEncodeInvite(dbUrl,anonKey,srvState.serverName||'',srvState.shortId||'');
+  const encoded=lmsEncodeInvite(srvState.serverName||'',srvState.shortId||'');
   navigator.clipboard.writeText(encoded).then(()=>toast('⧉ Invite code copied — teammate pastes it in the Join tab')).catch(()=>{
     const ta=document.createElement('textarea');ta.value=encoded;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
     toast('⧉ Invite code copied');
@@ -79,6 +259,9 @@ function openServerHub(){
   const _overlay=document.getElementById('server-hub-overlay');
   if(!_overlay){console.error('[LMS] server-hub-overlay element not found in DOM');toast('Server Hub UI not ready — try refreshing');return;}
   _overlay.style.display='block';
+  // Show ghost-account warning if the user's account wasn't found in the DB
+  const _ghostWarn=document.getElementById('srv-ghost-account-warning');
+  if(_ghostWarn) _ghostWarn.style.display=window._accountMissingFromDb?'block':'none';
   // Reset manual-open state so lobby panel starts collapsed if already connected
   const lobbyPanel=document.getElementById('srv-lobby-panel');
   if(lobbyPanel){lobbyPanel.dataset.manualOpen='0';lobbyPanel.style.display='none';}
@@ -87,6 +270,7 @@ function openServerHub(){
   renderSrvStatus();
   loadRecentServers();
   loadCreatedServers();
+  loadJoinedServers();
   // Update capacity bar
   const capText=document.getElementById('srv-capacity-text');
   const capFill=document.getElementById('srv-capacity-fill');
@@ -97,17 +281,17 @@ function openServerHub(){
     const hl=document.getElementById('host-as-label');const jl=document.getElementById('join-as-label');
     if(hl)hl.textContent=dn;if(jl)jl.textContent=dn;
   }
-  // Do NOT pre-fill join credentials with own DB — joiner needs the HOST's DB info
-  // Only clear if they look like own credentials
+  // Always clear join credential fields on open — these are for the HOST's DB, never the member's own
+  _pendingInviteCreds=null;
   const joinDbInp=document.getElementById('join-supabase-url');
   const joinKeyInp=document.getElementById('join-anon-key');
-  if(joinDbInp&&joinDbInp.value===getSrvDbUrl()&&getSrvDbUrl()) joinDbInp.value='';
-  if(joinKeyInp&&joinKeyInp.value===SRV_ANON_KEY&&SRV_ANON_KEY) joinKeyInp.value='';
+  if(joinDbInp)joinDbInp.value='';
+  if(joinKeyInp)joinKeyInp.value='';
   updateJoinDbHint();
-  if(!getSrvDbUrl()||!SRV_ANON_KEY){
+  if(false){
     const txt=document.getElementById('srv-status-txt');
-    if(txt)txt.textContent='⚠ Database not configured — click DB Setup to get started';
-    setTimeout(()=>openSupabaseSetup(), 400);
+    if(txt)txt.textContent='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Database not configured — click DB Setup to get started';
+    // shared DB — no setup needed
     return;
   }
   if(srvState.connected) renderActiveServer();
@@ -121,22 +305,64 @@ function switchSrvTab(tab){
   document.getElementById('srv-panel-join').style.display=tab==='join'?'block':'none';
   const minePanel=document.getElementById('srv-panel-mine');
   if(minePanel)minePanel.style.display=tab==='mine'?'block':'none';
-  document.getElementById('srv-tab-host').style.cssText=tab==='host'
-    ?'flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;'
-    :'flex:1;background:var(--bg2);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
-  document.getElementById('srv-tab-join').style.cssText=tab==='join'
-    ?'flex:1;background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent2);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;'
-    :'flex:1;background:var(--bg2);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
-  const mineTab=document.getElementById('srv-tab-mine');
-  if(mineTab)mineTab.style.cssText=tab==='mine'
-    ?'flex:1;background:linear-gradient(135deg,rgba(160,74,240,.1),rgba(160,74,240,.05));border:none;color:var(--accent5,#a04af0);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;'
-    :'flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
-  if(tab==='mine'){loadCreatedServers();loadRecentServers();}
+  const notifsPanel=document.getElementById('srv-panel-notifs');
+  if(notifsPanel)notifsPanel.style.display=tab==='notifs'?'block':'none';
+  if(tab==='notifs')loadNotifsPanel();
+  const tabs=['host','join','mine','notifs'];
+  const styles={
+    host:'flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;',
+    join:'flex:1;background:linear-gradient(135deg,rgba(74,240,200,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent2);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;',
+    mine:'flex:1;background:linear-gradient(135deg,rgba(160,74,240,.1),rgba(160,74,240,.05));border:none;border-right:1px solid var(--border);color:var(--accent5,#a04af0);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;',
+    notifs:'flex:1;background:linear-gradient(135deg,rgba(240,74,74,.1),rgba(240,74,74,.05));border:none;color:var(--accent3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;',
+  };
+  const inactive='flex:1;background:var(--bg2);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
+  const inactiveLast='flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;';
+  tabs.forEach((t,i)=>{
+    const btn=document.getElementById('srv-tab-'+t);
+    if(!btn)return;
+    if(t===tab)btn.style.cssText=styles[t];
+    else btn.style.cssText=(i===tabs.length-1)?inactiveLast:inactive;
+  });
+  if(tab==='mine'){loadCreatedServers();loadJoinedServers();loadRecentServers();}
+}
+
+async function loadNotifsPanel(){
+  // Show host send-alert section only for hosts
+  const wrap=document.getElementById('srv-send-alert-wrap');
+  if(wrap)wrap.style.display=srvState.connected&&srvState.isHost?'block':'none';
+  // Clear badge
+  const btn=document.getElementById('srv-tab-notifs');
+  if(btn){const txt=btn.textContent.replace(/ ●/g,'');btn.innerHTML=`<ion-icon name="notifications-sharp" style="font-size:13px;"></ion-icon> ${txt.trim()}`;}
+  // Load alert history
+  const histEl=document.getElementById('srv-alerts-history');
+  if(!histEl||!srvState.connected)return;
+  try{
+    const alerts=await _withServerCreds(CFG_URL,CFG_KEY,()=>fbGet('/servers/'+srvState.serverKey+'/serverAlerts'))||{};
+    const list=Object.entries(alerts).map(([k,v])=>({...v,_key:k})).sort((a,b)=>b.ts-a.ts).slice(0,30);
+    const colors={info:'var(--accent2)',warn:'var(--accent4)',danger:'var(--accent3)',success:'var(--accent)'};
+    if(!list.length){histEl.innerHTML='<div style="font-size:10px;color:var(--text3);text-align:center;padding:20px 0;letter-spacing:.06em;">No alerts yet</div>';return;}
+    histEl.innerHTML=list.map(a=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid ${colors[a.type]||colors.info};border-radius:2px;padding:10px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:8px;color:${colors[a.type]||colors.info};letter-spacing:.1em;text-transform:uppercase;">${a.type||'info'}</span>
+          <span style="font-size:8px;color:var(--text3);">from ${escHtml(a.by)}</span>
+          <span style="margin-left:auto;font-size:8px;color:var(--text3);">${new Date(a.ts).toLocaleString()}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text);line-height:1.5;">${escHtml(a.msg)}</div>
+      </div>`).join('');
+  }catch(e){histEl.innerHTML='<div style="font-size:10px;color:var(--text3);padding:12px;">Could not load alerts.</div>';}
+}
+
+async function clearServerAlerts(){
+  if(!srvState.connected||!srvState.isHost){toast('Only hosts can clear server alerts');return;}
+  await _withServerCreds(CFG_URL,CFG_KEY,()=>fbDelete('/servers/'+srvState.serverKey+'/serverAlerts'));
+  loadNotifsPanel();
+  toast('Alerts cleared');
 }
 
 function renderSrvStatus(){
   const dot=document.getElementById('srv-status-dot');
-  const dbBtn=document.getElementById('srv-db-setup-btn');if(dbBtn){dbBtn.style.display=(srvState.connected||multiServers.length>0)?'none':'inline-block';dbBtn.textContent=getSrvDbUrl()?'✓ DB Ready':'⚙ DB Setup';dbBtn.style.color=getSrvDbUrl()?'var(--accent)':'var(--text3)';dbBtn.style.borderColor=getSrvDbUrl()?'var(--accent)':'var(--border2)';}
+  const dbBtn=document.getElementById('srv-db-setup-btn');if(dbBtn){dbBtn.style.display=(srvState.connected||multiServers.length>0)?'none':'inline-block';dbBtn.innerHTML='<ion-icon name="checkmark-circle-sharp" style="font-size:12px;pointer-events:none;vertical-align:middle;margin-right:4px;"></ion-icon>DB Ready';dbBtn.style.color='var(--accent)';dbBtn.style.borderColor='var(--accent)';}
   const txt=document.getElementById('srv-status-txt');
   const discBtn=document.getElementById('srv-disconnect-btn');
   const lobbyPanel=document.getElementById('srv-lobby-panel');
@@ -167,7 +393,7 @@ function renderSrvStatus(){
       }
       switcherEl.innerHTML=multiServers.map(sv=>{
         const active=sv.serverKey===srvState.serverKey;
-        return `<button onclick="switchActiveServer('${sv.serverKey}')" style="background:${active?'linear-gradient(135deg,rgba(74,240,200,.15),rgba(74,240,200,.07))':'var(--bg3)'};border:1px solid ${active?'var(--accent2)':'var(--border)'};color:${active?'var(--accent2)':'var(--text3)'};font-family:var(--font);font-size:8px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">${escHtml(sv.serverName)}${sv.isHost?' ⚡':''}</button>`;
+        return `<button onclick="switchActiveServer('${sv.serverKey}')" style="background:${active?'linear-gradient(135deg,rgba(74,240,200,.15),rgba(74,240,200,.07))':'var(--bg3)'};border:1px solid ${active?'var(--accent2)':'var(--border)'};color:${active?'var(--accent2)':'var(--text3)'};font-family:var(--font);font-size:8px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:4px;">${escHtml(sv.serverName)}${sv.isHost?` <ion-icon name="flash-sharp" style="font-size:10px;"></ion-icon>`:''}</button>`;
       }).join('');
     } else if(switcherEl){switcherEl.remove();}
   } else if(totalConnected>0){
@@ -182,12 +408,12 @@ function renderSrvStatus(){
     const addAnotherWrap2=document.getElementById('srv-add-another-wrap');
     if(addAnotherWrap2)addAnotherWrap2.style.display=totalConnected>=MAX_SERVERS?'none':'block';
     // Auto-set srvState to first server
-    srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,_dbUrl:sv.dbUrl||null,_dbKey:sv.dbKey||null};
-    localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,dbUrl:sv.dbUrl||'',dbKey:sv.dbKey||''}));
+    srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,_dbUrl:CFG_URL,_dbKey:CFG_KEY};
+    localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId}));
   } else {
     dot.style.background='#444';
     dot.style.boxShadow='none';
-    txt.textContent=getSrvDbUrl() ? 'Not connected to any server' : '⚠ Database not configured';
+    txt.textContent='Not connected to any server';
     discBtn.style.display='none';
     lobbyPanel.style.display='block';
     activePanel.style.display='none';
@@ -200,8 +426,8 @@ function switchActiveServer(serverKey){
   const sv=getServerById(serverKey);
   if(!sv)return;
   _activeSidebarServerKey=serverKey;
-  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,activeProjId:null,_dbUrl:sv.dbUrl||null,_dbKey:sv.dbKey||null};
-  localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,dbUrl:sv.dbUrl||'',dbKey:sv.dbKey||''}));
+  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId,activeProjId:null,_dbUrl:CFG_URL,_dbKey:CFG_KEY};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey:sv.serverKey,serverName:sv.serverName,username:sv.username,isHost:sv.isHost,myId:sv.myId,shortId:sv.shortId}));
   renderSrvStatus();
   renderActiveServer();
   renderRootGrid();
@@ -236,19 +462,17 @@ function updateJoinDbHint(){
   const key=(document.getElementById('join-anon-key')?.value||'').trim();
   const hint=document.getElementById('join-db-hint');
   if(!hint)return;
-  if(url&&!url.includes('.supabase.co')){hint.style.color='var(--accent3)';hint.textContent='⚠ Must be a .supabase.co URL';return;}
-  if(key&&!key.startsWith('eyJ')){hint.style.color='var(--accent3)';hint.textContent='⚠ Key should start with eyJ... — check you copied the anon public key';return;}
-  if(url&&key&&url.includes('.supabase.co')&&key.startsWith('eyJ')){hint.style.color='var(--accent)';hint.textContent='✓ Credentials look good';}
+  if(url&&!url.includes('.supabase.co')){hint.style.color='var(--accent3)';hint.textContent='Must be a .supabase.co URL';return;}
+  if(key&&!key.startsWith('eyJ')){hint.style.color='var(--accent3)';hint.textContent='Key should start with eyJ... — check you copied the anon public key';return;}
+  if(url&&key&&url.includes('.supabase.co')&&key.startsWith('eyJ')){hint.style.color='var(--accent)';hint.textContent='Credentials look good';}
   else{hint.style.color='var(--text3)';hint.textContent='';}
 }
 
 async function joinServer(){
-  const joinUrlRaw=(document.getElementById('join-supabase-url')?.value||'').trim();
-  const joinKeyRaw=(document.getElementById('join-anon-key')?.value||'').trim();
-  // Use host's DB credentials for this server — NEVER overwrite our own global credentials
-  const targetDbUrl=(joinUrlRaw||getSrvDbUrl()).replace(/\/+$/,'');
-  const targetDbKey=joinKeyRaw||SRV_ANON_KEY;
-  if(!targetDbUrl||!targetDbKey){openSupabaseSetup();return;}
+  // If we have a decoded invite with a shortId, use ID-based join — it's the source of truth
+  if(_pendingInviteCreds?.shortId){return joinServerById();}
+  const targetDbUrl=CFG_URL;
+  const targetDbKey=CFG_KEY;
   const username=currentUser?(currentUser.displayName||currentUser.username):'Member';
   const serverName=document.getElementById('join-servername').value.trim();
   const pass=document.getElementById('join-password').value;
@@ -289,17 +513,19 @@ async function joinServer(){
   if(!saved){toast('Failed to join server. Check database configuration.');return;}
 
   // Store per-server credentials — do NOT touch the user's own SRV_DB_URL / SRV_ANON_KEY
-  const sv={serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||'',dbUrl:targetDbUrl,dbKey:targetDbKey};
+  const sv={serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||''};
   addMultiServer(sv);
   startServerHeartbeat(serverKey);
 
-  srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||'',_dbUrl:targetDbUrl,_dbKey:targetDbKey};
-  localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||'',dbUrl:targetDbUrl,dbKey:targetDbKey}));
+  srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||'',_dbUrl:CFG_URL,_dbKey:CFG_KEY};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||''}));
   saveRecentServer(serverName,pass);
   if(isHost||meta.hostId===myId)saveCreatedServer(meta.name,pass);
-  const _svForCreated={serverKey,serverName:meta.name,pass,dbUrl:targetDbUrl,dbKey:targetDbKey};
+  else saveJoinedServer(meta.name,pass);
+  const _svForCreated={serverKey,serverName:meta.name,pass};
   if(isHost) localStorage.setItem('lms_created_'+serverKey, JSON.stringify(_svForCreated));
-  _savePassCache(meta.name,pass,targetDbUrl,targetDbKey);
+  _savePassCache(meta.name,pass,serverKey);
+  _pendingInviteCreds=null;
   startSrvHeartbeat();
   renderSrvStatus();
   renderActiveServer();
@@ -310,7 +536,9 @@ async function joinServer(){
 
 // Replace hostServer() function (around line 3200+)
 async function hostServer(){
-  if(!getSrvDbUrl()){openSupabaseSetup();return;}
+  // Server creation always uses the HOST's OWN personal DB — never srvState creds
+  // (srvState may point to a different server the host is currently connected to).
+  const _hUrl=CFG_URL; const _hKey=CFG_KEY;
   const username=currentUser?(currentUser.displayName||currentUser.username):(document.getElementById('host-username')?.value.trim()||'Host');
   const serverName=document.getElementById('host-servername').value.trim();
   const pass=document.getElementById('host-password').value;
@@ -319,8 +547,21 @@ async function hostServer(){
   if(pass!==pass2){toast('Passwords do not match');return;}
 
   if(multiServers.length>=MAX_SERVERS){
-    toast('You already have '+MAX_SERVERS+' servers running. Leave one to create another.');
+    toast('You already have '+MAX_SERVERS+' servers active. Leave one to create another.');
     return;
+  }
+
+  // Lifetime cap: max 10 created servers per user (DB check)
+  if(currentUser){
+    try{
+      const _capR=await fetch(CFG_URL+'/rest/v1/servers?host_id=eq.'+encodeURIComponent(currentUser.uid)+'&deleted=eq.false&select=id',
+        {headers:{'apikey':CFG_KEY,'Authorization':'Bearer '+CFG_KEY,'Accept':'application/json','Range':'0-0','Prefer':'count=exact'}});
+      const _capCount=parseInt(_capR.headers.get('content-range')?.split('/')[1]||'0',10);
+      if(_capCount>=10){
+        toast('You have reached the 10 server limit. Delete an old server to create a new one.');
+        return;
+      }
+    }catch(e){ /* allow through if count check fails */ }
   }
 
   toast('Creating server…');
@@ -330,7 +571,8 @@ async function hostServer(){
   const serverDesc=(document.getElementById('host-serverdesc')?.value||'').trim();
   const serverTags=(document.getElementById('host-servertags')?.value||'').trim().split(',').map(t=>t.trim()).filter(Boolean);
 
-  const existing=await fbGet('/servers/'+serverKey+'/meta');
+  // All creation writes go to the host's own DB explicitly
+  const existing=await _withServerCreds(_hUrl,_hKey,()=>fbGet('/servers/'+serverKey+'/meta'));
   if(existing && existing.passHash && !existing.deleted){
     toast('Server name taken — try another');
     return;
@@ -341,8 +583,8 @@ async function hostServer(){
   const shortId=genServerId();
   const shortIdClean=shortId.replace(/-/g,'');
 
-  // Create server
-  await fbSet('/servers/'+serverKey+'/meta',{
+  // Create server in the host's own DB
+  await _withServerCreds(_hUrl,_hKey,()=>fbSet('/servers/'+serverKey+'/meta',{
     key:serverKey,
     name:serverName,
     passHash:passHash,
@@ -354,9 +596,8 @@ async function hostServer(){
     description:serverDesc,
     tags:serverTags,
     deleted:false
-  });
+  }));
 
-  // FIX: Create proper host member object with all required fields
   const hostMemberData={
     uid:myId,
     server_key:serverKey,
@@ -371,31 +612,34 @@ async function hostServer(){
     inProject:null
   };
 
-  const memberSaved=await fbSet('/servers/'+serverKey+'/members/'+myId,hostMemberData);
+  const memberSaved=await _withServerCreds(_hUrl,_hKey,()=>fbSet('/servers/'+serverKey+'/members/'+myId,hostMemberData));
   if(!memberSaved){
     console.warn('Member upsert failed, trying plain POST fallback…');
-    const _murl=getSrvDbUrl()+'/rest/v1/members';
+    const _murl=_hUrl+'/rest/v1/members';
     const _mdata=_memberToDb(hostMemberData);
-    const _mr=await fetch(_murl,{method:'POST',headers:sbHeaders({'Prefer':'return=minimal'}),body:JSON.stringify(_mdata)});
+    const _mhdrs=Object.assign({'Content-Type':'application/json','apikey':_hKey,'Authorization':'Bearer '+_hKey},{'Prefer':'return=minimal'});
+    const _mr=await fetch(_murl,{method:'POST',headers:_mhdrs,body:JSON.stringify(_mdata)});
     const _mok=_mr.ok||_mr.status===201||_mr.status===204;
     if(!_mok){const _mt=await _mr.text().catch(()=>'');console.warn('Member fallback failed:',_mr.status,_mt);toast('Warning: member row failed ('+_mr.status+'). Check console.');}
-    // Do NOT return — let server creation finish
   }
 
-  // Store reverse-lookup index for short ID joining
-  await fbSet('/serverIds/'+shortIdClean,{short_id:shortIdClean,server_key:serverKey});
+  // Store reverse-lookup index in host's own DB
+  await _withServerCreds(_hUrl,_hKey,()=>fbSet('/serverIds/'+shortIdClean,{short_id:shortIdClean,server_key:serverKey}));
 
   const sv={serverKey,serverName,username,isHost:true,myId,shortId};
   addMultiServer(sv);
   startServerHeartbeat(serverKey);
 
-  srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null,shortId};
+  srvState={...srvState,connected:true,serverKey,serverName,username,isHost:true,myId,activeProjId:null,shortId,_dbUrl:CFG_URL,_dbKey:CFG_KEY};
   localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName,username,isHost:true,myId,shortId}));
   saveRecentServer(serverName,pass);
   saveCreatedServer(serverName,pass);
-  _savePassCache(serverName,pass,getSrvDbUrl(),SRV_ANON_KEY);
+  _savePassCache(serverName,pass,serverKey);
   bakInitialSnapshot(serverKey,serverName);
   startSrvHeartbeat();
+  // Force lobby panel closed so it doesn't render alongside the active panel (duplicate view bug)
+  const _lp=document.getElementById('srv-lobby-panel');
+  if(_lp){_lp.dataset.manualOpen='0';_lp.style.display='none';}
   renderSrvStatus();
   renderActiveServer();
   toast('Server launched: '+serverName+' ('+multiServers.length+'/'+MAX_SERVERS+')');
@@ -406,13 +650,15 @@ async function hostServer(){
 // Also add this heartbeat enhancement to detect deleted members
 function startSrvHeartbeat(){
   stopSrvPolling();
+  _lastAlertTs=Date.now(); // don't flood with old alerts on connect
+  _lastKnownChatTs=0;
   if(srvState.isHost)bakStartTimers(srvState.serverKey,srvState.serverName);
   srvState.pollInterval=setInterval(async()=>{
     if(!srvState.connected)return;
-    const _hUrl=srvState._dbUrl||getSrvDbUrl();const _hKey=srvState._dbKey||SRV_ANON_KEY;
+    const _hUrl=CFG_URL;const _hKey=CFG_KEY;
     const meta=await _withServerCreds(_hUrl,_hKey,()=>fbGet('/servers/'+srvState.serverKey+'/meta'));
     if(!meta||meta.deleted){
-      toast('⚠ This server was deleted by the host.');
+      toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>This server was deleted by the host.');
       stopSrvPolling();
       _srvMetaCache=null;_srvMetaCacheKey=null;srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
       localStorage.removeItem('lms_active_server');
@@ -427,33 +673,60 @@ function startSrvHeartbeat(){
       activity:srvState.activity||null,
       inProject:srvState.activeProjId||null
     }));
+
+    // Kick detection — check own member row for kicked flag or deletion
+    if(!srvState.isHost){
+      const myRow=await _withServerCreds(_hUrl,_hKey,()=>fbGet('/servers/'+srvState.serverKey+'/members/'+srvState.myId));
+      if(!myRow||myRow.kicked){
+        toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>You have been kicked from "'+srvState.serverName+'".');
+        // Clean up joined servers list immediately
+        const _kSrvName=(srvState.serverName||'').toLowerCase();
+        if(_kSrvName){
+          try{
+            const _kj=JSON.parse(localStorage.getItem('lms_joined_servers')||'[]');
+            localStorage.setItem('lms_joined_servers',JSON.stringify(_kj.filter(s=>s.name.toLowerCase()!==_kSrvName)));
+          }catch(e){}
+        }
+        const _kKey2=srvState.serverKey;
+        stopSrvPolling();
+        removeMultiServer(_kKey2);
+        _srvMetaCache=null;_srvMetaCacheKey=null;
+        srvState={connected:false,serverKey:null,serverName:null,username:null,isHost:false,pollInterval:null,chatPollInterval:null,activeProjId:null,activeTab:'tasks',myId:null,lastChatTs:0,shortId:''};
+        localStorage.removeItem('lms_active_server');
+        if(document.getElementById('app-shell').classList.contains('visible')){goHome();}
+        else{renderRootGrid();}
+        return;
+      }
+    }
     
     if(document.getElementById('server-hub-overlay')?.style.display!=='none'){
       renderActiveServer();
     }
     if(document.getElementById('root-screen-wrap').style.display!=='none'&&srvState.connected){
-      renderRootServerProjects();
+      renderSelectedServerPanel();
     }
     if(srvState.activeProjId&&document.getElementById('app-shell').classList.contains('visible')){
       updateSoloPresenceBar();
     }
     if(srvState.activeProjId&&document.getElementById('app-shell').classList.contains('visible')){
       if(document.getElementById('page-chat')?.classList.contains('active')) renderSoloChat();
+      // Poll for new chat messages even when NOT in chat
+      else await _pollChatForNotifs();
+      // Always poll typing indicator
+      await _pollTypingIndicator();
     }
+    // Poll server alerts for all members
+    await _pollServerAlerts();
   },5000);
 }
 
 // ---- JOIN BY SERVER ID ----
 async function joinServerById(){
-  const joinUrlRaw=(document.getElementById('join-supabase-url')?.value||'').trim();
-  const joinKeyRaw=(document.getElementById('join-anon-key')?.value||'').trim();
-  // Use host's DB credentials — NEVER overwrite the user's own global credentials
-  const targetDbUrl=(joinUrlRaw||getSrvDbUrl()).replace(/\/+$/,'');
-  const targetDbKey=joinKeyRaw||SRV_ANON_KEY;
-  if(!targetDbUrl||!targetDbKey){openSupabaseSetup();return;}
+  const targetDbUrl=CFG_URL;
+  const targetDbKey=CFG_KEY;
 
   const username=currentUser?(currentUser.displayName||currentUser.username):'Member';
-  const shortIdRaw=document.getElementById('join-server-id').value.trim();
+  const shortIdRaw=(_pendingInviteCreds?.shortId||document.getElementById('join-server-id').value).trim();
   const pass=document.getElementById('join-password').value;
   if(!shortIdRaw||!pass){toast('Fill all fields');return;}
 
@@ -486,17 +759,17 @@ async function joinServerById(){
   await _withServerCreds(targetDbUrl,targetDbKey,()=>fbSet('/servers/'+serverKey+'/members/'+myId,{uid:myId,server_key:serverKey,name:username, displayName:username, username:currentUser?.username||username,lastSeen:Date.now(),isHost,createdAt:Date.now(),email:currentUser?.email||'',activity:null,inProject:null}));
 
   // Store per-server credentials — do NOT touch SRV_DB_URL / SRV_ANON_KEY
-  const sv={serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw,dbUrl:targetDbUrl,dbKey:targetDbKey};
+  const sv={serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw};
   addMultiServer(sv);
   startServerHeartbeat(serverKey);
 
-  srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||shortIdRaw,_dbUrl:targetDbUrl,_dbKey:targetDbKey};
-  localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw,dbUrl:targetDbUrl,dbKey:targetDbKey}));
+  srvState={...srvState,connected:true,serverKey,serverName:meta.name,username,isHost,myId,activeProjId:null,shortId:meta.shortId||shortIdRaw,_dbUrl:CFG_URL,_dbKey:CFG_KEY};
+  localStorage.setItem('lms_active_server',JSON.stringify({serverKey,serverName:meta.name,username,isHost,myId,shortId:meta.shortId||shortIdRaw}));
   saveRecentServer(meta.name,pass);
-  // REPLACE WITH:
+  _pendingInviteCreds=null;
   if(isHost||meta.hostId===myId)saveCreatedServer(meta.name,pass);
-  // AND also store it in the per-server slot so it appears in My Servers:
-  const _svForCreated={serverKey,serverName:meta.name,pass,dbUrl:targetDbUrl,dbKey:targetDbKey};
+  else saveJoinedServer(meta.name,pass);
+  const _svForCreated={serverKey,serverName:meta.name,pass};
   if(isHost) localStorage.setItem('lms_created_'+serverKey, JSON.stringify(_svForCreated));
   startSrvHeartbeat();
   renderSrvStatus();
@@ -511,9 +784,24 @@ async function disconnectServer(serverKeyToLeave){
   const key=serverKeyToLeave||srvState.serverKey;
   if(!key)return;
   const sv=getServerById(key)||srvState;
-  // Remove member presence
-  if(sv.myId)await fbDelete('/servers/'+key+'/members/'+sv.myId);
+  // Remove member presence using server's own creds
+  if(sv.myId){
+    const _dUrl=(CFG_URL);const _dKey=(CFG_KEY);
+    await _withServerCreds(_dUrl,_dKey,()=>fbDelete('/servers/'+key+'/members/'+sv.myId));
+  }
   removeMultiServer(key);
+  // Remove from lms_joined_servers so My Servers bar updates immediately (no refresh needed)
+  const _srvName=(sv.serverName||'').toLowerCase();
+  if(_srvName){
+    try{
+      const _joined=JSON.parse(localStorage.getItem('lms_joined_servers')||'[]');
+      localStorage.setItem('lms_joined_servers',JSON.stringify(_joined.filter(s=>s.name.toLowerCase()!==_srvName)));
+      if(currentUser&&CFG_URL){
+        const _fbKey=_srvName.replace(/[^a-z0-9]/g,'_');
+        fbDelete('/accounts/'+currentUser.uid+'/joinedServers/'+_fbKey).catch(()=>{});
+      }
+    }catch(e){}
+  }
   // If this was the active session server, clear srvState
   if(srvState.serverKey===key){
     stopSrvPolling();
@@ -541,7 +829,7 @@ let _srvMetaCacheKey=null;
 async function renderActiveServer(refetchMeta=false){
   if(!srvState.connected)return;
   // Load members using this server's credentials
-  const _raUrl=srvState._dbUrl||getSrvDbUrl();const _raKey=srvState._dbKey||SRV_ANON_KEY;
+  const _raUrl=CFG_URL;const _raKey=CFG_KEY;
   const members=await _withServerCreds(_raUrl,_raKey,()=>fbGet('/servers/'+srvState.serverKey+'/members'))||{};
   const now=Date.now();
   const onlineMs=30000; // 30s = online
@@ -561,8 +849,8 @@ async function renderActiveServer(refetchMeta=false){
   const srvNameEl=document.getElementById('srv-active-name');
   if(srvNameEl){
     const badge=visibility==='private'
-      ?`<span style="font-size:8px;padding:1px 6px;border:1px solid var(--accent5);color:var(--accent5);border-radius:1px;letter-spacing:.08em;margin-left:8px;">🔒 PRIVATE</span>`
-      :`<span style="font-size:8px;padding:1px 6px;border:1px solid var(--accent2);color:var(--accent2);border-radius:1px;letter-spacing:.08em;margin-left:8px;">⚡ PUBLIC</span>`;
+      ?`<span style="font-size:8px;padding:1px 6px;border:1px solid var(--accent5);color:var(--accent5);border-radius:1px;letter-spacing:.08em;margin-left:8px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> PRIVATE</span>`
+      :`<span style="font-size:8px;padding:1px 6px;border:1px solid var(--accent2);color:var(--accent2);border-radius:1px;letter-spacing:.08em;margin-left:8px;display:inline-flex;align-items:center;gap:4px;"><ion-icon name="earth-sharp" style="font-size:10px;"></ion-icon> PUBLIC</span>`;
     srvNameEl.innerHTML=escHtml(srvState.serverName.toUpperCase())+badge;
   }
 
@@ -587,7 +875,7 @@ async function renderActiveServer(refetchMeta=false){
     }
     if(metaFooterEl){
       const parts=[];
-      if(meta.hostName)parts.push(`<span>⚡ Hosted by <strong style="color:var(--accent);">${escHtml(meta.hostName)}</strong></span>`);
+      if(meta.hostName)parts.push(`<span style="display:inline-flex;align-items:center;gap:4px;"><ion-icon name="flash-sharp" style="font-size:11px;color:var(--accent);"></ion-icon> Hosted by <strong style="color:var(--accent);">${escHtml(meta.hostName)}</strong></span>`);
       if(meta.createdAt){const d=new Date(meta.createdAt);parts.push(`<span>Created ${d.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})}</span>`);}
       metaFooterEl.innerHTML=parts.join('<span style="opacity:.3;">·</span>');
     }
@@ -613,9 +901,17 @@ async function renderActiveServer(refetchMeta=false){
     idEl.textContent=srvState.shortId;
   } else if(idWrap){idWrap.style.display='none';}
 
-  memberEl.innerHTML=onlineMembers.map(([id,m])=>
-    `<div class="srv-member-badge${id===srvState.myId?' you':''}">${escHtml(m.name)}${m.isHost?' ⚡':''}</div>`
-  ).join('');
+  memberEl.innerHTML=onlineMembers.map(([id,m])=>{
+    const isMe=id===srvState.myId;
+    const permBtn=srvState.isHost&&!isMe&&!m.isHost
+      ?`<button onclick="event.stopPropagation();openMemberPermissions('${id}','${(m.name||'Member').replace(/'/g,"\\\\'\'")}')" title="Manage permissions" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 5px;cursor:pointer;border-radius:1px;margin-left:4px;display:inline-flex;align-items:center;" onmouseover="this.style.color='var(--accent4)';this.style.borderColor='var(--accent4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="settings-sharp" style="font-size:11px;pointer-events:none;"></ion-icon></button>`
+      :'';
+    const kickBtn=srvState.isHost&&!isMe&&!m.isHost
+      ?`<button onclick="event.stopPropagation();kickMember('${id}','${(m.name||'Member').replace(/'/g,"\\\\'\'")}')" title="Kick member" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 5px;cursor:pointer;border-radius:1px;margin-left:2px;display:inline-flex;align-items:center;" onmouseover="this.style.color='var(--accent3)';this.style.borderColor='var(--accent3)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="person-remove-sharp" style="font-size:11px;pointer-events:none;"></ion-icon></button>`
+      :'';
+    const hostIcon=m.isHost?` <ion-icon name="flash-sharp" style="font-size:10px;color:var(--accent);pointer-events:none;"></ion-icon>`:'';
+    return `<div class="srv-member-badge${isMe?' you':''}" style="display:flex;align-items:center;">${escHtml(m.name)}${hostIcon}${permBtn}${kickBtn}</div>`;
+  }).join('');
 
   // Load projects
   const projects=await _withServerCreds(_raUrl,_raKey,()=>fbGet('/servers/'+srvState.serverKey+'/projects'))||{};
@@ -634,8 +930,8 @@ async function renderActiveServer(refetchMeta=false){
     if(notifList.length){
       notifEl.innerHTML=`<div style="background:rgba(240,160,74,.06);border:1px solid rgba(240,160,74,.3);border-radius:3px;padding:12px 14px;margin-bottom:14px;">
         <div style="font-size:8px;color:var(--accent4);letter-spacing:.2em;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
-          ⚠ HOST ALERTS — MEMBER DELETIONS
-          <button onclick="clearHostNotifs()" style="margin-left:auto;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:1px 7px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">Clear All</button>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>HOST ALERTS — MEMBER DELETIONS
+          <button onclick="clearHostNotifs()" title="Clear all notifications" style="margin-left:auto;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 7px;cursor:pointer;border-radius:1px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent3)';this.style.borderColor='var(--accent3)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="trash-outline" style="font-size:11px;pointer-events:none;"></ion-icon> Clear All</button>
         </div>
         ${notifList.map(n=>`<div style="padding:5px 0;border-bottom:1px solid rgba(240,160,74,.15);font-size:10px;color:var(--text2);">
           <span style="color:var(--accent3);">${escHtml(n.by)}</span> deleted ${escHtml(n.what)} in <span style="color:var(--accent2);">${escHtml(n.projectName)}</span>
@@ -682,17 +978,18 @@ async function promptChangeServerPassword(serverName,currentPass){
     // Update localStorage and Firebase cache
     saveCreatedServer(serverName||srvState.serverName,n1);
     closeModal();
-    toast('✓ Server password changed!');
+    toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Server password changed!');
     loadCreatedServers();
+    loadJoinedServers();
   },accent:true}]);
 }
 
 async function confirmDeleteServer(){
   if(!srvState.isHost){toast('Only the host can delete this server');return;}
   const code=Math.floor(100000+Math.random()*900000)+'';
-  openModal('⚠ Delete Server',`
+  openModal('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Delete Server',`
     <div style="background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:2px;padding:10px 12px;margin-bottom:14px;font-size:10px;color:var(--accent3);line-height:1.7;letter-spacing:.04em;">
-      ⚠ This will permanently delete <strong>${escHtml(srvState.serverName)}</strong> and ALL projects, members, and data inside it. This cannot be undone.
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>This will permanently delete <strong>${escHtml(srvState.serverName)}</strong> and ALL projects, members, and data inside it. This cannot be undone.
     </div>
     <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">To confirm, type: <strong style="color:var(--accent3);letter-spacing:.1em;">delete ${escHtml(code)}</strong></p>
     <input class="modal-inp" id="del-srv-inp" placeholder="Type the confirmation above..." autocomplete="off">
@@ -714,7 +1011,7 @@ async function confirmDeleteServer(){
     const deletedName=srvState.serverName;
     const localCreated=JSON.parse(localStorage.getItem('lms_created_servers')||'[]');
     localStorage.setItem('lms_created_servers',JSON.stringify(localCreated.filter(s=>s.name.toLowerCase()!==deletedName.toLowerCase())));
-    if(currentUser&&getSrvDbUrl()){
+    if(currentUser&&CFG_URL){
       const fbKey=deletedName.toLowerCase().replace(/[^a-z0-9]/g,'_');
       fbDelete('/accounts/'+currentUser.uid+'/createdServers/'+fbKey).catch(()=>{});
     }
@@ -730,6 +1027,196 @@ async function confirmDeleteServer(){
     renderRootGrid();
     toast('Server deleted');
   },danger:true}]);
+}
+
+
+// ============================================================
+// MEMBER PERMISSIONS SYSTEM
+// Stored in DB at /servers/{key}/permissions/{uid} (jsonb)
+// Default: all false for non-hosts (host always has all perms)
+// ============================================================
+
+const PERM_DEFS = [
+  { key:'canCreateProject',  label:'Create Projects',  desc:'Add new projects to the server' },
+  { key:'canDeleteProject',  label:'Delete Projects',  desc:'Remove any project from the server' },
+  { key:'canEditProject',    label:'Edit Projects',    desc:'Rename/re-color any project' },
+  { key:'canViewProjects',   label:'View Projects',    desc:'See and open server projects' },
+  { key:'canImportProject',  label:'Import Projects',  desc:'Upload/import a .lmsroot file as a new project' },
+  { key:'canExportProject',  label:'Export Projects',  desc:'Download/export any project' },
+  { key:'canManageTasks',    label:'Manage Tasks',     desc:'Add, remove and check off tasks/phases' },
+  { key:'canManageBugs',     label:'Manage Bugs',      desc:'Create, update and close bug reports' },
+  { key:'canManageVersions', label:'Manage Versions',  desc:'Log and delete version entries' },
+  { key:'canManageNotes',    label:'Manage Notes',     desc:'Write and delete notes' },
+  { key:'canChat',           label:'Chat',             desc:'Send messages in project chat' },
+  { key:'canManageScenes',   label:'Manage Scenes',    desc:'Create/edit scene tree nodes' },
+  { key:'canManageAssets',   label:'Manage Assets',    desc:'Add and update asset tracker entries' },
+  { key:'canManageScripts',  label:'Manage Scripts',   desc:'Write and delete vault scripts' },
+];
+
+// Default permissions for new non-host members
+const DEFAULT_PERMS = {
+  canCreateProject:false, canDeleteProject:false, canEditProject:false,
+  canViewProjects:true, canImportProject:false, canExportProject:true,
+  canManageTasks:true, canManageBugs:true, canManageVersions:true,
+  canManageNotes:true, canChat:true, canManageScenes:true,
+  canManageAssets:true, canManageScripts:false,
+};
+
+// Cache: {serverKey:{uid:{...perms}}}
+let _permCache = {};
+
+async function _getPermsRow(serverKey){
+  // Permissions are stored as a special project row: project_id = '__permissions__'
+  // Its data jsonb holds {uid: {perm:bool, ...}} for every member
+  const _pUrl=CFG_URL; const _pKey=CFG_KEY;
+  const url=(CFG_URL)+'/rest/v1/projects?server_key=eq.'+encodeURIComponent(serverKey)+'&project_id=eq.__permissions__&select=data';
+  try{
+    const r=await fetch(url,{headers:Object.assign({'Content-Type':'application/json'},{'apikey':_pKey||SRV_ANON_KEY,'Authorization':'Bearer '+(_pKey||SRV_ANON_KEY),'Accept':'application/json'})});
+    if(!r.ok)return{};
+    const j=await r.json();
+    if(!j||!j.length)return{};
+    const d=j[0].data;
+    return typeof d==='string'?JSON.parse(d):(d||{});
+  }catch(e){return{};}
+}
+
+async function _savePermsRow(serverKey, allPerms){
+  const _pUrl=CFG_URL; const _pKey=CFG_KEY;
+  const url=(CFG_URL)+'/rest/v1/projects?on_conflict=project_id';
+  const body={project_id:'__permissions__',server_key:serverKey,name:'__permissions__',color:'#000',created_by:'system',created_at:Date.now(),data:JSON.stringify(allPerms)};
+  try{
+    await fetch(url,{method:'POST',headers:Object.assign({'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},{'apikey':_pKey||SRV_ANON_KEY,'Authorization':'Bearer '+(_pKey||SRV_ANON_KEY)}),body:JSON.stringify(body)});
+  }catch(e){console.warn('savePermsRow failed',e);}
+}
+
+async function loadMemberPerms(serverKey, uid){
+  if(_permCache[serverKey]&&_permCache[serverKey][uid]!==undefined) return _permCache[serverKey][uid];
+  const all=await _getPermsRow(serverKey);
+  const perms=all[uid]?{...DEFAULT_PERMS,...all[uid]}:{...DEFAULT_PERMS};
+  if(!_permCache[serverKey])_permCache[serverKey]={};
+  _permCache[serverKey][uid]=perms;
+  return perms;
+}
+
+async function saveMemberPerms(serverKey, uid, perms){
+  const all=await _getPermsRow(serverKey);
+  all[uid]=perms;
+  await _savePermsRow(serverKey, all);
+  if(!_permCache[serverKey])_permCache[serverKey]={};
+  _permCache[serverKey][uid]=perms;
+}
+
+// Check if current user has a permission (host always passes)
+async function canMember(perm){
+  if(!srvState.connected) return false;
+  if(srvState.isHost) return true;
+  const perms=await loadMemberPerms(srvState.serverKey, srvState.myId);
+  return !!perms[perm];
+}
+
+// Invalidate cache for a member (call after saving)
+function _invalidatePermCache(serverKey, uid){
+  if(_permCache[serverKey]) delete _permCache[serverKey][uid];
+}
+
+// ---- HOST: open permissions modal for a member ----
+async function openMemberPermissions(uid, memberName){
+  if(!srvState.isHost){toast('Only the host can manage permissions');return;}
+  const perms=await loadMemberPerms(srvState.serverKey, uid);
+
+  const rows=PERM_DEFS.map(p=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:11px;color:var(--text);letter-spacing:.03em;">${escHtml(p.label)}</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:1px;">${escHtml(p.desc)}</div>
+      </div>
+      <label style="position:relative;display:inline-block;width:34px;height:18px;flex-shrink:0;margin-left:12px;">
+        <input type="checkbox" id="mp-${p.key}" ${perms[p.key]?'checked':''} style="opacity:0;width:0;height:0;">
+        <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:${perms[p.key]?'var(--accent2)':'var(--bg3)'};border:1px solid ${perms[p.key]?'var(--accent2)':'var(--border2)'};border-radius:10px;cursor:pointer;transition:.2s;" id="mp-track-${p.key}">
+          <span style="position:absolute;top:2px;left:${perms[p.key]?'16px':'2px'};width:12px;height:12px;border-radius:50%;background:#fff;transition:.2s;"></span>
+        </span>
+      </label>
+    </div>
+  `).join('');
+
+  // Add toggle-all shortcut
+  const headerRow=`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;margin-bottom:4px;border-bottom:2px solid var(--border);">
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.15em;">PERMISSION</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="_mpSetAll(true)" style="background:none;border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">All On</button>
+        <button onclick="_mpSetAll(false)" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">All Off</button>
+      </div>
+    </div>
+  `;
+
+  openModal('Permissions · '+escHtml(memberName),
+    `<div style="font-size:9px;color:var(--accent4);padding:6px 10px;background:rgba(240,160,74,.07);border:1px solid rgba(240,160,74,.2);border-radius:2px;margin-bottom:12px;letter-spacing:.05em;">Applies to this member on <strong>${escHtml(srvState.serverName)}</strong>. Hosts always have full access.</div>
+    ${headerRow}
+    <div style="max-height:340px;overflow-y:auto;padding-right:4px;">${rows}</div>`,
+    [
+      {label:'Cancel', action:closeModal},
+      {label:'Save Permissions', accent:true, action:async()=>{
+        const newPerms={};
+        PERM_DEFS.forEach(p=>{newPerms[p.key]=document.getElementById('mp-'+p.key).checked;});
+        await saveMemberPerms(srvState.serverKey, uid, newPerms);
+        _invalidatePermCache(srvState.serverKey, uid);
+        closeModal();
+        toast('Permissions updated for '+memberName);
+      }}
+    ]
+  );
+
+  // Wire up toggle visual sync after modal renders
+  setTimeout(()=>{
+    PERM_DEFS.forEach(p=>{
+      const cb=document.getElementById('mp-'+p.key);
+      const track=document.getElementById('mp-track-'+p.key);
+      if(!cb||!track)return;
+      cb.addEventListener('change',()=>{
+        const on=cb.checked;
+        track.style.background=on?'var(--accent2)':'var(--bg3)';
+        track.style.borderColor=on?'var(--accent2)':'var(--border2)';
+        track.querySelector('span').style.left=on?'16px':'2px';
+      });
+    });
+  },50);
+}
+
+function _mpSetAll(val){
+  PERM_DEFS.forEach(p=>{
+    const cb=document.getElementById('mp-'+p.key);
+    const track=document.getElementById('mp-track-'+p.key);
+    if(!cb||!track)return;
+    cb.checked=val;
+    track.style.background=val?'var(--accent2)':'var(--bg3)';
+    track.style.borderColor=val?'var(--accent2)':'var(--border2)';
+    track.querySelector('span').style.left=val?'16px':'2px';
+  });
+}
+
+// ---- KICK MEMBER ----
+function kickMember(uid, memberName){
+  if(!srvState.isHost){toast('Only the host can kick members');return;}
+  openModal('Kick · '+escHtml(memberName),
+    `<div style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:8px;">Remove <strong style="color:var(--accent3);">${escHtml(memberName)}</strong> from <strong>${escHtml(srvState.serverName)}</strong>?</div>
+    <div style="font-size:9px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:8px 10px;line-height:1.65;">They will be force-disconnected immediately and their member slot freed. They can still rejoin unless you also change the server password.</div>`,
+    [
+      {label:'Cancel', action:closeModal},
+      {label:'Kick Member', danger:true, action:async()=>{
+        closeModal();
+        const _kUrl=CFG_URL;const _kKey=CFG_KEY;
+        // Write kicked flag — member heartbeat detects this and self-disconnects
+        await _withServerCreds(_kUrl,_kKey,()=>fbPatch('/servers/'+srvState.serverKey+'/members/'+uid,{kicked:true,kickedAt:Date.now()}));
+        // Also delete their member row after a brief grace period so they get one poll cycle to detect it
+        setTimeout(async()=>{
+          await _withServerCreds(_kUrl,_kKey,()=>fbDelete('/servers/'+srvState.serverKey+'/members/'+uid));
+        },6000);
+        toast(escHtml(memberName)+' has been kicked');
+        renderActiveServer();
+      }}
+    ]
+  );
 }
 
 function renderSrvProjectsList(projects){
@@ -758,20 +1245,43 @@ function renderSrvProjectsList(projects){
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
         <div style="font-size:9px;color:var(--text3);">→</div>
-        ${srvState.isHost?`<button onclick="event.stopPropagation();openEditProjectMeta('${id}')" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:7px;padding:1px 6px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">✎</button>`:''}
-        ${srvState.isHost?`<button onclick="event.stopPropagation();deleteSrvProject('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:11px;padding:2px 4px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>`:''}
+        ${srvState.isHost?`<button onclick="event.stopPropagation();openEditProjectMeta('${id}')" title="Edit project info" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:7px;padding:2px 6px;cursor:pointer;border-radius:1px;display:inline-flex;align-items:center;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="create-sharp" style="font-size:11px;pointer-events:none;"></ion-icon></button>`:''}
+        ${srvState.isHost?`<button onclick="event.stopPropagation();deleteSrvProject('${id}')" title="Delete project" style="background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:11px;padding:2px 4px;display:inline-flex;align-items:center;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'"><ion-icon name="trash-sharp" style="font-size:12px;pointer-events:none;"></ion-icon></button>`:''}
       </div>
     </div>`;
   }).join('');
   if(el.innerHTML!==newHtml)el.innerHTML=newHtml;
 }
 
+// ---- POLL CHAT FOR NOTIFS (when not in chat page) ----
+async function _pollChatForNotifs(){
+  if(!srvState.connected||!srvState.activeProjId)return;
+  try{
+    const chat=await _withServerCreds(CFG_URL,CFG_KEY,()=>fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat'))||{};
+    const msgs=Object.values(chat).sort((a,b)=>a.ts-b.ts);
+    if(!msgs.length)return;
+    const lastMsg=msgs[msgs.length-1];
+    if(_lastKnownChatTs===0){_lastKnownChatTs=lastMsg.ts;return;}
+    if(lastMsg.ts>_lastKnownChatTs&&lastMsg.uid!==srvState.myId){
+      _lastKnownChatTs=lastMsg.ts;
+      showChatNotifBanner(lastMsg.name||'Someone',lastMsg.text||'');
+    }
+  }catch(e){}
+}
+
 // ---- SOLO SHELL TEAM CHAT (server mode) ----
 async function renderSoloChat(){
   if(!srvState.connected||!srvState.activeProjId)return;
-  const chat=await fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat')||{};
+  const chat=await _withServerCreds(CFG_URL,CFG_KEY,()=>fbGet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat'))||{};
   const msgs=Object.values(chat).sort((a,b)=>a.ts-b.ts);
   const el=document.getElementById('solo-chat-msgs');if(!el)return;
+  // Detect new messages since last render
+  const latestTs=msgs.length?msgs[msgs.length-1].ts:0;
+  const hadNew=latestTs>_lastKnownChatTs&&_lastKnownChatTs>0;
+  const newFromOther=msgs.filter(m=>m.ts>_lastKnownChatTs&&m.uid!==srvState.myId);
+  if(hadNew&&newFromOther.length){playChatSound('incoming');}
+  _lastKnownChatTs=latestTs||_lastKnownChatTs;
+  const wasAtBottom=el.scrollTop>=el.scrollHeight-el.clientHeight-30;
   el.innerHTML=msgs.map(m=>{
     const mine=m.uid===srvState.myId;
     return`<div class="srv-msg${mine?' mine':' theirs'}">
@@ -780,16 +1290,23 @@ async function renderSoloChat(){
       <div class="srv-msg-time">${new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
     </div>`;
   }).join('');
-  el.scrollTop=el.scrollHeight;
+  if(wasAtBottom||msgs.length<=1)el.scrollTop=el.scrollHeight;
+  // Poll typing indicator
+  await _pollTypingIndicator();
 }
 
 async function sendSoloSrvMsg(){
   const inp=document.getElementById('solo-chat-inp');if(!inp)return;
   const text=inp.value.trim();if(!text)return;
   inp.value='';
+  clearTimeout(_typingTimeout);
+  await _setTyping(false);
+  _lastTypingTs=0;
   const id='msg_'+Date.now();
-  await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat/'+id,{id,text,name:srvState.username,uid:srvState.myId,ts:Date.now()});
+  await _withServerCreds(CFG_URL,CFG_KEY,()=>fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/chat/'+id,{id,text,name:srvState.username,uid:srvState.myId,ts:Date.now()}));
+  playChatSound('outgoing');
   await srvBroadcastActivity('chatting');
+  _lastKnownChatTs=Date.now();
   renderSoloChat();
 }
 
@@ -828,7 +1345,7 @@ async function renderRootServerProjects(){
   const online=Object.entries(members).filter(([id,m])=>m&&m.lastSeen&&(now-m.lastSeen)<30000);
   const presEl=document.getElementById('rs-srv-presence');
   if(presEl){
-    presEl.innerHTML=online.map(([id,m])=>`<div style="display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;border:1px solid ${id===srvState.myId?'var(--accent)':'var(--accent2)'};font-size:9px;color:${id===srvState.myId?'var(--accent)':'var(--accent2)'};letter-spacing:.06em;"><div style="width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;"></div>${escHtml(m.name)}${m.isHost?' ⚡':''}</div>`).join('');
+    presEl.innerHTML=online.map(([id,m])=>`<div style="display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;border:1px solid ${id===srvState.myId?'var(--accent)':'var(--accent2)'};font-size:9px;color:${id===srvState.myId?'var(--accent)':'var(--accent2)'};letter-spacing:.06em;"><div style="width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;"></div>${escHtml(m.name)}${m.isHost?` <ion-icon name="flash-sharp" style="font-size:10px;pointer-events:none;"></ion-icon>`:''}</div>`).join('');
     const cnt=document.getElementById('rs-srv-members');if(cnt)cnt.textContent=online.length+' online';
   }
   if(!grid)return;
@@ -870,9 +1387,9 @@ async function renderRootServerProjects(){
       <div class="rc-prog"><div class="rc-prog-bar"><div class="rc-prog-fill" style="width:${pct}%;background:${col}"></div></div><div class="rc-prog-txt">${pct}% complete</div></div>
       ${proj.createdBy?`<div style="font-size:8px;color:var(--text3);margin-top:6px;letter-spacing:.04em;">by <strong style="color:var(--accent);font-weight:normal;">${escHtml(proj.createdBy)}</strong>${proj.createdAt?' · '+new Date(proj.createdAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):''}</div>`:''}
       <div class="rc-actions">
-        <button class="rc-action-btn" onclick="event.stopPropagation();exportServerRoot('${id}')">Export</button>
-        ${srvState.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();openEditProjectMeta('${id}')">✎ Info</button>`:''}
-        ${srvState.isHost?`<button class="rc-action-btn" onclick="event.stopPropagation();deleteSrvProject('${id}')" style="color:var(--accent3);">Delete</button>`:''}
+        <button class="rc-action-btn" onclick="event.stopPropagation();exportServerRoot('${id}')"><ion-icon name="cloud-download-sharp" style="font-size:11px;pointer-events:none;"></ion-icon> Export</button>
+        ${srvState.isHost?`<button class="rc-action-btn" title="Edit project info" onclick="event.stopPropagation();openEditProjectMeta('${id}')"><ion-icon name="create-sharp" style="font-size:11px;pointer-events:none;"></ion-icon> Info</button>`:''}
+        ${srvState.isHost?`<button class="rc-action-btn" title="Delete project" onclick="event.stopPropagation();deleteSrvProject('${id}')" style="color:var(--accent3);"><ion-icon name="trash-sharp" style="font-size:11px;pointer-events:none;"></ion-icon> Delete</button>`:''}
       </div>`;
     card.addEventListener('click',()=>openSrvProject(id));
     frag.appendChild(card);
@@ -885,15 +1402,15 @@ async function renderRootServerProjects(){
 function promptPublishToServer(rootId){
   const root=roots.find(r=>r.id===rootId);
   if(!root)return;
-  if(!getSrvDbUrl()){
+  if(false){
     openModal('Publish to Server',`<p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:10px;">To publish <strong style="color:var(--accent);">${escHtml(root.name)}</strong> to a server, you first need to configure a Supabase database and connect to or host a server.</p>`,[
-      {label:'Cancel',action:closeModal},{label:'⚙ DB Setup',action:()=>{closeModal();openSupabaseSetup();},accent:true}
+      {label:'Cancel',action:closeModal},{label:'OK',action:closeModal,accent:true}
     ]);
     return;
   }
   if(!srvState.connected){
     openModal('Publish to Server',`<p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:10px;">To publish <strong style="color:var(--accent);">${escHtml(root.name)}</strong> to a server, you need to host or join a server first as the host.</p>`,[
-      {label:'Cancel',action:closeModal},{label:'⚡ Open Server Hub',action:()=>{closeModal();openServerHub();},accent:true}
+      {label:'Cancel',action:closeModal},{label:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Open Server Hub',action:()=>{closeModal();openServerHub();},accent:true}
     ]);
     return;
   }
@@ -914,8 +1431,8 @@ async function hostExistingProjectOnServer(rootId){
   const data=getRootData(rootId);
   openModal('Host "'+root.name+'" on Server',`
     <p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:12px;">This will create a server copy of <strong style="color:var(--accent);">${escHtml(root.name)}</strong> on <strong style="color:var(--accent2);">${escHtml(srvState.serverName)}</strong>.<br>Your local project stays untouched.</p>
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:10px 12px;font-size:10px;color:var(--text3);">📋 ${(data.scripts||[]).length} scripts · ${(data.bugs||[]).length} bugs · ${(data.assets||[]).length} assets will be copied</div>
-  `,[{label:'Cancel',action:closeModal},{label:'⚡ Host It',action:async()=>{
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:10px 12px;font-size:10px;color:var(--text3);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> ${(data.scripts||[]).length} scripts · ${(data.bugs||[]).length} bugs · ${(data.assets||[]).length} assets will be copied</div>
+  `,[{label:'Cancel',action:closeModal},{label:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Host It',action:async()=>{
     closeModal();
     toast('Uploading to server…');
     const id='proj_'+Date.now();
@@ -929,7 +1446,8 @@ async function hostExistingProjectOnServer(rootId){
 }
 
 // ---- CREATE SERVER PROJECT ----
-function openCreateServerProject(){
+async function openCreateServerProject(){
+  if(!(await canMember('canCreateProject','You don\'t have permission to create projects')))return;
   const colors=['#c8f04a','#4af0c8','#f04a4a','#f0a04a','#a04af0','#4a9af0'];
   let selCol=colors[Math.floor(Math.random()*colors.length)];
   openModal('New Server Project',`
@@ -957,7 +1475,6 @@ async function createSrvProject(){
   toast('Project created: '+name);
   renderActiveServer();
   renderRootGrid();
-  renderRootServerProjects();
 }
 
 // ---- EDIT SOLO PROJECT INFO ----
@@ -985,7 +1502,7 @@ function openEditSoloProjectInfo(rootId){
 // ---- EDIT SERVER META (host only) ----
 async function openEditServerMeta(){
   if(!srvState.isHost){toast('Only the host can edit server info');return;}
-  const _raUrl=srvState._dbUrl||getSrvDbUrl();const _raKey=srvState._dbKey||SRV_ANON_KEY;
+  const _raUrl=CFG_URL;const _raKey=CFG_KEY;
   const meta=await _withServerCreds(_raUrl,_raKey,()=>fbGet('/servers/'+srvState.serverKey+'/meta'))||{};
   const currentTags=(meta.tags||[]).join(', ');
   openModal('Edit Server Info',`
@@ -1004,7 +1521,7 @@ async function openEditServerMeta(){
 // ---- EDIT PROJECT META (host only, active server) ----
 async function openEditProjectMeta(projId){
   if(!srvState.isHost){toast('Only the host can edit project info');return;}
-  const _rUrl=srvState._dbUrl||getSrvDbUrl();const _rKey=srvState._dbKey||SRV_ANON_KEY;
+  const _rUrl=CFG_URL;const _rKey=CFG_KEY;
   const proj=await _withServerCreds(_rUrl,_rKey,()=>fbGet('/servers/'+srvState.serverKey+'/projects/'+projId));
   if(!proj){toast('Project not found');return;}
   const currentTags=(proj.tags||[]).join(', ');
@@ -1026,7 +1543,7 @@ async function openEditProjectMetaFor(serverKey,projId){
   const sv=getServerById(serverKey);
   if(!sv||!sv.isHost){toast('Only the host can edit project info');return;}
   const origState={...srvState};
-  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,isHost:true,myId:sv.myId,_dbUrl:sv.dbUrl||null,_dbKey:sv.dbKey||null};
+  srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:sv.serverName,isHost:true,myId:sv.myId,_dbUrl:CFG_URL,_dbKey:CFG_KEY};
   await openEditProjectMeta(projId);
   // Restore after modal opens (modal is async so srvState will be used inside)
   // We restore on close via renderActiveServer which re-reads srvState
@@ -1037,9 +1554,9 @@ async function deleteSrvProject(id){
   const proj=speProjData&&speProjData.id===id?speProjData:(await fbGet('/servers/'+srvState.serverKey+'/projects/'+id));
   const projName=proj?.name||'this project';
   const code=Math.floor(100000+Math.random()*900000)+'';
-  openModal('⚠ Delete Server Project',`
+  openModal('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Delete Server Project',`
     <div style="background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:2px;padding:10px 12px;margin-bottom:14px;font-size:10px;color:var(--accent3);line-height:1.7;letter-spacing:.04em;">
-      ⚠ This will permanently delete <strong>${escHtml(projName)}</strong> and ALL its data from the server. This cannot be undone.
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>This will permanently delete <strong>${escHtml(projName)}</strong> and ALL its data from the server. This cannot be undone.
     </div>
     <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">To confirm, type: <strong style="color:var(--accent3);letter-spacing:.1em;">delete ${escHtml(code)}</strong></p>
     <input class="modal-inp" id="del-confirm-inp" placeholder="Type the confirmation above..." autocomplete="off">
@@ -1060,7 +1577,7 @@ async function deleteSrvProject(id){
   const SYNC_COOLDOWN = 15000; // 15s minimum between syncs
 
   function _syncIfStale(){
-    if(!currentUser || !getSrvDbUrl()) return;
+    if(!currentUser || !CFG_URL) return;
     const now = Date.now();
     if(now - _lastSync < SYNC_COOLDOWN) return;
     _lastSync = now;
@@ -1072,6 +1589,7 @@ async function deleteSrvProject(id){
     const hub = document.getElementById('server-hub-overlay');
     if(hub && hub.style.display !== 'none'){
       loadCreatedServers();
+      loadJoinedServers();
       loadRecentServers();
     }
   }

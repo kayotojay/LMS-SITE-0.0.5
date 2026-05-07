@@ -1,0 +1,291 @@
+/* ═══════════════════════════════════════════════════════
+   SCENE CANVAS MODE — Blender-node / Godot palette style
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Root layout ──────────────────────────────────── */
+#sc-canvas-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ── Toolbar ──────────────────────────────────────── */
+#sc-canvas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  z-index: 20;
+}
+
+/* ── Body: palette + viewport ─────────────────────── */
+#sc-canvas-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Palette panel ────────────────────────────────── */
+#sc-canvas-palette {
+  width: 174px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.sc-pal-hdr {
+  padding: 8px 10px 6px;
+  font-size: 8px;
+  letter-spacing: .18em;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sc-pal-search {
+  margin: 6px 8px;
+  padding: 4px 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 9px;
+  outline: none;
+  flex-shrink: 0;
+  transition: border-color .15s;
+}
+.sc-pal-search:focus { border-color: var(--accent2); }
+
+#sc-pal-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+.sc-pal-group {
+  padding: 6px 10px 2px;
+  font-size: 7px;
+  letter-spacing: .18em;
+  color: var(--text3);
+  text-transform: uppercase;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+.sc-pal-group:first-child { border-top: none; margin-top: 0; }
+
+.sc-pal-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  cursor: grab;
+  font-size: 9px;
+  color: var(--text2);
+  letter-spacing: .04em;
+  transition: background .12s, color .12s;
+  user-select: none;
+  border-left: 2px solid transparent;
+}
+.sc-pal-item:hover {
+  background: var(--bg3);
+  color: var(--text);
+  border-left-color: var(--accent2);
+}
+.sc-pal-item:active { cursor: grabbing; }
+.sc-pal-item-dragging { opacity: .5; }
+
+.sc-pal-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sc-pal-ico { font-size: 11px; flex-shrink: 0; line-height: 1; display: flex; }
+.sc-pal-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Canvas viewport ──────────────────────────────── */
+#sc-canvas-vp {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  background: var(--bg);
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+#sc-canvas-vp:active { cursor: grabbing; }
+
+/* grid overlay badge */
+#sc-canvas-vp::after {
+  content: 'DRAG · SCROLL=ZOOM · RMB LINE=DISCONNECT';
+  position: absolute; bottom: 10px; right: 12px;
+  font-size: 7px; letter-spacing: .08em; color: var(--text3);
+  border: 1px solid var(--border); padding: 2px 7px; border-radius: 1px;
+  pointer-events: none; opacity: .4;
+}
+
+#sc-canvas-world {
+  position: absolute;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  transform-origin: 0 0;
+}
+
+/* ── Node cards ───────────────────────────────────── */
+.sc-cvs-node {
+  position: absolute;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  box-shadow: 0 2px 14px rgba(0,0,0,.4);
+  transition: box-shadow .18s, border-color .18s;
+  z-index: 10;
+  min-height: 52px;
+  user-select: none;
+}
+.sc-cvs-node:hover {
+  border-color: var(--border2);
+  box-shadow: 0 6px 28px rgba(0,0,0,.55);
+}
+.sc-cvs-node-root {
+  box-shadow: 0 0 0 2px var(--accent), 0 4px 20px rgba(0,0,0,.5);
+}
+.sc-cvs-node-sel {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--accent), 0 6px 24px rgba(0,0,0,.55) !important;
+}
+
+/* card header */
+.sc-cvs-hdr {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  height: 32px;
+  cursor: grab;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-radius: 2px 2px 0 0;
+  position: relative;
+}
+.sc-cvs-hdr:active { cursor: grabbing; }
+
+.sc-cvs-type {
+  font-size: 13px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.sc-cvs-name {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: .04em;
+}
+.sc-cvs-script-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.sc-cvs-del {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 2px 3px;
+  opacity: .5;
+  transition: opacity .12s, color .12s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.sc-cvs-del:hover { opacity: 1; color: var(--accent3); }
+
+/* card body */
+.sc-cvs-body {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 6px;
+  flex-wrap: wrap;
+  min-height: 20px;
+}
+.sc-cvs-typestr {
+  font-size: 8px;
+  letter-spacing: .08em;
+  opacity: .75;
+  flex-shrink: 0;
+}
+.sc-cvs-children-badge {
+  font-size: 7px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid var(--border);
+  border-radius: 1px;
+  padding: 1px 5px;
+  color: var(--text3);
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+.sc-cvs-nid {
+  font-size: 8px;
+  color: var(--text3);
+  letter-spacing: .06em;
+  margin-left: auto;
+  opacity: .7;
+}
+
+/* ── Ports ────────────────────────────────────────── */
+/* Ports are now rendered as a single draggable dot that appears
+   centered on the card edge closest to hovered direction.
+   The fixed in/out dots are kept for drag interaction but hidden visually
+   until hover, then shown as a ring on the right edge (out) and left (in). */
+.sc-cvs-port {
+  position: absolute;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: var(--bg2);
+  cursor: crosshair;
+  z-index: 30;
+  transition: transform .12s, background .12s, opacity .12s;
+  opacity: 0;
+}
+/* Out port: shown center-right, used as drag handle only */
+.sc-cvs-port-in {
+  left: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.sc-cvs-port-out {
+  right: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.sc-cvs-node:hover .sc-cvs-port {
+  opacity: 1;
+}
+.sc-cvs-port:hover {
+  transform: translateY(-50%) scale(1.4) !important;
+  background: var(--accent2) !important;
+}
+.sc-cvs-port-out:hover {
+  background: var(--accent) !important;
+}
+
+/* ── Connection lines (in SVG) ──────────────────────
+   Styles are inline in JS; just ensure pointer-events */
+#sc-canvas-svg { pointer-events: none; }

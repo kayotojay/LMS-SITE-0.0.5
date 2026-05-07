@@ -17,7 +17,7 @@ function toggleSiteUpdates(){
   _siteUpdatesPanelOpen = !_siteUpdatesPanelOpen;
   panel.style.display = _siteUpdatesPanelOpen ? 'block' : 'none';
   panel.classList.toggle('open', _siteUpdatesPanelOpen);
-  if(arrow) arrow.textContent = _siteUpdatesPanelOpen ? '▲' : '▼';
+  if(arrow) arrow.innerHTML=_siteUpdatesPanelOpen?`<svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'><polyline points='18 15 12 9 6 15'/></svg>`:`<svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'><polyline points='6 9 12 15 18 9'/></svg>`;
   if(_siteUpdatesPanelOpen){
     btn.style.color = 'var(--accent6)';
     btn.style.borderColor = 'var(--accent6)';
@@ -143,7 +143,7 @@ document.addEventListener('click', function(e){
     panel.style.display = 'none';
     panel.classList.remove('open');
     const arrow = document.getElementById('rs-updates-arrow');
-    if(arrow) arrow.textContent = '▼';
+    if(arrow) arrow.innerHTML=`<svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'><polyline points='6 9 12 15 18 9'/></svg>`;
     btn.style.color = 'var(--text3)';
     btn.style.borderColor = 'var(--border)';
   }
@@ -164,7 +164,7 @@ function openRootSettings(){
         <div style="font-family:var(--vt);font-size:36px;letter-spacing:.12em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">HUB SETTINGS</div>
         <div style="font-size:9px;color:var(--text3);letter-spacing:.28em;margin-top:4px;">APPEARANCE · BEHAVIOUR · DATA</div>
       </div>
-      <button onclick="closeRootSettings()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:11px;padding:6px 16px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.borderColor='var(--accent3)';this.style.color='var(--accent3)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">✕ Close</button>
+      <button onclick="closeRootSettings()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:11px;padding:6px 16px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.borderColor='var(--accent3)';this.style.color='var(--accent3)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Close</button>
     </div>
 
     <!-- GRID LAYOUT: 3 columns -->
@@ -213,13 +213,32 @@ function openRootSettings(){
         <!-- Custom Theme Builder (collapsed by default, expands on click) -->
         <div class="settings-section">
           <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleRsCustomTheme()">
-            <h3 style="margin-bottom:0;">✦ Custom Theme</h3>
+            <h3 style="margin-bottom:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display:inline-block;vertical-align:middle;margin-right:5px;opacity:.8;"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/></svg>Custom Theme</h3>
             <span id="rs-ct-arr" style="font-size:10px;color:var(--text3);transition:transform .2s;">▶</span>
           </div>
           <div id="rs-ct-body" style="display:none;margin-top:12px;">
             <div style="font-size:9px;color:var(--text3);margin-bottom:10px;line-height:1.6;">Build your own theme. Click Apply to preview live.</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
               ${[['bg','BG Base'],['bg2','BG Surface'],['bg3','BG Elevated'],['bg4','BG High'],['inp-bg','Input BG'],['border','Border Subtle'],['border2','Border Strong'],['text','Text Primary'],['text2','Text Secondary'],['text3','Text Muted'],['accent','Accent 1'],['accent2','Accent 2'],['accent3','Danger'],['accent4','Warning'],['accent5','Purple'],['accent6','Blue']].map(([k,l])=>`<div class="ct-row"><span class="ct-lbl" style="font-size:8px;">${l}</span><input type="color" class="ct-pick" id="rs-ct-${k}" oninput="previewCustomTheme()"></div>`).join('')}
+            </div>
+            <div style="margin-top:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:2px;">
+              <div style="font-size:8px;color:var(--text3);letter-spacing:.14em;margin-bottom:4px;">ICON ACCENTS</div>
+              <div style="font-size:8px;color:var(--text3);opacity:.7;margin-bottom:6px;line-height:1.5;">Independent — not affected by theme accent changes.</div>
+              <div class="ct-row" style="margin-bottom:4px;" title="Important / primary icons">
+                <span class="ct-lbl" style="font-size:8px;display:flex;align-items:center;gap:4px;"><svg width="8" height="8" viewBox="0 0 24 24" fill="var(--accent)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Highlight</span>
+                <input type="color" class="ct-pick" id="rs-ct-icon-hi" value="#c8f04a" oninput="previewCustomTheme()">
+              </div>
+              <div class="ct-row" style="margin-bottom:4px;" title="Common / secondary icons">
+                <span class="ct-lbl" style="font-size:8px;display:flex;align-items:center;gap:4px;"><svg width="8" height="8" viewBox="0 0 24 24" fill="var(--accent2)" stroke="none"><circle cx="12" cy="12" r="8"/></svg> Common</span>
+                <input type="color" class="ct-pick" id="rs-ct-icon-mid" value="#4af0c8" oninput="previewCustomTheme()">
+              </div>
+              <div class="ct-row" title="Utility / quiet icons">
+                <span class="ct-lbl" style="font-size:8px;display:flex;align-items:center;gap:4px;"><svg width="8" height="8" viewBox="0 0 24 24" fill="var(--text3)" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg> Utility</span>
+                <input type="color" class="ct-pick" id="rs-ct-icon-dim" value="#4a5278" oninput="previewCustomTheme()">
+              </div>
+              <button class="btn" style="width:100%;font-size:8px;margin-top:6px;padding:3px;" onclick="resetIconAccentVars();['rs-ct-icon-hi','rs-ct-icon-mid','rs-ct-icon-dim'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.value=['#c8f04a','#4af0c8','#4a5278'][i];});">Reset Icon Accents</button>
+            </div>
+            <div style="display:none;"><!-- spacer -->
             </div>
             <div id="rs-ct-preview" style="background:var(--ct-bg2,#0d0f18);border:1px solid var(--ct-border,#1f2438);border-radius:3px;padding:8px;border-top:2px solid var(--ct-accent,#c8f04a);margin-bottom:8px;">
               <div style="font-family:var(--vt);font-size:14px;color:var(--ct-accent,#c8f04a);margin-bottom:2px;">PREVIEW</div>
@@ -230,7 +249,7 @@ function openRootSettings(){
               </div>
             </div>
             <div style="display:flex;gap:6px;margin-bottom:6px;">
-              <button class="btn accent" onclick="applyCustomTheme()" style="flex:1;">▶ Apply</button>
+              <button class="btn accent" onclick="applyCustomTheme()" style="flex:1;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>Apply</button>
               <button class="btn" onclick="exportCustomTheme()">↑ Export</button>
             </div>
             <div style="display:flex;gap:4px;">
@@ -358,9 +377,9 @@ function openRootSettings(){
           <div style="display:flex;flex-direction:column;gap:8px;">
             <button class="btn" onclick="gdriveExportAll()" style="width:100%;text-align:left;">↓ Export Full Backup</button>
             <button class="btn" onclick="triggerImportBackup()" style="width:100%;text-align:left;">↑ Import Backup</button>
-            <button class="btn" onclick="closeRootSettings();openSupabaseSetup();" style="width:100%;text-align:left;color:var(--accent2);border-color:var(--accent2);">⚙ Database Setup</button>
+            <button class="btn" onclick="closeRootSettings();openSupabaseSetup();" style="width:100%;text-align:left;color:var(--accent2);border-color:var(--accent2);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Database Setup</button>
             <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-            <button class="btn danger" onclick="confirmClearAllProjects()" style="width:100%;text-align:left;">⚠ Clear ALL Projects</button>
+            <button class="btn danger" onclick="confirmClearAllProjects()" style="width:100%;text-align:left;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Clear ALL Projects</button>
           </div>
         </div>
 
@@ -415,7 +434,7 @@ function _rsyncRootSettings(){
         else{toggleRsCustomTheme();}
       };
       const ct=SETTINGS.customTheme||{bg:'#07080d',accent:'#c8f04a',accent2:'#4af0c8',accent3:'#f0504a'};
-      btn.innerHTML=`<div class="tbv2-swatches"><div class="tbv2-swatch" style="background:${ct.bg||'#07080d'};flex:2;"></div><div class="tbv2-swatch" style="background:${ct.accent||'#c8f04a'};flex:1;"></div><div class="tbv2-swatch" style="background:${ct.accent2||'#4af0c8'};flex:1;"></div><div class="tbv2-swatch" style="background:${ct.accent3||'#f0504a'};flex:1;"></div><div class="tbv2-swatch" style="background:linear-gradient(135deg,#888,#444);flex:1;"></div></div><div class="tbv2-label">✦ Custom</div>`;
+      btn.innerHTML=`<div class="tbv2-swatches"><div class="tbv2-swatch" style="background:${ct.bg||'#07080d'};flex:2;"></div><div class="tbv2-swatch" style="background:${ct.accent||'#c8f04a'};flex:1;"></div><div class="tbv2-swatch" style="background:${ct.accent2||'#4af0c8'};flex:1;"></div><div class="tbv2-swatch" style="background:${ct.accent3||'#f0504a'};flex:1;"></div><div class="tbv2-swatch" style="background:linear-gradient(135deg,#888,#444);flex:1;"></div></div><div class="tbv2-label"><svg width='10' height='10' viewBox='0 0 24 24' fill='currentColor' stroke='none' style='display:inline-block;vertical-align:middle;margin-right:3px;'><path d='M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z'/></svg>Custom</div>`;
       cont.appendChild(btn);
     }
   });

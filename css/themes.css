@@ -205,7 +205,7 @@
   transition:all .15s;overflow:hidden;position:relative;
 }
 .theme-btn-v2:hover,.theme-btn-v2.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
-.theme-btn-v2.active::after{content:'✓';position:absolute;top:4px;right:5px;font-size:8px;color:var(--accent);font-family:var(--font);}
+.theme-btn-v2.active::after{content:'';position:absolute;top:4px;right:5px;font-size:8px;color:var(--accent);font-family:var(--font);}
 .tbv2-swatches{display:flex;height:6px;width:100%;}
 .tbv2-swatch{flex:1;}
 .tbv2-label{padding:4px 6px 5px;font-size:9px;letter-spacing:.06em;color:var(--text2);}
@@ -215,7 +215,7 @@
 .palette-drop{border:1px dashed var(--border2);padding:12px 10px;border-radius:3px;text-align:center;cursor:pointer;transition:all .2s;font-size:9px;color:var(--text3);letter-spacing:.1em;}
 .palette-drop:hover{border-color:var(--accent);color:var(--accent);}
 .palette-drop.drag-over{border-color:var(--accent2);background:rgba(74,240,200,.04);color:var(--accent2);}
-.custom-theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.custom-theme-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:10px;}
 .ct-group{display:flex;flex-direction:column;gap:4px;}
 .ct-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
 .ct-lbl{font-size:8px;color:var(--text3);letter-spacing:.1em;flex:1;}
@@ -298,7 +298,7 @@
 [data-layout="youtube"] .rc-engine { padding:0 10px 8px;font-size:10px;color:var(--text3); }
 [data-layout="youtube"] .root-grid { grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px; }
 [data-layout="youtube"] .rs-logo { font-family:system-ui,sans-serif;font-size:28px;font-weight:900;letter-spacing:-.03em;color:#fff;background:none;-webkit-text-fill-color:#fff; }
-[data-layout="youtube"] .rs-logo::before { content:'▶ ';color:#ff0000;-webkit-text-fill-color:#ff0000; }
+[data-layout="youtube"] .rs-logo::before { content:'► ';color:#ff0000;-webkit-text-fill-color:#ff0000; }
 [data-layout="youtube"] .sidebar { border-right:none;background:var(--bg2); }
 [data-layout="youtube"] .nav-item { border-radius:0;border-left:3px solid transparent;margin:0;padding-left:17px; }
 [data-layout="youtube"] .nav-item.active { border-left-color:#ff0000;background:rgba(255,0,0,.08); }

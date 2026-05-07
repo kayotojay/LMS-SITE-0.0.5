@@ -90,8 +90,14 @@ function _chatFromDb(r){
 function _pathToSupabase(path){
   const parts=path.replace(/^\/+/,'').split('/');
   if(parts[0]==='accounts'){
+    if(parts[1]&&parts[2]){
+      // Sub-field path: /accounts/{uid}/{subField}/{subKey?}
+      // These are user-scoped data blobs (joinedServers, recentServers, createdServers).
+      // Stored as JSONB in the members.meta column — _type:'account_meta' signals special handling.
+      return{table:'members',filter:'uid=eq.'+parts[1],single:true,_type:'account_meta',_uid:parts[1],_subField:parts[2],_subKey:parts[3]||null};
+    }
     if(parts[1]) return{table:'members',filter:'uid=eq.'+parts[1],single:true,_type:'account'};
-    return{table:'members',filter:'username=not.is.null',single:false,_type:'account'}; }
+    return{table:'members',filter:'username=not.is.null&server_key=is.null',single:false,_type:'account'}; }
   if(parts[0]==='emailIndex'){
     const email=parts[1].replace(/__at__/g,'@').replace(/_/g,'.');
     return{table:'members',filter:'email=eq.'+encodeURIComponent(email),single:true,_type:'account'};
@@ -136,42 +142,6 @@ function _fromDb(meta,row){
   return row;
 }
 
-async function fbGet(path){
-  try{
-    const meta=_pathToSupabase(path);
-    const {table,filter,single}=meta;
-    const url=getSrvDbUrl()+'/rest/v1/'+table+(filter?'?'+filter:'');
-    const r=await fetch(url,{headers:sbHeaders({'Accept':'application/json'})});
-    if(!r.ok) return null;
-    const j=await r.json();
-    if(!Array.isArray(j)) return _fromDb(meta,j);
-    if(j.length===0) return null;
-    if(single) return _fromDb(meta,j[0]);
-    // Return as object keyed by the logical ID
-    if(meta._type==='member'||meta._type==='account'){
-      const out={};
-      j.forEach(row=>{const m=_memberFromDb(row);if(m&&m.uid)out[m.uid]=m;});
-      return Object.keys(out).length?out:null;
-    }
-    if(meta._type==='project'){
-      const out={};
-      j.forEach(row=>{const p=_projectFromDb(row);if(p&&p.id)out[p.id]=p;});
-      return Object.keys(out).length?out:null;
-    }
-    if(meta._type==='chat'){
-      const out={};
-      j.forEach(row=>{const m=_chatFromDb(row);if(m&&m.id)out[m.id]=m;});
-      return Object.keys(out).length?out:null;
-    }
-    if(meta._type==='server'){
-      const out={};
-      j.forEach(row=>{const s=_serverFromDb(row);if(s&&s.key)out[s.key]=s;});
-      return Object.keys(out).length?out:null;
-    }
-    return j.length===1?j[0]:Object.fromEntries(j.map(row=>[row.uid||row.key||row.project_id||row.id,row]));
-  }catch(e){console.warn('fbGet error',path,e);return null;}
-}
-
 // ---- READ — translate DB rows → JS objects ----
 function _fromDb(meta,row){
   if(!row)return null;
@@ -182,9 +152,11 @@ function _fromDb(meta,row){
 }
 
 // ---- HELPER: read raw project data jsonb ----
-async function _getProjectData(serverKey,projId){
-  const url=getSrvDbUrl()+'/rest/v1/projects?server_key=eq.'+serverKey+'&project_id=eq.'+projId;
-  const r=await fetch(url,{headers:sbHeaders({'Accept':'application/json'})});
+async function _getProjectData(serverKey,projId,creds){
+  const base=(CFG_URL);
+  const hdrs=creds?{'Content-Type':'application/json','apikey':creds.key,'Authorization':'Bearer '+creds.key,'Accept':'application/json'}:sbHeaders({'Accept':'application/json'});
+  const url=base+'/rest/v1/projects?server_key=eq.'+serverKey+'&project_id=eq.'+projId;
+  const r=await fetch(url,{headers:hdrs});
   if(!r.ok) return null;
   const j=await r.json();
   if(!j||!j.length) return null;
@@ -193,29 +165,52 @@ async function _getProjectData(serverKey,projId){
   try{data=typeof row.data==='string'?JSON.parse(row.data):(row.data||{});}catch(e){}
   return{row,data};
 }
-async function _patchProjectDataJsonb(serverKey,projId,mergeFn){
-  const got=await _getProjectData(serverKey,projId);
+async function _patchProjectDataJsonb(serverKey,projId,mergeFn,creds){
+  const got=await _getProjectData(serverKey,projId,creds);
   const data=got?got.data:{};
   mergeFn(data);
-  const url=getSrvDbUrl()+'/rest/v1/projects?server_key=eq.'+serverKey+'&project_id=eq.'+projId;
-  await fetch(url,{method:'PATCH',headers:sbHeaders({'Prefer':'return=minimal'}),body:JSON.stringify({data:JSON.stringify(data)})});
+  const base=(CFG_URL);
+  const hdrs=creds?{'Content-Type':'application/json','apikey':creds.key,'Authorization':'Bearer '+creds.key,'Prefer':'return=minimal'}:sbHeaders({'Prefer':'return=minimal'});
+  const url=base+'/rest/v1/projects?server_key=eq.'+serverKey+'&project_id=eq.'+projId;
+  await fetch(url,{method:'PATCH',headers:hdrs,body:JSON.stringify({data:JSON.stringify(data)})});
 }
 
-async function fbGet(path){
+async function fbGet(path,creds){
   try{
     const meta=_pathToSupabase(path);
     const {table,filter,single}=meta;
+    // account_meta paths (/accounts/uid/...) must ALWAYS use the member's own DB,
+    // never a server's host DB — even if called inside a _withServerCreds block.
+    const _ownCreds={url:CFG_URL,key:CFG_KEY};
+    const _resolvedCreds=meta._type==='account_meta'?_ownCreds:(creds||_resolveDbCreds());
+    const base=CFG_URL;
+    const hdrs={'Content-Type':'application/json','apikey':_resolvedCreds.key,'Authorization':'Bearer '+_resolvedCreds.key,'Accept':'application/json'};
+    // Sub-field read for account meta (joinedServers, recentServers, createdServers)
+    if(meta._type==='account_meta'){
+      const url2=base+'/rest/v1/'+table+'?'+meta.filter+'&select=meta&server_key=is.null';
+      const r2=await fetch(url2,{headers:hdrs});
+      if(!r2.ok) return null;
+      const j2=await r2.json();
+      const row=(Array.isArray(j2)?j2[0]:j2)||null;
+      if(!row) return null;
+      let metaObj={};
+      try{metaObj=typeof row.meta==='string'?JSON.parse(row.meta):(row.meta||{});}catch(e){}
+      const subData=metaObj[meta._subField]||null;
+      if(!subData) return null;
+      if(meta._subKey) return subData[meta._subKey]||null;
+      return subData;
+    }
     // Sub-field read (e.g. /servers/key/projects/id/chat)
     if(meta._type==='project'&&meta._projId&&meta._subField){
-      const got=await _getProjectData(meta._serverKey,meta._projId);
+      const got=await _getProjectData(meta._serverKey,meta._projId,creds);
       if(!got) return null;
       const val=got.data[meta._subField];
       if(val===undefined||val===null) return null;
       if(meta._subId) return val[meta._subId]||null;
       return val;
     }
-    const url=getSrvDbUrl()+'/rest/v1/'+table+(filter?'?'+filter:'');
-    const r=await fetch(url,{headers:sbHeaders({'Accept':'application/json'})});
+    const url=base+'/rest/v1/'+table+(filter?'?'+filter:'');
+    const r=await fetch(url,{headers:hdrs});
     if(!r.ok) return null;
     const j=await r.json();
     if(!Array.isArray(j)) return _fromDb(meta,j);
@@ -253,91 +248,128 @@ function _toDb(meta,data){
   return data;
 }
 
-async function fbSet(path,data){
+async function fbSet(path,data,creds){
   try{
     const meta=_pathToSupabase(path);
     const {table}=meta;
+    // account_meta paths (/accounts/uid/...) must ALWAYS use the member's own DB.
+    const _ownCreds={url:CFG_URL,key:CFG_KEY};
+    const _resolvedCreds=meta._type==='account_meta'?_ownCreds:(creds||_resolveDbCreds());
+    const base=CFG_URL;
+    const hdrs=(extra)=>Object.assign({'Content-Type':'application/json','apikey':_resolvedCreds.key,'Authorization':'Bearer '+_resolvedCreds.key},extra||{});
+    // Sub-field write: account meta (joinedServers, recentServers, createdServers stored in members.meta JSONB)
+    if(meta._type==='account_meta'){
+      const baseUrl2=base+'/rest/v1/'+table;
+      // First read current meta
+      const rGet=await fetch(baseUrl2+'?uid=eq.'+encodeURIComponent(meta._uid)+'&server_key=is.null&select=meta',{headers:hdrs({'Accept':'application/json'})});
+      let metaObj={};
+      if(rGet.ok){const rows=await rGet.json();const row=(Array.isArray(rows)?rows[0]:rows)||null;if(row){try{metaObj=typeof row.meta==='string'?JSON.parse(row.meta):(row.meta||{});}catch(e){}}}
+      if(!metaObj[meta._subField]) metaObj[meta._subField]={};
+      if(meta._subKey) metaObj[meta._subField][meta._subKey]=data;
+      else metaObj[meta._subField]=data;
+      // PATCH member row (server_key=null account row)
+      const rPatch=await fetch(baseUrl2+'?uid=eq.'+encodeURIComponent(meta._uid)+'&server_key=is.null',{method:'PATCH',headers:hdrs({'Prefer':'return=minimal'}),body:JSON.stringify({meta:JSON.stringify(metaObj)})});
+      // If PATCH hits nothing (row doesn't exist yet), upsert it
+      if(rPatch.status===404||rPatch.status===204&&false){
+        await fetch(baseUrl2+'?on_conflict=uid,server_key',{method:'POST',headers:hdrs({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify({uid:meta._uid,server_key:null,meta:JSON.stringify(metaObj)})});
+      }
+      return true;
+    }
     // Sub-field write: merge into project data jsonb
     if(meta._type==='project'&&meta._projId&&meta._subField){
       await _patchProjectDataJsonb(meta._serverKey,meta._projId,d=>{
         if(meta._subId){if(!d[meta._subField])d[meta._subField]={};d[meta._subField][meta._subId]=data;}
         else d[meta._subField]=data;
-      });
+      },creds);
       return true;
     }
     const dbData=_toDb(meta,data);
     let conflictCol='';
-    if(table==='members') conflictCol=(meta._type==='member'?'uid,server_key':'uid');
+    if(table==='members') conflictCol='uid,server_key';
     else if(table==='projects') conflictCol='project_id';
     else if(table==='servers') conflictCol='key';
     else if(table==='server_ids') conflictCol='short_id';
     else if(table==='email_codes') conflictCol='email_key';
-    const url=getSrvDbUrl()+'/rest/v1/'+table+(conflictCol?'?on_conflict='+conflictCol:'');
-    const r=await fetch(url,{method:'POST',headers:sbHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(dbData)});
-    if(!r.ok&&r.status!==201&&r.status!==204){
-      const errText=await r.text().catch(()=>'');
-      console.warn('fbSet failed',path,'status:',r.status,errText);
+    const baseUrl=base+'/rest/v1/'+table;
+    if(table==='servers'&&dbData.key===undefined&&meta.filter){
+      const r=await fetch(baseUrl+'?'+meta.filter,{method:'PATCH',headers:hdrs({'Prefer':'return=minimal'}),body:JSON.stringify(dbData)});
+      if(!r.ok&&r.status!==201&&r.status!==204){const errText=await r.text().catch(()=>'');console.warn('fbSet failed',path,'status:',r.status,errText);}
+      return r.ok||r.status===201||r.status===204;
     }
+    const url=baseUrl+(conflictCol?'?on_conflict='+conflictCol:'');
+    let r=await fetch(url,{method:'POST',headers:hdrs({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(dbData)});
+
+    if(!r.ok&&r.status!==201&&r.status!==204){const errText=await r.text().catch(()=>'');console.warn('fbSet failed',path,'status:',r.status,errText);}
     return r.ok||r.status===201||r.status===204;
   }catch(e){console.warn('fbSet error',path,e);return false;}
 }
 
-async function fbPatch(path,data){
+async function fbPatch(path,data,creds){
   try{
     const meta=_pathToSupabase(path);
     const {table,filter}=meta;
-    // Project sub-field patch
+    // account/own-user paths must always use the member's own DB
+    const _ownCreds={url:CFG_URL,key:CFG_KEY};
+    const _resolvedCreds=meta._type==='account_meta'||meta._type==='account'?_ownCreds:(creds||_resolveDbCreds());
+    const base=CFG_URL;
+    const hdrs=(extra)=>Object.assign({'Content-Type':'application/json','apikey':_resolvedCreds.key,'Authorization':'Bearer '+_resolvedCreds.key},extra||{});
     if(meta._type==='project'&&meta._projId){
       if(meta._subField){
         await _patchProjectDataJsonb(meta._serverKey,meta._projId,d=>{
           if(meta._subId){if(!d[meta._subField])d[meta._subField]={};d[meta._subField][meta._subId]={...(d[meta._subField][meta._subId]||{}),...data};}
           else d[meta._subField]={...(d[meta._subField]||{}),...data};
-        });
+        },creds);
         return true;
       } else {
-        // Top-level project patch
         if(data&&data._dataOnly){
-          const url=getSrvDbUrl()+'/rest/v1/projects?server_key=eq.'+meta._serverKey+'&project_id=eq.'+meta._projId;
-          const r=await fetch(url,{method:'PATCH',headers:sbHeaders({'Prefer':'return=minimal'}),body:JSON.stringify({data:data.data})});
+          const url=base+'/rest/v1/projects?server_key=eq.'+meta._serverKey+'&project_id=eq.'+meta._projId;
+          const r=await fetch(url,{method:'PATCH',headers:hdrs({'Prefer':'return=minimal'}),body:JSON.stringify({data:data.data})});
           return r.ok||r.status===204;
         }
-        await _patchProjectDataJsonb(meta._serverKey,meta._projId,d=>{Object.assign(d,data);});
+        await _patchProjectDataJsonb(meta._serverKey,meta._projId,d=>{Object.assign(d,data);},creds);
         return true;
       }
     }
     const dbData=_toDb(meta,data);
-    const url=getSrvDbUrl()+'/rest/v1/'+table+(filter?'?'+filter:'');
-    const r=await fetch(url,{method:'PATCH',headers:sbHeaders({'Prefer':'return=minimal'}),body:JSON.stringify(dbData)});
+    const url=base+'/rest/v1/'+table+(filter?'?'+filter:'');
+    const r=await fetch(url,{method:'PATCH',headers:hdrs({'Prefer':'return=minimal'}),body:JSON.stringify(dbData)});
     return r.ok||r.status===204;
   }catch(e){console.warn('fbPatch error',path,e);return false;}
 }
 
-async function fbPush(path,data){
+async function fbPush(path,data,creds){
   try{
     const meta=_pathToSupabase(path);
     const {table}=meta;
+    const _resolvedCreds=creds||_resolveDbCreds();
+    const base=CFG_URL;
+    const hdrs={'Content-Type':'application/json','apikey':_resolvedCreds.key,'Authorization':'Bearer '+_resolvedCreds.key,'Prefer':'return=minimal'};
     const dbData=_toDb(meta,data);
-    const url=getSrvDbUrl()+'/rest/v1/'+table;
-    const r=await fetch(url,{method:'POST',headers:sbHeaders({'Prefer':'return=minimal'}),body:JSON.stringify(dbData)});
+    const url=base+'/rest/v1/'+table;
+    const r=await fetch(url,{method:'POST',headers:hdrs,body:JSON.stringify(dbData)});
     return r.ok||r.status===201||r.status===204;
   }catch(e){console.warn('fbPush error',path,e);return false;}
 }
 
-async function fbDelete(path){
+async function fbDelete(path,creds){
   try{
     const meta=_pathToSupabase(path);
     const {table,filter}=meta;
-    // Sub-field delete: remove key from project data jsonb
+    // account/own-user paths must always use the member's own DB
+    const _ownCreds={url:CFG_URL,key:CFG_KEY};
+    const _resolvedCreds=meta._type==='account_meta'||meta._type==='account'?_ownCreds:(creds||_resolveDbCreds());
+    const base=CFG_URL;
+    const hdrs={'Content-Type':'application/json','apikey':_resolvedCreds.key,'Authorization':'Bearer '+_resolvedCreds.key};
     if(meta._type==='project'&&meta._projId&&meta._subField){
       await _patchProjectDataJsonb(meta._serverKey,meta._projId,d=>{
         if(meta._subId&&d[meta._subField]) delete d[meta._subField][meta._subId];
         else delete d[meta._subField];
-      });
+      },creds);
       return true;
     }
     if(!filter){console.warn('fbDelete: no filter, skipping to avoid wiping table',path);return false;}
-    const url=getSrvDbUrl()+'/rest/v1/'+table+'?'+filter;
-    await fetch(url,{method:'DELETE',headers:sbHeaders()});
+    const url=base+'/rest/v1/'+table+'?'+filter;
+    await fetch(url,{method:'DELETE',headers:hdrs});
     return true;
   }catch(e){console.warn('fbDelete error',path,e);return false;}
 }

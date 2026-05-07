@@ -4,6 +4,16 @@
 // ---- OPEN PROJECT EDITOR ----
 let speProjData=null;
 let spe_activityLog=[];
+
+// ---- Permission guard helper (used by all write actions in server projects) ----
+async function _requirePerm(perm, msg){
+  if(!(await canMember(perm))){
+    toast(msg||'You do not have permission to do that');
+    return false;
+  }
+  return true;
+}
+
 async function openSrvProject(projId){
   if(!srvState.connected)return;
   srvState.activeProjId=projId;
@@ -12,7 +22,7 @@ async function openSrvProject(projId){
 
   // Load project data from Firebase into D
   toast('Loading project…');
-  const _spUrl=srvState._dbUrl||getSrvDbUrl();const _spKey=srvState._dbKey||SRV_ANON_KEY;
+  const _spUrl=CFG_URL;const _spKey=CFG_KEY;
   const proj=await _withServerCreds(_spUrl,_spKey,()=>fbGet('/servers/'+srvState.serverKey+'/projects/'+projId));
   if(!proj){toast('Project not found');renderRootGrid();document.getElementById('root-screen-wrap').style.display='block';return;}
 
@@ -75,7 +85,7 @@ async function updateSoloPresenceBar(){
     const isMe=id===srvState.myId;
     const pill=document.createElement('div');
     pill.className='srv-presence-member online'+(isMe?' you':'');
-    pill.innerHTML='<div class="srv-presence-dot"></div><span>'+escHtml(m.name)+(m.isHost?' ⚡':'')+'</span>';
+    pill.innerHTML='<div class="srv-presence-dot"></div><span>'+escHtml(m.name)+(m.isHost?' <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>':'')+'</span>';
     if(m.activity&&!isMe){const a=document.createElement('span');a.className='srv-activity-pill';a.textContent=m.activity;pill.appendChild(a);}
     bar.appendChild(pill);
   });
@@ -111,7 +121,7 @@ async function syncProjData(fullRender=false){
     const isMe=id===srvState.myId;
     const pill=document.createElement('div');
     pill.className='srv-presence-member online'+(isMe?' you':'');
-    pill.innerHTML=`<div class="srv-presence-dot"></div><span>${escHtml(m.name)}${m.isHost?' ⚡':''}</span>`;
+    pill.innerHTML=`<div class="srv-presence-dot"></div><span>${escHtml(m.name)}${m.isHost?' <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>':''}</span>`;
     if(m.activity&&!isMe){
       const act=document.createElement('span');act.className='srv-activity-pill';act.textContent=m.activity;pill.appendChild(act);
     }
@@ -236,7 +246,7 @@ function renderSpeCurrentTab(){speRenderCurrentPage();}
 // ---- BROADCAST PRESENCE ACTIVITY ----
 async function srvBroadcastActivity(activity){
   if(!srvState.connected||!srvState.myId)return;
-  const _bUrl=srvState._dbUrl||getSrvDbUrl();const _bKey=srvState._dbKey||SRV_ANON_KEY;
+  const _bUrl=CFG_URL;const _bKey=CFG_KEY;
   await _withServerCreds(_bUrl,_bKey,()=>fbPatch('/servers/'+srvState.serverKey+'/members/'+srvState.myId,{
     lastSeen:Date.now(),activity:activity||null,inProject:srvState.activeProjId||null
   }));
@@ -303,6 +313,7 @@ async function addSrvTask(){
   const task={id:'t_'+Date.now(),title,desc:document.getElementById('st-desc').value.trim(),assignee:document.getElementById('st-assign').value.trim(),status:document.getElementById('st-status').value,createdBy:srvState.username,createdAt:Date.now()};
   await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/tasks/'+task.id,task);
   await srvBroadcastActivity('added task: '+title.substring(0,30));
+  if(!(await _requirePerm('canManageTasks','You don\'t have permission to add tasks')))return;
   closeModal();await syncProjData(true);toast('Task added');
 }
 
@@ -317,6 +328,7 @@ async function cycleSrvTaskStatus(taskId){
 }
 
 async function deleteSrvTask(taskId){
+  if(!(await _requirePerm('canManageTasks','You don\'t have permission to remove tasks')))return;
   await fbDelete('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/tasks/'+taskId);
   await syncProjData(true);toast('Task removed');
 }
@@ -359,6 +371,7 @@ async function updateSrvNote(noteId,content){
 }
 
 async function deleteSrvNote(noteId){
+  if(!(await _requirePerm('canManageNotes','You don\'t have permission to delete notes')))return;
   await fbDelete('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/notes/'+noteId);
   await syncProjData(true);
 }
@@ -369,7 +382,7 @@ function renderSpeBugs(){
   const bugs=Object.entries(speProjData.bugs||{});
   el.innerHTML=`<div id="spe-bugs-list"></div>`;
   const listEl=document.getElementById('spe-bugs-list');
-  if(!bugs.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No bugs reported. Either perfect or untested 🎉</div>';return;}
+  if(!bugs.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No bugs reported. Either perfect or untested <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 10l-8-4V7"/></svg></div>';return;}
   const sevColors={critical:'#f04a4a',high:'#f0a04a',medium:'#f0f04a',low:'#4a9af0'};
   listEl.innerHTML=bugs.map(([id,bug])=>`
     <div class="bug-card" style="--sev:${sevColors[bug.severity]||'#888'};margin-bottom:8px;${bug.status==='resolved'?'opacity:.5':''}">
@@ -377,7 +390,7 @@ function renderSpeBugs(){
         <span class="bug-sev" style="color:${sevColors[bug.severity]||'#888'};border-color:${sevColors[bug.severity]||'#888'};">${(bug.severity||'').toUpperCase()}</span>
         <span class="bug-title" style="flex:1;">${escHtml(bug.title)}</span>
         <span class="pill" style="color:${bug.status==='resolved'?'var(--accent)':bug.status==='inprogress'?'var(--accent4)':'var(--accent3)'};border-color:currentColor;font-size:8px;">${bug.status||'open'}</span>
-        <button onclick="cycleSrvBug('${id}')" class="btn" style="font-size:9px;padding:3px 8px;">${bug.status==='open'?'→ In Progress':bug.status==='inprogress'?'✓ Resolve':'↺ Reopen'}</button>
+        <button onclick="cycleSrvBug('${id}')" class="btn" style="font-size:9px;padding:3px 8px;">${bug.status==='open'?'→ In Progress':bug.status==='inprogress'?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Resolve':'↺ Reopen'}</button>
         <button onclick="deleteSrvBug('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>
       </div>
       ${bug.desc?`<div class="bug-desc">${escHtml(bug.desc)}</div>`:''}
@@ -403,6 +416,7 @@ async function addSrvBug(){
   const bug={id,title,severity:document.getElementById('sb-sev').value,desc:document.getElementById('sb-desc').value.trim(),status:'open',reportedBy:srvState.username,date:new Date().toLocaleDateString()};
   await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/bugs/'+id,bug);
   await srvBroadcastActivity('reported bug: '+title.substring(0,30));
+  if(!(await _requirePerm('canManageBugs','You don\'t have permission to report bugs')))return;
   closeModal();await syncProjData(true);toast('Bug reported');
 }
 
@@ -415,6 +429,7 @@ async function cycleSrvBug(bugId){
 }
 
 async function deleteSrvBug(bugId){
+  if(!(await _requirePerm('canManageBugs','You don\'t have permission to remove bugs')))return;
   await fbDelete('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/bugs/'+bugId);
   await syncProjData(true);toast('Bug removed');
 }
@@ -458,10 +473,12 @@ async function addSrvVersion(){
   const ver={id,tag,name:document.getElementById('sv-name').value.trim(),notes:document.getElementById('sv-notes').value.trim(),color:document.getElementById('sv-color').value,createdBy:srvState.username,date:new Date().toLocaleDateString(),createdAt:Date.now()};
   await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/versions/'+id,ver);
   await srvBroadcastActivity('logged version '+tag);
+  if(!(await _requirePerm('canManageVersions','You don\'t have permission to log versions')))return;
   closeModal();await syncProjData(true);toast('Version logged: '+tag);
 }
 
 async function deleteSrvVersion(id){
+  if(!(await _requirePerm('canManageVersions','You don\'t have permission to remove versions')))return;
   await fbDelete('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/versions/'+id);
   await syncProjData(true);toast('Version removed');
 }
@@ -616,6 +633,7 @@ function speRenderVault(){
 }
 
 async function speCreateFolder(){
+  if(!(await _requirePerm('canManageScripts','You don\'t have permission to manage scripts')))return;
   const name=document.getElementById('spe-new-folder-inp').value.trim();if(!name)return;
   const folders=speProjData.folders||[];
   const id='f_'+Date.now();
@@ -851,7 +869,7 @@ function speRenderSceneFileTree(){
   // Flat list of scenes for now
   el.innerHTML=scenes.map(s=>`
     <div class="sft-scene${speSelectedScene===s.id?' active-scene':''}" onclick="speSelectScene('${s.id}')">
-      <span class="sft-scene-icon">🎬</span>
+      <span class="sft-scene-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--icon-mid)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M2 6l10-4 10 4v12l-10 4L2 18V6z"/></svg></span>
       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(s.name)}</span>
     </div>`).join('');
 }
@@ -876,7 +894,7 @@ function speRenderNodeTree(){
     return`<div class="st-node">
       <div class="st-node-row${speSelectedNode===node.id?' selected':''}" style="padding-left:${6+depth*14}px;" onclick="speSelectNode('${node.id}')">
         <div class="st-node-arr${children.length?' open':'leaf'}">▶</div>
-        <div class="st-node-icon">${node.icon||'📦'}</div>
+        <div class="st-node-icon">${typeof getNodeSVGIcon !== 'undefined' ? getNodeSVGIcon(node.type||'Node',12) : ''}</div>
         <div class="st-node-name${node.script?' has-script':''}">${escHtml(node.name)}</div>
         <div class="st-node-id">${escHtml(node.type||'Node')}</div>
       </div>
@@ -942,12 +960,12 @@ function speAddNodeModal(){
     <label class="modal-label">Type</label>
     <input class="modal-inp" id="spe-nd-type" placeholder="e.g. CharacterBody3D, Node2D">
     <label class="modal-label">Icon</label>
-    <input class="modal-inp" id="spe-nd-icon" placeholder="emoji e.g. 🎮 🎥 📦" maxlength="4">
+    <input class="modal-inp" id="spe-nd-icon" placeholder="node type e.g. Camera2D, Area2D" maxlength="4">
   `,[{label:'Cancel',action:closeModal},{label:'Add',action:async()=>{
     const name=document.getElementById('spe-nd-name').value.trim();if(!name)return;
     const scenes=JSON.parse(JSON.stringify(speProjData.scenes||[]));
     const si=scenes.findIndex(s=>s.id===speSelectedScene);if(si<0)return;
-    const node={id:'nd_'+Date.now(),name,type:document.getElementById('spe-nd-type').value.trim(),icon:document.getElementById('spe-nd-icon').value.trim()||'📦',parent:speSelectedNode||null,script:''};
+    const node={id:'nd_'+Date.now(),name,type:document.getElementById('spe-nd-type').value.trim(),icon:document.getElementById('spe-nd-icon').value.trim()||'Node',parent:speSelectedNode||null,script:''};
     scenes[si].nodes=[...(scenes[si].nodes||[]),node];
     await fbPatch('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId,{scenes});
     await srvBroadcastActivity('added node: '+name);
@@ -1025,7 +1043,7 @@ function speRenderAssets(){
       <div class="surv-row"><span class="surv-key">Assignee</span><span class="surv-val">${escHtml(a.assignee||'—')}</span></div>
       ${a.notes?`<div style="font-size:10px;color:var(--text2);margin-top:6px;">${escHtml(a.notes)}</div>`:''}
       <div class="surv-actions">
-        <button class="btn" style="font-size:9px;" onclick="speCycleAsset('${a.id}')">${a.status==='done'?'↺':a.status==='inprogress'?'✓':'→'}</button>
+        <button class="btn" style="font-size:9px;" onclick="speCycleAsset('${a.id}')">${a.status==='done'?'↺':a.status==='inprogress'?'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>':'→'}</button>
         <button class="btn danger" style="font-size:9px;" onclick="speDeleteAsset('${a.id}')">×</button>
       </div>
     </div>`).join('')}</div>`;

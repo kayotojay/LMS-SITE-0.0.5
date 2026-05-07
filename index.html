@@ -9,50 +9,36 @@
   <link rel="stylesheet" href="css/themes.css">
   <!-- Animations, layout, components -->
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/canvas.css">
+  <link rel="stylesheet" href="css/scene-canvas.css">
   <style>
-/* ── CANVAS MODE ─────────────────────────────────── */
-#canvas-container{display:flex;flex-direction:column;width:100%;height:100%;background:var(--bg);overflow:hidden;}
-#canvas-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;z-index:10;}
-.cvs-tbtn{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:9px;padding:4px 10px;cursor:pointer;letter-spacing:.08em;border-radius:1px;transition:all .15s;white-space:nowrap;}
-.cvs-tbtn:hover{border-color:var(--accent);color:var(--accent);}
-.cvs-tbtn-active{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(200,240,74,.08)!important;}
-#canvas-vp{flex:1;position:relative;overflow:hidden;cursor:grab;background:var(--bg);background-image:radial-gradient(circle,var(--border) 1px,transparent 1px);background-size:24px 24px;}
-#canvas-vp:active{cursor:grabbing;}
-#canvas-world{position:absolute;top:0;left:0;width:0;height:0;transform-origin:0 0;}
-/* Cards */
-.cvs-card{position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius,2px);width:260px;transition:box-shadow .2s,border-color .2s;box-shadow:0 2px 12px rgba(0,0,0,.35);}
-.cvs-card:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.5);}
-.cvs-card-dragging{box-shadow:0 12px 40px rgba(0,0,0,.6);border-color:var(--accent2);opacity:.95;cursor:grabbing;}
-.cvs-card-expanded{border-color:var(--accent)!important;box-shadow:0 12px 60px rgba(200,240,74,.15),0 4px 20px rgba(0,0,0,.6)!important;transition:all .25s ease!important;}
-.cvs-card-dimmed{opacity:.25;filter:blur(1px);}
-.cvs-card-done{border-color:rgba(74,240,200,.35)!important;}
-.cvs-card-done .cvs-card-hdr{background:rgba(74,240,200,.04);}
-/* Card header */
-.cvs-card-hdr{display:flex;align-items:center;gap:7px;padding:9px 10px;border-bottom:1px solid var(--border);cursor:grab;user-select:none;background:var(--bg2);border-radius:var(--radius,2px) var(--radius,2px) 0 0;}
-.cvs-card-hdr:active{cursor:grabbing;}
-.cvs-badge{font-size:8px;padding:2px 5px;border-radius:1px;letter-spacing:.08em;flex-shrink:0;}
-.cvs-title{font-size:10px;color:var(--text);flex:1;letter-spacing:.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.cvs-prog{font-size:9px;color:var(--text3);flex-shrink:0;letter-spacing:.05em;}
-.cvs-prog-done{color:var(--accent2)!important;font-weight:bold;}
-.cvs-expand-btn{background:none;border:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:9px;padding:1px 5px;cursor:pointer;border-radius:1px;flex-shrink:0;transition:all .15s;line-height:1.3;}
-.cvs-expand-btn:hover{border-color:var(--accent);color:var(--accent);}
-/* Progress bar */
-.cvs-pb-wrap{height:2px;background:var(--bg3);border-radius:0;}
-.cvs-pb{height:2px;background:var(--accent);border-radius:0;transition:width .3s ease;}
-.cvs-pb-done{background:var(--accent2);}
-/* Body */
-.cvs-body{padding:6px 10px 8px;max-height:300px;overflow-y:auto;overflow-x:hidden;}
-.cvs-body::-webkit-scrollbar{width:3px;}
-.cvs-body::-webkit-scrollbar-track{background:transparent;}
-.cvs-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-.cvs-task-row{display:flex;align-items:flex-start;gap:6px;padding:3px 0;border-bottom:1px solid rgba(128,128,128,.05);}
-.cvs-task-row:last-of-type{border-bottom:none;}
-.cvs-task-done .t-lbl{color:var(--text3)!important;text-decoration:line-through;}
-.cvs-add-row{display:flex;gap:5px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);}
-.cvs-add-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:12px;padding:2px 8px;cursor:pointer;border-radius:1px;line-height:1;transition:all .15s;}
-.cvs-add-btn:hover{border-color:var(--accent);color:var(--accent);}
-/* page override for canvas */
-#page-canvas.active{display:flex!important;flex-direction:column;padding:0;height:calc(100vh - 40px);}
+
+  </style>
+  <!-- Ionicons -->
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    /* Ion-icon tooltip pattern */
+    .ii-btn { position:relative; }
+    .ii-btn[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg3,#1a1a1a);
+      border: 1px solid var(--border,#333);
+      color: var(--text2,#ccc);
+      font-family: var(--font,'Share Tech Mono',monospace);
+      font-size: 9px;
+      letter-spacing: .08em;
+      padding: 3px 8px;
+      border-radius: 2px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    ion-icon { pointer-events: none; display: block; }
   </style>
   <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -69,9 +55,9 @@
     <div style="font-size:9px;color:var(--text3);letter-spacing:.3em;text-transform:uppercase;margin-bottom:24px;">Dev Hub — Sign In</div>
 
     <div id="login-db-warning" style="display:none;background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:3px;padding:14px 16px;margin-bottom:16px;letter-spacing:.06em;line-height:1.6;">
-      <div style="font-size:11px;color:var(--accent3);font-weight:bold;margin-bottom:6px;">⚠ NO DATABASE CONFIGURED</div>
+      <div style="font-size:11px;color:var(--accent3);font-weight:bold;margin-bottom:6px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>NO DATABASE CONFIGURED</div>
       <div style="font-size:9px;color:var(--text2);margin-bottom:10px;line-height:1.7;">You need a free Supabase project configured before you can create an account or sign in. It only takes ~2 minutes.</div>
-      <button onclick="openSupabaseSetup()" style="width:100%;padding:9px;background:rgba(240,74,74,.15);border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:.08em;" onmouseover="this.style.background='rgba(240,74,74,.25)'" onmouseout="this.style.background='rgba(240,74,74,.15)'">⚙ Set Up Database First →</button>
+      
     </div>
 
     <!-- Wrappable body for verification panel swapping -->
@@ -89,7 +75,7 @@
         <input id="li-username" class="modal-inp" placeholder="Username or email" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')document.getElementById('li-password').focus()">
         <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">PASSWORD</label>
         <input id="li-password" class="modal-inp" type="password" placeholder="Your password" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
-        <button onclick="doLogin()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Sign In →</button>
+        <button onclick="doLogin()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;display:flex;align-items:center;justify-content:center;gap:8px;"><ion-icon name="log-in-sharp" style="font-size:15px;"></ion-icon> Sign In</button>
         <div style="text-align:center;margin-top:12px;">
           <button onclick="showForgotPassword()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:9px;cursor:pointer;letter-spacing:.08em;" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">Forgot Password?</button>
         </div>
@@ -109,13 +95,13 @@
         <div id="ca-pw-hint" style="font-size:9px;color:var(--text3);margin-bottom:8px;min-height:14px;"></div>
         <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;text-align:left;">CONFIRM PASSWORD</label>
         <input id="ca-password2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:16px;">
-        <button onclick="doCreateAccount()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">Create Account →</button>
+        <button onclick="doCreateAccount()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;display:flex;align-items:center;justify-content:center;gap:8px;"><ion-icon name="person-add-sharp" style="font-size:15px;"></ion-icon> Create Account</button>
         <div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Requires a Firebase DB. Your account is stored in the shared database.</div>
       </div>
     </div><!-- end login-body-wrap -->
 
     <div style="margin-top:16px;">
-      <button onclick="openSupabaseSetup()" id="login-db-setup-btn" style="background:none;border:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:9px;padding:4px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">⚙ DB Setup</button>
+      
     </div>
   </div>
 </div>
@@ -143,7 +129,7 @@
       <div id="rs-updates-panel" style="display:none;width:280px;background:var(--bg2);border:1px solid var(--border6,var(--border));border-radius:2px;max-height:360px;overflow-y:auto;position:absolute;top:100%;left:0;z-index:100;margin-top:2px;animation:fadeUp .2s ease;box-shadow:0 8px 32px rgba(0,0,0,.4);">
         <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);">
           <div style="font-size:9px;color:var(--accent6);letter-spacing:.18em;">SITE UPDATES</div>
-          <button onclick="toggleSiteUpdates()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:11px;padding:0 2px;line-height:1;" title="Close">✕</button>
+          <button onclick="toggleSiteUpdates()" class="ii-btn" style="background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:11px;padding:0 2px;line-height:1;" title="Close"><ion-icon name="close-sharp" style="font-size:14px;"></ion-icon></button>
         </div>
         <div id="rs-updates-list" style="padding:4px 0;">
           <div style="font-size:10px;color:var(--text3);padding:14px 12px;text-align:center;letter-spacing:.06em;">Loading…</div>
@@ -151,9 +137,9 @@
       </div>
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
-      <button class="rs-btn" onclick="openRootSettings()" title="Settings" style="padding:6px 12px;">⚙ Settings</button>
-      <button class="rs-btn primary" id="rs-server-btn" onclick="openServerHub()" style="border-color:var(--accent2);color:var(--accent2);padding:6px 14px;">⚡ Server Hub</button>
-      <button class="rs-btn" onclick="openCommunity()" style="padding:6px 12px;">🌐 Community</button>
+      <button class="rs-btn ii-btn" onclick="openRootSettings()" title="Settings" style="padding:6px 10px;"><ion-icon name="settings-sharp" style="font-size:14px;"></ion-icon></button>
+      <button class="rs-btn primary ii-btn" id="rs-server-btn" onclick="openServerHub()" title="Server Hub" style="border-color:var(--accent2);color:var(--accent2);padding:6px 10px;"><ion-icon name="flash-sharp" style="font-size:14px;"></ion-icon></button>
+      <button class="rs-btn ii-btn" onclick="openCommunity()" title="Community" style="padding:6px 10px;"><ion-icon name="globe-sharp" style="font-size:14px;"></ion-icon></button>
       <button onclick="openDataDisclaimer()" style="background:none;border:1px solid rgba(240,200,74,.35);color:rgba(240,200,74,.7);font-family:var(--font);font-size:8px;padding:4px 10px;cursor:pointer;border-radius:1px;letter-spacing:.1em;transition:all .15s;" onmouseover="this.style.borderColor='rgba(240,200,74,.8)';this.style.color='rgba(240,200,74,1)'" onmouseout="this.style.borderColor='rgba(240,200,74,.35)';this.style.color='rgba(240,200,74,.7)'" title="Important — read about data storage">! Important</button>
     </div>
   </div>
@@ -166,22 +152,22 @@
   <!-- Redesigned action buttons - card style grid -->
   <div class="rs-action-grid" style="position:relative;z-index:1;animation:fadeUp .5s .1s ease both;width:100%;max-width:960px;margin-bottom:28px;">
     <button class="rs-action-card primary-card" onclick="openCreateRoot()">
-      <span class="rs-action-icon">+</span>
+      <span class="rs-action-icon"><ion-icon name="add-sharp" style="font-size:22px;"></ion-icon></span>
       <span class="rs-action-label">New Project</span>
       <span class="rs-action-sub">Start a fresh root</span>
     </button>
     <button class="rs-action-card" onclick="triggerImportRoot()">
-      <span class="rs-action-icon">↑</span>
+      <span class="rs-action-icon"><ion-icon name="cloud-upload-sharp" style="font-size:22px;"></ion-icon></span>
       <span class="rs-action-label">Import Root</span>
       <span class="rs-action-sub">Load a .lmsroot file</span>
     </button>
     <button class="rs-action-card" onclick="showExportLastManTasks()">
-      <span class="rs-action-icon">↓</span>
+      <span class="rs-action-icon"><ion-icon name="cloud-download-sharp" style="font-size:22px;"></ion-icon></span>
       <span class="rs-action-label">Starter Template</span>
       <span class="rs-action-sub">Export sample tasks</span>
     </button>
     <button class="rs-action-card" onclick="openAccountSettings()" style="--card-accent:var(--accent5);">
-      <span class="rs-action-icon" style="color:var(--accent5);">◈</span>
+      <span class="rs-action-icon" style="color:var(--accent5);"><ion-icon name="person-circle-sharp" style="font-size:22px;"></ion-icon></span>
       <span class="rs-action-label" style="color:var(--accent5);">Account</span>
       <span class="rs-action-sub">Profile, password &amp; sign out</span>
     </button>
@@ -194,7 +180,7 @@
       <div style="font-size:9px;color:var(--accent2);letter-spacing:.22em;text-transform:uppercase;">Server Projects</div>
       <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--accent2),transparent);opacity:.2;"></div>
       <div class="rs-srv-slot-bar" id="rs-slot-bar"></div>
-      <button onclick="openServerHub()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">&#9889; Hub</button>
+      <button onclick="openServerHub()" class="ii-btn" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:4px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;display:flex;align-items:center;" title="Server Hub" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="flash-sharp" style="font-size:13px;"></ion-icon></button>
     </div>
     <div style="display:flex;gap:12px;align-items:flex-start;">
       <div class="rs-srv-sidebar" id="rs-srv-sidebar"></div>
@@ -221,16 +207,26 @@
   <div id="rs-srv-members" style="display:none;"></div>
   <div id="rs-srv-presence" style="display:none;"></div>
 
-  <!-- MY SERVERS SECTION — persistent across sessions -->
+  <!-- MY SERVERS SECTION (hosted) — persistent across sessions -->
   <div id="rs-my-servers-section" style="display:none;width:100%;max-width:960px;position:relative;z-index:1;margin-bottom:28px;animation:fadeUp .4s .1s ease both;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
       <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:glowPulse 2s infinite;flex-shrink:0;"></div>
       <div style="font-size:9px;color:var(--accent);letter-spacing:.22em;text-transform:uppercase;">My Servers</div>
       <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--accent),transparent);opacity:.2;"></div>
-      <button onclick="openServerHub()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">⚡ Hub</button>
-      <button onclick="openBackupVault()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'" title="Server Backup Vault">🗄 Backups</button>
+      <button onclick="openServerHub()" class="ii-btn" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:4px 8px;cursor:pointer;border-radius:1px;display:flex;align-items:center;" title="Server Hub" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="flash-sharp" style="font-size:13px;"></ion-icon></button>
+      <button onclick="openBackupVault()" class="ii-btn" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:4px 8px;cursor:pointer;border-radius:1px;display:flex;align-items:center;" title="Server Backup Vault" onmouseover="this.style.color='var(--accent2)';this.style.borderColor='var(--accent2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="archive-sharp" style="font-size:13px;"></ion-icon></button>
     </div>
     <div id="rs-my-servers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;"></div>
+  </div>
+
+  <!-- CONNECTED SERVERS SECTION (member) — servers the user has joined as a member -->
+  <div id="rs-connected-servers-section" style="display:none;width:100%;max-width:960px;position:relative;z-index:1;margin-bottom:28px;animation:fadeUp .4s .2s ease both;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 6px var(--accent2);animation:glowPulse 2s infinite;flex-shrink:0;"></div>
+      <div style="font-size:9px;color:var(--accent2);letter-spacing:.22em;text-transform:uppercase;">Connected Servers</div>
+      <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--accent2),transparent);opacity:.2;"></div>
+    </div>
+    <div id="rs-connected-servers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;"></div>
   </div>
 
   <!-- LOCAL PROJECTS SECTION -->
@@ -262,6 +258,9 @@
 <!-- APP SHELL -->
 <div id="app-shell">
   <div class="sidebar" id="sidebar">
+    <div class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar">
+      <ion-icon name="chevron-back-outline" style="font-size:14px;"></ion-icon>
+    </div>
     <div class="logo" onclick="goHome()" title="Back to projects">
       <div class="logo-back">&#8592; Projects</div>
       <div class="logo-title" id="proj-logo-title">LMS</div>
@@ -269,42 +268,43 @@
     </div>
     <!-- Static sections -->
     <div class="nav-section">
-      <div class="nav-label">Overview</div>
-      <div class="nav-item active" onclick="nav('dash')"><div class="nav-dot" style="background:#c8f04a"></div>Dashboard</div>
+      <div class="nav-label"><span class="nav-label-text">Overview</span></div>
+      <div class="nav-item active" onclick="nav('dash')"><ion-icon name="grid-outline" class="nav-icon"></ion-icon><span class="nav-text">Dashboard</span></div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Build</div>
-      <div class="nav-item" onclick="nav('main-tasks')"><div class="nav-dot" style="background:#c8f04a"></div>Main Phases</div>
-      <div class="nav-item" onclick="nav('sub-tasks')"><div class="nav-dot" style="background:#777"></div>Sub Phases</div>
-      <div class="nav-item" id="navitem-canvas" onclick="nav('canvas');if(typeof initCanvas==='function')initCanvas(typeof _canvasType!=='undefined'?_canvasType:'main');" style="color:var(--accent2);"><div class="nav-dot" style="background:var(--accent2);"></div>Canvas Mode</div>
-      <div class="nav-item" onclick="nav('vault')"><div class="nav-dot" style="background:#a04af0"></div>Script Vault</div>
-      <div class="nav-item" onclick="nav('versions')"><div class="nav-dot" style="background:#4a9af0"></div>Versions</div>
+      <div class="nav-label"><span class="nav-label-text">Build</span></div>
+      <div class="nav-item" onclick="nav('main-tasks')"><ion-icon name="git-branch-outline" class="nav-icon"></ion-icon><span class="nav-text">Main Phases</span></div>
+      <div class="nav-item" onclick="nav('sub-tasks')"><ion-icon name="git-merge-outline" class="nav-icon"></ion-icon><span class="nav-text">Sub Phases</span></div>
+      <div class="nav-item" id="navitem-canvas" onclick="nav('canvas');if(typeof initCanvas==='function')initCanvas(typeof _canvasType!=='undefined'?_canvasType:'main');" style="color:var(--accent2);"><ion-icon name="color-wand-outline" class="nav-icon"></ion-icon><span class="nav-text">Canvas Mode</span></div>
+      <div class="nav-item" onclick="nav('vault')"><ion-icon name="code-slash-outline" class="nav-icon"></ion-icon><span class="nav-text">Script Vault</span></div>
+      <div class="nav-item" onclick="nav('versions')"><ion-icon name="git-commit-outline" class="nav-icon"></ion-icon><span class="nav-text">Versions</span></div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Build Analytics</div>
-      <div class="nav-item" onclick="nav('analytics')"><div class="nav-dot" style="background:#c8f04a"></div>Dev Time Tracker</div>
+      <div class="nav-label"><span class="nav-label-text">Build Analytics</span></div>
+      <div class="nav-item" onclick="nav('analytics')"><ion-icon name="bar-chart-outline" class="nav-icon"></ion-icon><span class="nav-text">Dev Time Tracker</span></div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Scene Editor</div>
-      <div class="nav-item" onclick="nav('scene-tree')"><div class="nav-dot" style="background:#4af0c8"></div>Scene Tree</div>
+      <div class="nav-label"><span class="nav-label-text">Scene Editor</span></div>
+      <div class="nav-item" onclick="nav('scene-tree')"><ion-icon name="git-network-outline" class="nav-icon"></ion-icon><span class="nav-text">Scene Tree</span></div>
+      <div class="nav-item" id="navitem-custom-nodes" onclick="nav('custom-nodes')"><ion-icon name="construct-outline" class="nav-icon"></ion-icon><span class="nav-text">Custom Nodes</span></div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Design</div>
-      <div class="nav-item" onclick="nav('gdd')"><div class="nav-dot" style="background:#a04af0"></div>Game Design Doc</div>
-      <div class="nav-item" onclick="nav('assets')"><div class="nav-dot" style="background:#f0a04a"></div>Asset Tracker</div>
-      <div class="nav-item" onclick="nav('bugs')"><div class="nav-dot" style="background:#f04a4a"></div>Bug Tracker</div>
+      <div class="nav-label"><span class="nav-label-text">Design</span></div>
+      <div class="nav-item" onclick="nav('gdd')"><ion-icon name="document-text-outline" class="nav-icon"></ion-icon><span class="nav-text">Game Design Doc</span></div>
+      <div class="nav-item" onclick="nav('assets')"><ion-icon name="images-outline" class="nav-icon"></ion-icon><span class="nav-text">Asset Tracker</span></div>
+      <div class="nav-item" onclick="nav('bugs')"><ion-icon name="bug-outline" class="nav-icon"></ion-icon><span class="nav-text">Bug Tracker</span></div>
     </div>
     <!-- Project section -->
     <div class="nav-section">
-      <div class="nav-label">Project</div>
-      <div class="nav-item" onclick="exportCurrentRoot()"><div class="nav-dot" style="background:#555"></div>Export Root</div>
-      <div class="nav-item" onclick="triggerImportTasks()"><div class="nav-dot" style="background:#555"></div>Import Tasks</div>
-      <div class="nav-item" onclick="nav('settings')"><div class="nav-dot" style="background:#555"></div>Settings</div>
+      <div class="nav-label"><span class="nav-label-text">Project</span></div>
+      <div class="nav-item" onclick="exportCurrentRoot()"><ion-icon name="share-outline" class="nav-icon"></ion-icon><span class="nav-text">Export Root</span></div>
+      <div class="nav-item" onclick="triggerImportTasks()"><ion-icon name="cloud-download-outline" class="nav-icon"></ion-icon><span class="nav-text">Import Tasks</span></div>
+      <div class="nav-item" onclick="nav('settings')"><ion-icon name="settings-outline" class="nav-icon"></ion-icon><span class="nav-text">Settings</span></div>
     </div>
     <!-- Server-only nav — hidden when solo -->
     <div class="nav-section" id="solo-server-nav" style="display:none;">
-      <div class="nav-label" style="color:var(--accent2);">Server</div>
-      <div class="nav-item" onclick="if(srvState.connected){nav('chat');}else{toast('Connect to a server to use Team Chat');}"><div class="nav-dot" style="background:var(--accent2);animation:glowPulse 2s infinite;"></div>Team Chat</div>
+      <div class="nav-label" style="color:var(--accent2);"><span class="nav-label-text">Server</span></div>
+      <div class="nav-item" onclick="if(srvState.connected){nav('chat');}else{toast('Connect to a server to use Team Chat');}"><ion-icon name="chatbubbles-outline" class="nav-icon" style="color:var(--accent2);animation:glowPulse 2s infinite;"></ion-icon><span class="nav-text">Team Chat</span></div>
     </div>
     <div class="sidebar-footer">
       <span id="sidebar-footer">solo dev</span>
@@ -330,19 +330,47 @@
       <!-- DASHBOARD -->
       <div class="page active" id="page-dash">
         <div class="section-hdr"><span class="section-title">DASHBOARD</span><span class="section-sub" id="dash-sub">project overview</span></div>
-        <div class="stat-grid">
-          <div class="stat-card" style="--c:#c8f04a"><div class="stat-val" id="d-done" style="color:#c8f04a">0</div><div class="stat-label">Tasks Done</div></div>
-          <div class="stat-card" style="--c:#888"><div class="stat-val" id="d-total" style="color:#888">0</div><div class="stat-label">Total Tasks</div></div>
-          <div class="stat-card" style="--c:#a04af0"><div class="stat-val" id="d-scripts" style="color:#a04af0">0</div><div class="stat-label">Scripts</div></div>
-          <div class="stat-card" style="--c:#4af0c8"><div class="stat-val" id="d-chars" style="color:#4af0c8">0</div><div class="stat-label">Characters</div></div>
+        <!-- Two-column dashboard layout -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;height:calc(100% - 60px);min-height:0;">
+          <!-- LEFT COLUMN: Stats + Progress + Assignments -->
+          <div style="display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding-right:4px;">
+            <div class="stat-grid" style="grid-template-columns:repeat(2,1fr);">
+              <div class="stat-card" style="--c:#c8f04a"><div class="stat-val" id="d-done" style="color:#c8f04a">0</div><div class="stat-label">Tasks Done</div></div>
+              <div class="stat-card" style="--c:#888"><div class="stat-val" id="d-total" style="color:#888">0</div><div class="stat-label">Total Tasks</div></div>
+              <div class="stat-card" style="--c:#a04af0"><div class="stat-val" id="d-scripts" style="color:#a04af0">0</div><div class="stat-label">Scripts</div></div>
+              <div class="stat-card" style="--c:#4af0c8"><div class="stat-val" id="d-chars" style="color:#4af0c8">0</div><div class="stat-label">Characters</div></div>
+              <div class="stat-card" style="--c:#f0a04a"><div class="stat-val" id="d-main-phases" style="color:#f0a04a">0</div><div class="stat-label">Main Phases</div></div>
+              <div class="stat-card" style="--c:#4a9ff0"><div class="stat-val" id="d-sub-phases" style="color:#4a9ff0">0</div><div class="stat-label">Sub Phases</div></div>
+            </div>
+            <div>
+              <div class="g-progress-bar"><div class="g-progress-fill" id="g-bar" style="width:0%"></div></div>
+              <div class="g-progress-label" id="g-label">overall progress</div>
+            </div>
+            <!-- Import log badge -->
+            <div id="dash-import-badge" style="display:none;background:rgba(200,240,74,.06);border:1px solid rgba(200,240,74,.2);border-radius:2px;padding:8px 12px;font-size:9px;color:var(--text2);letter-spacing:.08em;align-items:center;gap:8px;"></div>
+            <!-- Task Assignments Panel -->
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:2px;flex:1;min-height:200px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);">
+                <div style="font-size:9px;color:var(--accent5);letter-spacing:.18em;">TASK ASSIGNMENTS</div>
+                <button onclick="openTaskAssignModal()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.borderColor='var(--accent5)';this.style.color='var(--accent5)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">+ Assign</button>
+              </div>
+              <div id="dash-assignments" style="padding:8px;max-height:260px;overflow-y:auto;"></div>
+            </div>
+          </div>
+          <!-- RIGHT COLUMN: Activity Feed -->
+          <div style="display:flex;flex-direction:column;gap:0;background:var(--bg2);border:1px solid var(--border);border-radius:2px;overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+              <div style="font-size:9px;color:var(--accent);letter-spacing:.18em;">ACTIVITY FEED</div>
+              <div style="display:flex;gap:4px;">
+                <button id="af-filter-all" onclick="setActivityFilter('all')" class="af-filter-btn active" style="background:rgba(200,240,74,.1);border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:7px;padding:2px 6px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">ALL</button>
+                <button id="af-filter-task" onclick="setActivityFilter('task')" class="af-filter-btn" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:7px;padding:2px 6px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">TASKS</button>
+                <button id="af-filter-phase" onclick="setActivityFilter('phase')" class="af-filter-btn" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:7px;padding:2px 6px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">PHASES</button>
+                <button id="af-filter-assign" onclick="setActivityFilter('assign')" class="af-filter-btn" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:7px;padding:2px 6px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">ASSIGNED</button>
+              </div>
+            </div>
+            <div class="timeline" id="activity-log" style="flex:1;overflow-y:auto;padding:8px 12px;margin:0;"></div>
+          </div>
         </div>
-        <div class="g-progress-bar"><div class="g-progress-fill" id="g-bar" style="width:0%"></div></div>
-        <div class="g-progress-label" id="g-label">overall progress</div>
-        <div class="divider"></div>
-        <!-- Import log badge — shown after any import -->
-        <div id="dash-import-badge" style="display:none;background:rgba(200,240,74,.06);border:1px solid rgba(200,240,74,.2);border-radius:2px;padding:8px 12px;margin-bottom:12px;font-size:9px;color:var(--text2);letter-spacing:.08em;align-items:center;gap:8px;"></div>
-        <div class="section-hdr"><span class="section-title" style="font-size:16px">Recent Activity</span></div>
-        <div class="timeline" id="activity-log"></div>
       </div>
 
       <!-- MAIN PHASES -->
@@ -428,6 +456,13 @@
               <button class="theme-btn font-btn" onclick="setFont('slab')" data-f="slab" style="font-family:'Courier New',monospace;">Slab</button>
             </div>
             <div class="divider"></div>
+            <h3 style="margin-bottom:10px;">Nav Position</h3>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:8px;">Controls where the sidebar/nav bar sits in the project view.</div>
+            <div class="theme-grid" style="grid-template-columns:repeat(2,1fr);gap:6px;">
+              <button class="theme-btn nav-pos-btn active" onclick="setNavPos('left')" data-p="left" title="Sidebar on the left"><ion-icon name="arrow-back-outline" style="font-size:13px;display:block;margin:0 auto 3px;"></ion-icon>Left</button>
+              <button class="theme-btn nav-pos-btn" onclick="setNavPos('right')" data-p="right" title="Sidebar on the right"><ion-icon name="arrow-forward-outline" style="font-size:13px;display:block;margin:0 auto 3px;"></ion-icon>Right</button>
+            </div>
+            <div class="divider"></div>
             <h3 style="margin-bottom:10px;">Home Layout</h3>
             <div style="font-size:9px;color:var(--text3);margin-bottom:8px;">Changes card layout, spacing, and UI style of the home screen.</div>
             <div class="theme-grid" id="layout-grid">
@@ -501,30 +536,106 @@
                 </div>
                 <div class="ct-group">
                   <div style="font-size:8px;color:var(--text3);letter-spacing:.14em;margin-bottom:4px;">ACCENTS</div>
-                  <div class="ct-row"><span class="ct-lbl">Accent 1</span><input type="color" class="ct-pick" id="ct-accent" value="#c8f04a" oninput="previewCustomTheme()"></div>
-                  <div class="ct-row"><span class="ct-lbl">Accent 2</span><input type="color" class="ct-pick" id="ct-accent2" value="#4af0c8" oninput="previewCustomTheme()"></div>
+                  <div class="ct-row"><span class="ct-lbl">Primary</span><input type="color" class="ct-pick" id="ct-accent" value="#c8f04a" oninput="previewCustomTheme()"></div>
+                  <div class="ct-row"><span class="ct-lbl">Secondary</span><input type="color" class="ct-pick" id="ct-accent2" value="#4af0c8" oninput="previewCustomTheme()"></div>
                   <div class="ct-row"><span class="ct-lbl">Danger</span><input type="color" class="ct-pick" id="ct-accent3" value="#f0504a" oninput="previewCustomTheme()"></div>
                   <div class="ct-row"><span class="ct-lbl">Warning</span><input type="color" class="ct-pick" id="ct-accent4" value="#f0a84a" oninput="previewCustomTheme()"></div>
-                  <div class="ct-row"><span class="ct-lbl">Purple</span><input type="color" class="ct-pick" id="ct-accent5" value="#a04af0" oninput="previewCustomTheme()"></div>
-                  <div class="ct-row"><span class="ct-lbl">Blue</span><input type="color" class="ct-pick" id="ct-accent6" value="#4a9af0" oninput="previewCustomTheme()"></div>
+                  <div class="ct-row"><span class="ct-lbl">Extra 1</span><input type="color" class="ct-pick" id="ct-accent5" value="#a04af0" oninput="previewCustomTheme()"></div>
+                  <div class="ct-row"><span class="ct-lbl">Extra 2</span><input type="color" class="ct-pick" id="ct-accent6" value="#4a9af0" oninput="previewCustomTheme()"></div>
                 </div>
+                <!-- ICON ACCENTS -->
                 <div class="ct-group">
-                  <div style="font-size:8px;color:var(--text3);letter-spacing:.14em;margin-bottom:6px;">LIVE PREVIEW</div>
-                  <div id="ct-preview-card" style="background:var(--ct-bg2,#0d0f18);border:1px solid var(--ct-border,#1f2438);border-radius:3px;padding:10px;border-top:2px solid var(--ct-accent,#c8f04a);">
-                    <div style="font-family:var(--vt);font-size:16px;color:var(--ct-accent,#c8f04a);letter-spacing:.1em;margin-bottom:4px;">PROJECT</div>
-                    <div style="font-size:9px;color:var(--ct-text2,#8892b8);margin-bottom:6px;letter-spacing:.08em;">Custom Theme Preview</div>
-                    <div style="height:2px;background:linear-gradient(90deg,var(--ct-accent,#c8f04a),var(--ct-accent2,#4af0c8));border-radius:1px;margin-bottom:8px;"></div>
-                    <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                      <span style="font-size:8px;padding:2px 6px;border:1px solid var(--ct-accent2,#4af0c8);color:var(--ct-accent2,#4af0c8);border-radius:1px;">tag</span>
-                      <span style="font-size:8px;padding:2px 6px;border:1px solid var(--ct-accent3,#f0504a);color:var(--ct-accent3,#f0504a);border-radius:1px;">danger</span>
-                      <span style="font-size:8px;padding:2px 6px;border:1px solid var(--ct-accent4,#f0a84a);color:var(--ct-accent4,#f0a84a);border-radius:1px;">warn</span>
+                  <div style="font-size:8px;color:var(--text3);letter-spacing:.14em;margin-bottom:2px;">ICON ACCENTS</div>
+                  <div style="font-size:8px;color:var(--text3);opacity:.7;margin-bottom:6px;line-height:1.5;">Applied live to all SVG icons across the entire app — independent of accent colours.</div>
+                  <div class="ct-row" title="Important / primary icons (node roots, camera, key nodes)">
+                    <span class="ct-lbl" style="display:flex;align-items:center;gap:4px;">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="var(--icon-hi)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                      Highlight
+                    </span>
+                    <input type="color" class="ct-pick" id="ct-icon-hi" value="#c8f04a" oninput="applyIconAccentVarsFromPickers()">
+                  </div>
+                  <div class="ct-row" title="Common / secondary icons (sprites, bodies, areas)">
+                    <span class="ct-lbl" style="display:flex;align-items:center;gap:4px;">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="var(--icon-mid)" stroke="none"><circle cx="12" cy="12" r="8"/></svg>
+                      Common
+                    </span>
+                    <input type="color" class="ct-pick" id="ct-icon-mid" value="#4af0c8" oninput="applyIconAccentVarsFromPickers()">
+                  </div>
+                  <div class="ct-row" title="Utility / quiet icons (labels, audio, UI nodes)">
+                    <span class="ct-lbl" style="display:flex;align-items:center;gap:4px;">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="var(--icon-dim)" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                      Utility
+                    </span>
+                    <input type="color" class="ct-pick" id="ct-icon-dim" value="#4a5278" oninput="applyIconAccentVarsFromPickers()">
+                  </div>
+                  <button class="btn" style="width:100%;font-size:8px;margin-top:6px;padding:3px;" onclick="resetIconAccentVars();document.getElementById('ct-icon-hi').value='#c8f04a';document.getElementById('ct-icon-mid').value='#4af0c8';document.getElementById('ct-icon-dim').value='#4a5278';">Reset to Theme Defaults</button>
+                </div>
+                <div class="ct-group" style="grid-column:1/-1;">
+                  <div style="font-size:8px;color:var(--text3);letter-spacing:.14em;margin-bottom:6px;">LIVE PREVIEW — full app layout</div>
+                  <!-- Full mini-app preview -->
+                  <div id="ct-preview-app" style="border:1px solid var(--ct-border2,#2e354f);border-radius:3px;overflow:hidden;height:220px;display:flex;font-family:var(--font);">
+                    <!-- Sidebar -->
+                    <div style="width:90px;background:var(--ct-bg2,#0d0f18);border-right:1px solid var(--ct-border,#1f2438);display:flex;flex-direction:column;padding:8px 0;flex-shrink:0;">
+                      <div style="font-family:var(--vt,'VT323',monospace);font-size:14px;color:var(--ct-accent,#c8f04a);letter-spacing:.12em;padding:0 8px 8px;border-bottom:1px solid var(--ct-border,#1f2438);margin-bottom:6px;">LMS</div>
+                      <div style="padding:5px 8px;font-size:8px;color:var(--ct-accent,#c8f04a);background:color-mix(in srgb, var(--ct-accent,#c8f04a) 10%, transparent);border-left:2px solid var(--ct-accent,#c8f04a);letter-spacing:.08em;">HOME</div>
+                      <div style="padding:5px 8px;font-size:8px;color:var(--ct-text2,#8892b8);letter-spacing:.08em;">PROJECTS</div>
+                      <div style="padding:5px 8px;font-size:8px;color:var(--ct-text2,#8892b8);letter-spacing:.08em;">SERVERS</div>
+                      <div style="padding:5px 8px;font-size:8px;color:var(--ct-text2,#8892b8);letter-spacing:.08em;">SETTINGS</div>
+                      <div style="flex:1;"></div>
+                      <div style="padding:5px 8px;font-size:8px;color:var(--ct-text3,#4a5278);letter-spacing:.06em;">v1.2.0</div>
+                    </div>
+                    <!-- Main area -->
+                    <div style="flex:1;background:var(--ct-bg,#07080d);overflow:hidden;display:flex;flex-direction:column;">
+                      <!-- Topbar -->
+                      <div style="background:var(--ct-bg2,#0d0f18);border-bottom:1px solid var(--ct-border,#1f2438);padding:6px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                        <div style="font-size:9px;color:var(--ct-text,#d4d8f0);flex:1;letter-spacing:.1em;">MY PROJECTS</div>
+                        <div style="font-size:8px;padding:2px 7px;background:var(--ct-accent,#c8f04a);color:var(--ct-bg,#07080d);border-radius:2px;cursor:pointer;">+ NEW</div>
+                        <div style="font-size:8px;padding:2px 7px;border:1px solid var(--ct-border2,#2e354f);color:var(--ct-text2,#8892b8);border-radius:2px;">FILTER</div>
+                      </div>
+                      <!-- Content -->
+                      <div style="flex:1;padding:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;overflow:hidden;">
+                        <!-- Card 1 -->
+                        <div style="background:var(--ct-bg2,#0d0f18);border:1px solid var(--ct-border,#1f2438);border-top:2px solid var(--ct-accent,#c8f04a);border-radius:2px;padding:7px;">
+                          <div style="font-size:9px;color:var(--ct-text,#d4d8f0);margin-bottom:3px;letter-spacing:.06em;">GAME_JAM</div>
+                          <div style="font-size:8px;color:var(--ct-text3,#4a5278);margin-bottom:5px;">Godot 4.3</div>
+                          <div style="height:1px;background:linear-gradient(90deg,var(--ct-accent,#c8f04a),transparent);margin-bottom:5px;"></div>
+                          <div style="display:flex;gap:3px;">
+                            <span style="font-size:7px;padding:1px 4px;border:1px solid var(--ct-accent2,#4af0c8);color:var(--ct-accent2,#4af0c8);border-radius:1px;">active</span>
+                            <span style="font-size:7px;padding:1px 4px;border:1px solid var(--ct-accent4,#f0a84a);color:var(--ct-accent4,#f0a84a);border-radius:1px;">jam</span>
+                          </div>
+                        </div>
+                        <!-- Card 2 -->
+                        <div style="background:var(--ct-bg2,#0d0f18);border:1px solid var(--ct-border,#1f2438);border-top:2px solid var(--ct-accent2,#4af0c8);border-radius:2px;padding:7px;">
+                          <div style="font-size:9px;color:var(--ct-text,#d4d8f0);margin-bottom:3px;letter-spacing:.06em;">PLATFORMER</div>
+                          <div style="font-size:8px;color:var(--ct-text3,#4a5278);margin-bottom:5px;">Unity 2023</div>
+                          <div style="height:1px;background:linear-gradient(90deg,var(--ct-accent2,#4af0c8),transparent);margin-bottom:5px;"></div>
+                          <div style="display:flex;gap:3px;">
+                            <span style="font-size:7px;padding:1px 4px;border:1px solid var(--ct-accent5,#a04af0);color:var(--ct-accent5,#a04af0);border-radius:1px;">wip</span>
+                          </div>
+                        </div>
+                        <!-- Card 3 -->
+                        <div style="background:var(--ct-bg3,#131622);border:1px solid var(--ct-border2,#2e354f);border-radius:2px;padding:7px;opacity:.7;">
+                          <div style="font-size:9px;color:var(--ct-text2,#8892b8);margin-bottom:3px;letter-spacing:.06em;">PROTO_01</div>
+                          <div style="font-size:8px;color:var(--ct-text3,#4a5278);margin-bottom:5px;">Godot 3.5</div>
+                          <div style="height:1px;background:var(--ct-border2,#2e354f);margin-bottom:5px;"></div>
+                          <span style="font-size:7px;padding:1px 4px;border:1px solid var(--ct-accent3,#f0504a);color:var(--ct-accent3,#f0504a);border-radius:1px;">archived</span>
+                        </div>
+                      </div>
+                      <!-- Status bar -->
+                      <div style="background:var(--ct-bg4,#191d2e);border-top:1px solid var(--ct-border,#1f2438);padding:3px 10px;display:flex;gap:10px;flex-shrink:0;">
+                        <span style="font-size:7px;color:var(--ct-accent,#c8f04a);letter-spacing:.1em;">3 PROJECTS</span>
+                        <span style="font-size:7px;color:var(--ct-text3,#4a5278);">|</span>
+                        <span style="font-size:7px;color:var(--ct-text3,#4a5278);letter-spacing:.08em;">LAST SYNC: NOW</span>
+                        <div style="flex:1;"></div>
+                        <span style="font-size:7px;color:var(--ct-accent6,#4a9af0);letter-spacing:.08em;">● ONLINE</span>
+                      </div>
                     </div>
                   </div>
-                  <div style="margin-top:8px;display:flex;gap:4px;align-items:center;">
+                  <div style="margin-top:6px;display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
                     <div id="ct-accent-swatches" style="display:flex;gap:3px;flex:1;flex-wrap:wrap;"></div>
                   </div>
                   <div style="margin-top:8px;">
-                    <button class="btn accent" onclick="applyCustomTheme()" style="width:100%;margin-bottom:4px;">▶ Apply Now</button>
+                    <button class="btn accent" onclick="applyCustomTheme()" style="width:100%;margin-bottom:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>Apply Now</button>
                     <div style="display:flex;gap:4px;">
                       <input id="ct-save-name" class="modal-inp" placeholder="Name your theme..." style="flex:1;font-size:10px;margin-bottom:0;">
                       <button class="btn" onclick="saveCustomTheme()" style="white-space:nowrap;">Save</button>
@@ -535,6 +646,12 @@
                   </div>
                 </div>
               </div>
+
+              <!-- LOAD FROM PRESET -->
+              <div class="divider" style="margin:12px 0 8px;"></div>
+              <div style="font-size:9px;color:var(--text3);letter-spacing:.14em;margin-bottom:6px;">LOAD FROM PRESET</div>
+              <div style="font-size:8px;color:var(--text3);opacity:.7;margin-bottom:8px;line-height:1.5;">Start from any built-in theme — loads all its colours into the pickers so you can tweak from there.</div>
+              <div id="ct-preset-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;max-height:160px;overflow-y:auto;"></div>
 
               <!-- SAVED CUSTOM THEMES -->
               <div class="divider" style="margin:12px 0 8px;"></div>
@@ -660,6 +777,7 @@
           <button class="btn" id="st-add-node-btn" onclick="openAddNodeModal()" disabled style="opacity:.4;">Add Node</button>
           <button class="btn" id="st-del-node-btn" onclick="deleteSelectedNode()" style="color:var(--accent3);opacity:.4;" disabled>Remove Node</button>
           <button class="btn" onclick="exportSceneTree()">Export</button>
+          <button class="btn" style="border-color:var(--accent2);color:var(--accent2);" onclick="if(activeSceneId)openSceneCanvas(activeSceneId);else toast('Select a scene first')">⬡ Canvas Mode</button>
         </div>
         <div class="scene-layout">
           <!-- File manager / scene list -->
@@ -682,7 +800,20 @@
         </div>
       </div>
 
-      <!-- GAME DESIGN DOC PAGE -->
+      <!-- CUSTOM NODES PAGE -->
+      <div class="page" id="page-custom-nodes">
+        <div class="section-hdr"><span class="section-title">CUSTOM NODES</span><span class="section-sub">create, edit &amp; share custom node templates</span></div>
+        <div class="toolbar">
+          <button class="btn accent" onclick="openNewCustomNodeModal()">+ New Custom Node</button>
+          <button class="btn" onclick="exportAllCustomNodes()">Export All</button>
+          <button class="btn" onclick="importCustomNodes()">Import</button>
+        </div>
+        <div style="padding:0 16px 16px;">
+          <div id="custom-nodes-list"></div>
+        </div>
+      </div>
+
+            <!-- GAME DESIGN DOC PAGE -->
       <div class="page" id="page-gdd">
         <div class="section-hdr"><span class="section-title">GAME DESIGN DOC</span><span class="section-sub">gdd &amp; concept docs</span></div>
         <div class="toolbar">
@@ -744,8 +875,10 @@
       <div class="page" id="page-chat" style="display:none;flex-direction:column;height:calc(100vh - 90px);">
         <div class="section-hdr" style="flex-shrink:0;"><span class="section-title" style="color:var(--accent2);">TEAM CHAT</span><span class="section-sub">server communication</span></div>
         <div id="solo-chat-msgs" class="srv-chat-msgs" style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:2px;min-height:0;"></div>
+        <!-- Typing indicator -->
+        <div id="solo-typing-indicator" style="display:none;font-size:9px;color:var(--text3);letter-spacing:.06em;padding:3px 10px;min-height:18px;font-style:italic;animation:glowPulse 1.5s infinite;"></div>
         <div class="srv-chat-inp-row" style="padding:10px 0 0;flex-shrink:0;">
-          <input id="solo-chat-inp" class="add-inp" placeholder="Message the team…" style="flex:1;" onkeydown="if(event.key==='Enter')sendSoloSrvMsg()">
+          <input id="solo-chat-inp" class="add-inp" placeholder="Message the team…" style="flex:1;" onkeydown="handleChatInput(event);if(event.key==='Enter')sendSoloSrvMsg()">
           <button onclick="sendSoloSrvMsg()" class="add-btn">Send</button>
         </div>
       </div>
@@ -762,16 +895,39 @@
 
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);">
-      <div style="font-family:var(--vt);font-size:22px;letter-spacing:.15em;color:var(--accent2);">⚡ SERVER HUB</div>
-      <button onclick="closeServerHub()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;font-family:var(--font);padding:2px 8px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">✕</button>
+      <div style="font-family:var(--vt);font-size:22px;letter-spacing:.15em;color:var(--accent2);display:flex;align-items:center;gap:8px;"><ion-icon name="flash-sharp" style="font-size:20px;"></ion-icon> SERVER HUB</div>
+      <button onclick="closeServerHub()" class="ii-btn" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;font-family:var(--font);padding:4px 8px;display:flex;align-items:center;" title="Close" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'"><ion-icon name="close-sharp" style="font-size:18px;"></ion-icon></button>
     </div>
 
     <!-- Status bar -->
     <div style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
       <div id="srv-status-dot" style="width:8px;height:8px;border-radius:50%;background:#444;flex-shrink:0;"></div>
       <div id="srv-status-txt" style="font-size:10px;color:var(--text2);letter-spacing:.06em;flex:1;min-width:0;"></div>
-      <button id="srv-db-setup-btn" onclick="openSupabaseSetup()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.08em;flex-shrink:0;">⚙ DB Setup</button>
+      
       <button id="srv-disconnect-btn" onclick="disconnectServer()" style="display:none;background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.08em;flex-shrink:0;">Disconnect</button>
+    </div>
+
+    <!-- Ghost-account warning banner (shown when session exists but account is missing from DB) -->
+    <div id="srv-ghost-account-warning" style="display:none;background:rgba(240,160,40,.08);border-bottom:1px solid rgba(240,160,40,.35);padding:14px 20px;">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div style="font-size:18px;flex-shrink:0;margin-top:1px;color:rgba(240,160,40,1);"><ion-icon name="warning-sharp" style="font-size:20px;"></ion-icon></div>
+        <div style="flex:1;">
+          <div style="font-family:var(--vt);font-size:11px;color:rgba(240,170,40,1);letter-spacing:.12em;margin-bottom:5px;">ACCOUNT NOT FOUND IN DATABASE</div>
+          <div style="font-size:10px;color:var(--text2);line-height:1.7;margin-bottom:10px;">
+            Your local session exists but <strong style="color:var(--text);">this account has no matching record in the database</strong>. 
+            This can happen after a database reset, a migration, or a login mishap.<br>
+            <span style="color:rgba(240,160,40,.85);">Your server data and projects may be inaccessible or lost if you continue without action.</span>
+          </div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;">
+            RECOMMENDED: Back up any projects you can still access, then sign out and create a fresh account.
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="openServerBackup&&openServerBackup()" class="ii-btn" style="background:rgba(240,160,40,.15);border:1px solid rgba(240,160,40,.5);color:rgba(240,170,40,1);font-family:var(--font);font-size:9px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.08em;display:flex;align-items:center;gap:6px;" title="Back Up Projects" onmouseover="this.style.background='rgba(240,160,40,.25)'" onmouseout="this.style.background='rgba(240,160,40,.15)'"><ion-icon name="cloud-download-sharp" style="font-size:13px;"></ion-icon> Back Up Projects</button>
+            <button onclick="doLogout&&doLogout()" class="ii-btn" style="background:rgba(240,74,74,.1);border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:9px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.08em;display:flex;align-items:center;gap:6px;" title="Sign Out &amp; Remake Account" onmouseover="this.style.background='rgba(240,74,74,.2)'" onmouseout="this.style.background='rgba(240,74,74,.1)'"><ion-icon name="log-out-sharp" style="font-size:13px;"></ion-icon> Sign Out &amp; Remake</button>
+            <button onclick="document.getElementById('srv-ghost-account-warning').style.display='none'" class="ii-btn" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.08em;display:flex;align-items:center;gap:5px;" title="Dismiss warning" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'"><ion-icon name="close-circle-sharp" style="font-size:13px;"></ion-icon> Dismiss</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Active server panel -->
@@ -780,7 +936,7 @@
         <div id="srv-active-name" style="font-family:var(--vt);font-size:16px;letter-spacing:.12em;color:var(--accent2);"></div>
         <div id="srv-active-id-wrap" style="display:none;align-items:center;gap:5px;font-size:9px;color:var(--text3);">
           ID: <span id="srv-active-id" style="color:var(--accent);letter-spacing:.1em;"></span>
-          <button onclick="copyServerInvite()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:1px 7px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">⧉ Invite</button>
+          <button onclick="copyServerInvite()" class="ii-btn" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:3px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;display:flex;align-items:center;gap:4px;" title="Copy Invite Code" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'"><ion-icon name="link-sharp" style="font-size:12px;"></ion-icon> Invite</button>
         </div>
       </div>
       <!-- Meta info panel -->
@@ -788,7 +944,7 @@
         <div id="srv-meta-desc" style="color:var(--text2);line-height:1.6;margin-bottom:6px;"></div>
         <div id="srv-meta-tags" style="display:none;gap:4px;flex-wrap:wrap;margin-bottom:6px;"></div>
         <div id="srv-meta-footer" style="display:flex;gap:8px;flex-wrap:wrap;font-size:9px;color:var(--text3);"></div>
-        <button id="srv-edit-meta-btn" onclick="openEditServerMeta()" style="display:none;margin-top:8px;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">✎ Edit Info</button>
+        <button id="srv-edit-meta-btn" onclick="openEditServerMeta()" class="ii-btn" style="display:none;margin-top:8px;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:4px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;display:none;align-items:center;gap:5px;" title="Edit Server Info" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="create-sharp" style="font-size:12px;"></ion-icon> Edit Info</button>
       </div>
       <!-- Members -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -804,8 +960,8 @@
       <div id="srv-projects-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
       <!-- Host controls -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-        <button id="srv-change-pw-btn" onclick="promptChangeServerPassword()" style="display:none;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">🔑 Change Password</button>
-        <button id="srv-delete-server-btn" onclick="confirmDeleteServer()" style="display:none;background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">⚠ Delete Server</button>
+        <button id="srv-change-pw-btn" onclick="promptChangeServerPassword()" class="ii-btn" style="display:none;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:4px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;align-items:center;gap:5px;" title="Change Server Password" onmouseover="this.style.color='var(--accent4)';this.style.borderColor='var(--accent4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'"><ion-icon name="key-sharp" style="font-size:12px;"></ion-icon> Change Password</button>
+        <button id="srv-delete-server-btn" onclick="confirmDeleteServer()" class="ii-btn" style="display:none;background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:4px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;align-items:center;gap:5px;" title="Delete Server" onmouseover="this.style.background='rgba(240,74,74,.08)'" onmouseout="this.style.background='none'"><ion-icon name="trash-sharp" style="font-size:12px;"></ion-icon> Delete Server</button>
       </div>
       <!-- Add another server toggle -->
       <div id="srv-add-another-wrap" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
@@ -821,9 +977,10 @@
     <div id="srv-lobby-panel" style="padding:16px 20px;">
       <!-- Tabs -->
       <div style="display:flex;border:1px solid var(--border);border-radius:2px;overflow:hidden;margin-bottom:16px;">
-        <button id="srv-tab-host" onclick="switchSrvTab('host')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">⚡ HOST</button>
-        <button id="srv-tab-join" onclick="switchSrvTab('join')" style="flex:1;background:var(--bg2);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">→ JOIN</button>
-        <button id="srv-tab-mine" onclick="switchSrvTab('mine')" style="flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;">☰ MY SERVERS</button>
+        <button id="srv-tab-host" onclick="switchSrvTab('host')" style="flex:1;background:linear-gradient(135deg,rgba(200,240,74,.1),rgba(74,240,200,.05));border:none;border-right:1px solid var(--border);color:var(--accent);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:6px;"><ion-icon name="flash-sharp" style="font-size:13px;"></ion-icon> HOST</button>
+        <button id="srv-tab-join" onclick="switchSrvTab('join')" style="flex:1;background:var(--bg2);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:6px;"><ion-icon name="enter-sharp" style="font-size:13px;"></ion-icon> JOIN</button>
+        <button id="srv-tab-mine" onclick="switchSrvTab('mine')" style="flex:1;background:var(--bg2);border:none;border-right:1px solid var(--border);color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:6px;"><ion-icon name="server-sharp" style="font-size:13px;"></ion-icon> MY SERVERS</button>
+        <button id="srv-tab-notifs" onclick="switchSrvTab('notifs')" style="flex:1;background:var(--bg2);border:none;color:var(--text3);font-family:var(--font);font-size:10px;padding:10px;cursor:pointer;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:6px;"><ion-icon name="notifications-sharp" style="font-size:13px;"></ion-icon> ALERTS</button>
       </div>
 
       <!-- HOST panel -->
@@ -844,7 +1001,7 @@
         <input id="host-password" class="modal-inp" type="password" placeholder="Server password" style="margin-bottom:10px;">
         <label class="modal-label">CONFIRM PASSWORD</label>
         <input id="host-password2" class="modal-inp" type="password" placeholder="Confirm password" style="margin-bottom:14px;">
-        <button onclick="hostServer()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;">⚡ Launch Server →</button>
+        <button onclick="hostServer()" class="btn accent" style="width:100%;padding:10px;font-size:11px;letter-spacing:.1em;display:flex;align-items:center;justify-content:center;gap:8px;"><ion-icon name="flash-sharp" style="font-size:14px;"></ion-icon> Launch Server</button>
       </div>
 
       <!-- JOIN panel -->
@@ -857,14 +1014,14 @@
         </div>
         <!-- Decoded badge -->
         <div id="join-decoded-badge" style="display:none;align-items:center;gap:8px;background:rgba(74,240,200,.07);border:1px solid rgba(74,240,200,.25);border-radius:2px;padding:6px 10px;margin-bottom:10px;font-size:9px;color:var(--accent2);">
-          ✓ Invite decoded — <span></span>
-          <button onclick="document.getElementById('join-decoded-badge').style.display='none';document.getElementById('join-invite-row').style.display='block';" style="margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:9px;">✕ Clear</button>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>Invite decoded — <span></span>
+          <button onclick="document.getElementById('join-decoded-badge').style.display='none';document.getElementById('join-invite-row').style.display='block';" class="ii-btn" style="margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:9px;display:flex;align-items:center;" title="Clear invite"><ion-icon name="close-sharp" style="font-size:13px;"></ion-icon></button>
         </div>
-        <label class="modal-label">HOST DATABASE URL</label>
-        <input id="join-supabase-url" class="modal-inp" placeholder="https://xxxx.supabase.co" oninput="updateJoinDbHint()" style="margin-bottom:6px;">
-        <label class="modal-label">HOST ANON KEY</label>
-        <input id="join-anon-key" class="modal-inp" placeholder="eyJ..." oninput="updateJoinDbHint()" style="margin-bottom:4px;">
-        <div id="join-db-hint" style="font-size:9px;color:var(--text3);min-height:14px;margin-bottom:10px;letter-spacing:.04em;"></div>
+        <label class="modal-label" style="display:none;">HOST DATABASE URL</label>
+        <input id="join-supabase-url" class="modal-inp" placeholder="https://xxxx.supabase.co" oninput="updateJoinDbHint()" style="display:none;">
+        <label class="modal-label" style="display:none;">HOST ANON KEY</label>
+        <input id="join-anon-key" class="modal-inp" placeholder="eyJ..." oninput="updateJoinDbHint()" style="display:none;">
+        <div id="join-db-hint" style="display:none;font-size:9px;color:var(--text3);min-height:14px;margin-bottom:10px;letter-spacing:.04em;"></div>
         <label class="modal-label">SERVER NAME</label>
         <input id="join-servername" class="modal-inp" placeholder="Exact server name" style="margin-bottom:10px;">
         <label class="modal-label">SERVER ID <span style="color:var(--text3);font-weight:normal;">(optional — use instead of name)</span></label>
@@ -872,26 +1029,59 @@
         <label class="modal-label">PASSWORD</label>
         <input id="join-password" class="modal-inp" type="password" placeholder="Server password" style="margin-bottom:14px;">
         <div style="display:flex;gap:8px;">
-          <button onclick="joinServer()" class="btn accent2" style="flex:1;padding:10px;font-size:11px;letter-spacing:.1em;">→ Join by Name</button>
-          <button onclick="joinServerById()" style="flex:1;padding:10px;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">→ Join by ID</button>
+          <button onclick="joinServer()" class="btn accent2" style="flex:1;padding:10px;font-size:11px;letter-spacing:.1em;display:flex;align-items:center;justify-content:center;gap:6px;"><ion-icon name="enter-sharp" style="font-size:14px;"></ion-icon> Join by Name</button>
+          <button onclick="joinServerById()" class="ii-btn" style="flex:1;padding:10px;background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;border-radius:1px;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:6px;" title="Join by ID" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'"><ion-icon name="id-card-sharp" style="font-size:14px;"></ion-icon> Join by ID</button>
         </div>
       </div>
 
-      <!-- MY SERVERS panel -->
+        <!-- MY SERVERS panel -->
       <div id="srv-panel-mine" style="display:none;">
         <!-- Created by me -->
         <div id="srv-created-block" style="display:none;margin-bottom:20px;">
-          <div style="font-size:8px;color:var(--accent);letter-spacing:.2em;margin-bottom:8px;">⚡ SERVERS YOU CREATED</div>
+          <div style="font-size:8px;color:var(--accent);letter-spacing:.2em;margin-bottom:8px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--icon-hi)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>SERVERS YOU CREATED</div>
           <div id="srv-created-list"></div>
+        </div>
+        <!-- Joined as member -->
+        <div id="srv-joined-block" style="display:none;margin-bottom:20px;">
+          <div style="font-size:8px;color:var(--accent2);letter-spacing:.2em;margin-bottom:8px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--icon-mid)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>SERVERS YOU JOINED</div>
+          <div id="srv-joined-list"></div>
         </div>
         <!-- Recently joined -->
         <div id="srv-recent-block" style="display:none;">
-          <div style="font-size:8px;color:var(--accent2);letter-spacing:.2em;margin-bottom:8px;">🕐 RECENTLY JOINED</div>
+          <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;margin-bottom:8px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--icon-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>RECENTLY JOINED</div>
           <div id="srv-recent-list"></div>
         </div>
         <!-- Empty state -->
         <div id="srv-mine-empty" style="display:none;text-align:center;padding:28px 0;font-size:10px;color:var(--text3);letter-spacing:.08em;">No servers yet — host or join one to get started.</div>
       </div>
+
+      <!-- NOTIFICATIONS / ALERTS panel -->
+      <div id="srv-panel-notifs" style="display:none;">
+        <!-- Host: send alert section -->
+        <div id="srv-send-alert-wrap" style="display:none;margin-bottom:16px;">
+          <div style="font-size:8px;color:var(--accent);letter-spacing:.2em;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><ion-icon name="megaphone-sharp" style="font-size:12px;"></ion-icon> BROADCAST ALERT TO MEMBERS</div>
+          <textarea id="srv-alert-msg" placeholder="Type your alert message…" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:10px;padding:8px 10px;resize:vertical;min-height:60px;outline:none;border-radius:2px;margin-bottom:8px;line-height:1.5;"></textarea>
+          <div style="display:flex;gap:6px;margin-bottom:4px;">
+            <select id="srv-alert-type" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:9px;padding:5px 8px;outline:none;">
+              <option value="info">ℹ Info</option>
+              <option value="warn">⚠ Warning</option>
+              <option value="danger">🚨 Danger</option>
+              <option value="success">✓ Success</option>
+            </select>
+            <button onclick="sendHostAlert(document.getElementById('srv-alert-msg').value.trim(),document.getElementById('srv-alert-type').value);document.getElementById('srv-alert-msg').value='';" style="background:linear-gradient(135deg,rgba(200,240,74,.12),rgba(74,240,200,.06));border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:9px;padding:5px 14px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.background='rgba(200,240,74,.2)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(200,240,74,.12),rgba(74,240,200,.06))'">Send Alert</button>
+          </div>
+          <div style="height:1px;background:var(--border);margin:12px 0;"></div>
+        </div>
+        <!-- Alert history -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:8px;color:var(--text3);letter-spacing:.2em;">SERVER ALERTS HISTORY</div>
+          <button onclick="clearServerAlerts()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent3)';this.style.borderColor='var(--accent3)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border2)'">Clear All</button>
+        </div>
+        <div id="srv-alerts-history" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:10px;color:var(--text3);text-align:center;padding:20px 0;letter-spacing:.06em;">No alerts yet</div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -919,15 +1109,15 @@
 
     <!-- ── HEADER ── -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);">
-      <div style="font-family:var(--vt);font-size:20px;letter-spacing:.15em;color:var(--accent4);">⚙ DATABASE SETUP</div>
-      <button onclick="closeSupabaseSetup()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;font-family:var(--font);padding:2px 8px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">✕</button>
+      <div style="font-family:var(--vt);font-size:20px;letter-spacing:.15em;color:var(--accent4);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>DATABASE SETUP</div>
+      <button onclick="closeSupabaseSetup()" class="ii-btn" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;font-family:var(--font);padding:4px 8px;display:flex;align-items:center;" title="Close" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'"><ion-icon name="close-sharp" style="font-size:18px;"></ion-icon></button>
     </div>
 
     <!-- ── CONNECTED BANNER (hidden until DB set) ── -->
     <div id="fsm-has-url" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 22px;background:rgba(74,240,200,.07);border-bottom:1px solid rgba(74,240,200,.15);">
-      <span style="font-size:9px;color:var(--accent2);letter-spacing:.14em;">✓ DATABASE CONFIGURED</span>
+      <span style="font-size:9px;color:var(--accent2);letter-spacing:.14em;display:flex;align-items:center;gap:5px;"><ion-icon name="checkmark-circle-sharp" style="font-size:13px;"></ion-icon> DATABASE CONFIGURED</span>
       <span id="fsm-current-url" style="font-size:9px;color:var(--text2);word-break:break-all;flex:1;"></span>
-      <button onclick="clearSupabaseUrl()" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:3px 11px;cursor:pointer;border-radius:1px;letter-spacing:.08em;white-space:nowrap;" onmouseover="this.style.background='rgba(240,74,74,.1)'" onmouseout="this.style.background='none'">⚠ Reset Config</button>
+      <button onclick="clearSupabaseUrl()" class="ii-btn" style="background:none;border:1px solid var(--accent3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:4px 11px;cursor:pointer;border-radius:1px;letter-spacing:.08em;white-space:nowrap;display:flex;align-items:center;gap:5px;" title="Reset database config" onmouseover="this.style.background='rgba(240,74,74,.1)'" onmouseout="this.style.background='none'"><ion-icon name="warning-sharp" style="font-size:12px;"></ion-icon> Reset Config</button>
     </div>
 
     <!-- ── SECTION: STEPS 1–5 (Account + Project) ── -->
@@ -951,7 +1141,7 @@
           <div style="font-size:9px;color:var(--text2);line-height:1.75;">
             Click <span style="color:var(--accent);">New Project</span> and set a Database Password.
             <!-- inline highlight bar -->
-            <div style="margin-top:7px;border-left:3px solid var(--accent3);padding:6px 10px;background:rgba(240,74,74,.06);font-size:8px;color:var(--accent3);letter-spacing:.06em;line-height:1.6;">⚠ SAVE THIS PASSWORD — you will need it if you ever migrate data. Choose a strong password and store it somewhere safe.</div>
+            <div style="margin-top:7px;border-left:3px solid var(--accent3);padding:6px 10px;background:rgba(240,74,74,.06);font-size:8px;color:var(--accent3);letter-spacing:.06em;line-height:1.6;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>SAVE THIS PASSWORD — you will need it if you ever migrate data. Choose a strong password and store it somewhere safe.</div>
           </div>
         </div>
 
@@ -985,7 +1175,7 @@
         <!-- Fresh -->
         <div id="sql-panel-fresh" style="display:block;">
           <div style="border-left:3px solid var(--accent3);background:rgba(240,74,74,.06);padding:8px 12px;">
-            <div style="font-size:8px;color:var(--accent3);letter-spacing:.1em;margin-bottom:3px;">⚠ WARNING — DESTRUCTIVE OPERATION</div>
+            <div style="font-size:8px;color:var(--accent3);letter-spacing:.1em;margin-bottom:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>WARNING — DESTRUCTIVE OPERATION</div>
             <div style="font-size:8px;color:var(--text3);line-height:1.65;">This script drops ALL LMS tables first, then rebuilds from scratch. Every server, member, project and chat message will be permanently deleted. Use this only on a brand-new project or when you deliberately want to wipe everything.</div>
           </div>
           <div id="sql-fresh-loading" style="font-size:9px;color:var(--text3);padding:10px 12px;">Loading SQL script...</div>
@@ -1016,7 +1206,7 @@
 
       <!-- DO NOT MODIFY bar -->
       <div style="margin-left:36px;border-left:3px solid var(--accent3);background:rgba(240,74,74,.05);padding:10px 14px;">
-        <div style="font-size:8px;color:var(--accent3);letter-spacing:.1em;margin-bottom:5px;">⚠ DO NOT MODIFY THE DATABASE MANUALLY</div>
+        <div style="font-size:8px;color:var(--accent3);letter-spacing:.1em;margin-bottom:5px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>DO NOT MODIFY THE DATABASE MANUALLY</div>
         <div style="font-size:8px;color:var(--text3);line-height:1.7;">Do not rename, delete, or add columns to any LMS table in the Supabase Table Editor unless you know exactly what you are doing. Do not edit or rewrite the SQL scripts above unless you understand the full schema and all foreign key relationships. Do not drop RLS policies or disable Row Level Security — doing so exposes your entire database publicly.</div>
         <div style="margin-top:6px;font-size:8px;color:var(--text3);line-height:1.6;">The app expects a very specific table structure. Any manual changes that deviate from the script will cause errors or data loss that cannot be automatically recovered.</div>
       </div>
@@ -1034,14 +1224,14 @@
         <div style="min-width:22px;height:22px;border-radius:50%;background:rgba(74,240,200,.12);border:1px solid rgba(74,240,200,.4);color:var(--accent2);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--vt);margin-top:1px;">9</div>
         <div style="font-size:9px;color:var(--text2);line-height:1.75;">
           In the left sidebar go to <span style="color:var(--accent);">Project Settings → API</span>. Scroll down to <span style="color:var(--accent);">Legacy API Keys</span> and expand it. Copy the <span style="color:var(--accent2);">anon public key</span>.
-          <div style="margin-top:7px;border-left:3px solid var(--accent3);padding:6px 10px;background:rgba(240,74,74,.06);font-size:8px;color:var(--accent3);letter-spacing:.05em;line-height:1.6;">⚠ DO NOT copy the service_role secret — that grants full admin access to your database.</div>
+          <div style="margin-top:7px;border-left:3px solid var(--accent3);padding:6px 10px;background:rgba(240,74,74,.06);font-size:8px;color:var(--accent3);letter-spacing:.05em;line-height:1.6;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>DO NOT copy the service_role secret — that grants full admin access to your database.</div>
         </div>
       </div>
 
-      <!-- ★ Credentials landing pad -->
+      <!-- Credentials landing pad -->
       <div style="border:1px solid rgba(74,240,200,.25);border-radius:2px;background:rgba(74,240,200,.03);">
         <div style="padding:11px 16px;border-bottom:1px solid rgba(74,240,200,.15);background:rgba(74,240,200,.07);">
-          <div style="font-size:8px;color:var(--accent2);letter-spacing:.18em;">★ PASTE YOUR CREDENTIALS BELOW</div>
+          <div style="font-size:8px;color:var(--accent2);letter-spacing:.18em;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linecap="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>PASTE YOUR CREDENTIALS BELOW</div>
         </div>
         <div style="padding:18px 16px 16px;">
           <div style="margin-bottom:14px;">
@@ -1055,7 +1245,7 @@
             <div id="key-err" style="font-size:9px;color:var(--accent3);margin-top:4px;min-height:13px;"></div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button id="db-save-btn" onclick="saveSupabaseUrl()" disabled style="flex:1;background:linear-gradient(135deg,rgba(240,160,74,.08),rgba(200,240,74,.05));border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:9px 16px;cursor:not-allowed;border-radius:1px;letter-spacing:.1em;">✓ Save &amp; Connect</button>
+            <button id="db-save-btn" onclick="saveSupabaseUrl()" disabled style="flex:1;background:linear-gradient(135deg,rgba(240,160,74,.08),rgba(200,240,74,.05));border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:9px 16px;cursor:not-allowed;border-radius:1px;letter-spacing:.1em;display:flex;align-items:center;justify-content:center;gap:7px;"><ion-icon name="checkmark-sharp" style="font-size:13px;"></ion-icon> Save &amp; Connect</button>
             <button onclick="closeSupabaseSetup()" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:9px;padding:9px 14px;cursor:pointer;border-radius:1px;letter-spacing:.08em;" onmouseover="this.style.borderColor='var(--border)';this.style.color='var(--text2)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">Cancel</button>
           </div>
         </div>
@@ -1068,7 +1258,9 @@
 <!-- ============================================================ -->
 <!-- JS Modules — loaded in dependency order, init.js MUST be last -->
 <!-- ============================================================ -->
+<script src="js/supabase.js"></script>
 <script src="js/config.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/roots.js"></script>
 <script src="js/updates.js"></script>
@@ -1077,10 +1269,10 @@
 <script src="js/nav.js"></script>
 <script src="js/analytics.js"></script>
 <script src="js/scene.js"></script>
+<script src="js/scene-canvas.js"></script>
 <script src="js/gdd.js"></script>
 <script src="js/assets.js"></script>
 <script src="js/bugs.js"></script>
-<script src="js/supabase.js"></script>
 <script src="js/account.js"></script>
 <script src="js/ratelimit.js"></script>
 <script src="js/db-adapter.js"></script>
@@ -1089,6 +1281,7 @@
 <script src="js/server-root.js"></script>
 <script src="js/sql-panel.js"></script>
 <script src="js/server-backup.js"></script>
+<script src="js/custom-nodes.js"></script>
 <script src="js/canvas.js"></script>
 <script src="js/init.js"></script>
 

@@ -14,7 +14,7 @@ const SAVED_THEMES_SK='lms_saved_themes_v1';
 let roots=[];
 let activeRootId=null;
 let D=null;
-let SETTINGS={theme:'',accent:'#c8f04a',scanlines:false,compact:false,font:'mono',layout:'',customTheme:null,accentOverridden:false};
+let SETTINGS={theme:'',accent:'#c8f04a',scanlines:false,compact:false,font:'mono',layout:'',customTheme:null,accentOverridden:false,navPos:'left'};
 
 // =====================================================
 // THEME DEFINITIONS — used for swatch rendering

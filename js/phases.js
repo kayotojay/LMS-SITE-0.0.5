@@ -34,15 +34,48 @@ function buildPhaseCard(ph,storeKey){
       if(ps.removed.includes(i))return;const key=ph.id+'-t'+i;
       const row=document.createElement('div');row.className='task-row';
       const lbl=document.createElement('span');lbl.className='t-lbl'+(ps.checks[key]?' done':'');lbl.textContent=t;
-      const cbx=mkCheckbox(key,ps.checks,ph,(checked)=>{lbl.classList.toggle('done',checked);if(checked)logActivity('Completed: '+t.substring(0,42),ph.color);countUpdate();});
+      const cbx=mkCheckbox(key,ps.checks,ph,(checked)=>{lbl.classList.toggle('done',checked);logActivity((checked?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Completed: ':'↩ Unchecked: ')+t.substring(0,42),ph.color);countUpdate();});
       lbl.addEventListener('click',()=>cbx.click());
-      const xb=document.createElement('button');xb.className='xbtn';xb.textContent='×';xb.addEventListener('click',()=>{if(!ps.removed.includes(i))ps.removed.push(i);delete ps.checks[key];save();renderBody();countUpdate();updateGlobal();});
+      const xb=document.createElement('button');xb.className='xbtn';xb.textContent='×';xb.addEventListener('click',()=>{
+      if(!ps.removed.includes(i)) ps.removed.push(i);
+      delete ps.checks[key];
+      logActivity('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>Task removed: '+t.substring(0,42),ph.color);
+      save(); renderBody(); countUpdate(); updateGlobal();
+      const remaining=[...(ph.tasks||[]).filter((_,j)=>!ps.removed.includes(j)),...(ps.custom||[])];
+      if(!remaining.length){
+        openModal('Empty Phase',`<p style="color:var(--text2);font-size:13px;"><strong>${escHtml(ph.title)}</strong> has no tasks left. Delete the phase?</p>`,
+          [{label:'Keep it',action:()=>closeModal()},{label:'Delete phase',cls:'btn danger',action:()=>{
+            closeModal();
+            D.customPhases[ph._subPhase?'sub':'main']=D.customPhases[ph._subPhase?'sub':'main'].filter(x=>x.id!==ph.id);
+            logActivity('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>Phase deleted: '+ph.title,'#f04a4a');
+            save(); buildPhaseGrids(); updateGlobal();
+          }}]
+        );
+      }
+    });
+      
       row.appendChild(cbx);row.appendChild(lbl);row.appendChild(xb);wrap.appendChild(row);
     });
     if(ps.custom.length){const cl=document.createElement('div');cl.className='sec-head';cl.style.marginTop='8px';cl.textContent='Custom';wrap.appendChild(cl);
       ps.custom.forEach((t,i)=>{const key=ph.id+'-c'+i;const row=document.createElement('div');row.className='task-row';const lbl=document.createElement('span');lbl.className='t-lbl'+(ps.checks[key]?' done':'');lbl.textContent=t;
         const cbx=mkCheckbox(key,ps.checks,ph,(checked)=>{lbl.classList.toggle('done',checked);countUpdate();});lbl.addEventListener('click',()=>cbx.click());
-        const xb=document.createElement('button');xb.className='xbtn';xb.textContent='×';xb.addEventListener('click',()=>{ps.custom.splice(i,1);delete ps.checks[key];save();renderBody();countUpdate();updateGlobal();});
+        const xb=document.createElement('button');xb.className='xbtn';xb.textContent='×';xb.addEventListener('click',()=>{
+        ps.custom.splice(i,1);
+        delete ps.checks[key];
+        logActivity('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>Task removed: '+t.substring(0,42),ph.color);
+        save(); renderBody(); countUpdate(); updateGlobal();
+        const remaining=[...(ph.tasks||[]).filter((_,j)=>!ps.removed.includes(j)),...(ps.custom||[])];
+        if(!remaining.length){
+          openModal('Empty Phase',`<p style="color:var(--text2);font-size:13px;"><strong>${escHtml(ph.title)}</strong> has no tasks left. Delete the phase?</p>`,
+            [{label:'Keep it',action:()=>closeModal()},{label:'Delete phase',cls:'btn danger',action:()=>{
+              closeModal();
+              D.customPhases[ph._subPhase?'sub':'main']=D.customPhases[ph._subPhase?'sub':'main'].filter(x=>x.id!==ph.id);
+              logActivity('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>Phase deleted: '+ph.title,'#f04a4a');
+              save(); buildPhaseGrids(); updateGlobal();
+            }}]
+          );
+        }
+      });
         row.appendChild(cbx);row.appendChild(lbl);row.appendChild(xb);wrap.appendChild(row);
       });
     }
@@ -50,7 +83,12 @@ function buildPhaseCard(ph,storeKey){
     const ar=document.createElement('div');ar.className='add-row';
     const inp=document.createElement('input');inp.type='text';inp.className='add-inp';inp.placeholder='Add task...';
     const btn=document.createElement('button');btn.className='add-btn';btn.textContent='Add';
-    btn.addEventListener('click',()=>{const v=inp.value.trim();if(!v)return;ps.custom.push(v);inp.value='';save();renderBody();countUpdate();updateGlobal();});
+    btn.addEventListener('click',()=>{
+      const v=inp.value.trim(); if(!v)return;
+      ps.custom.push(v); inp.value='';
+      logActivity('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Task added: '+v.substring(0,42)+' → '+ph.title, ph.color);
+      save(); renderBody(); countUpdate(); updateGlobal();
+    });
     inp.addEventListener('keydown',e=>{if(e.key==='Enter')btn.click();});
     ar.appendChild(inp);ar.appendChild(btn);body.appendChild(ar);countUpdate();
   }
@@ -116,7 +154,9 @@ function createCustomPhase(type){
   if(!D.customPhases)D.customPhases={main:[],sub:[]};
   D.customPhases[type].push(ph);
   document.getElementById('np-label').value='';document.getElementById('np-title').value='';
-  save();buildPhaseGrids();updateGlobal();toast('Phase added');
+  save();buildPhaseGrids();updateGlobal();
+  logActivity('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Phase created: '+title+' ('+(type==='main'?'Main':'Sub')+')', ph.color);
+  toast('Phase added');
 }
 
 function updateGlobal(){
@@ -132,6 +172,8 @@ function updateGlobal(){
   document.getElementById('d-total').textContent=tot;
   document.getElementById('d-scripts').textContent=D.scripts.length;
   document.getElementById('d-chars').textContent=D.survivors.length;
+  const mpEl=document.getElementById('d-main-phases');if(mpEl)mpEl.textContent=phases.main.length;
+  const spEl=document.getElementById('d-sub-phases');if(spEl)spEl.textContent=phases.sub.length;
   renderImportLogBadge();
 }
 

@@ -133,7 +133,7 @@ function openAccountSettings(){
       <div style="font-size:9px;color:var(--text3);letter-spacing:.25em;margin-bottom:28px;">PROFILE & SETTINGS</div>
       <div id="acct-settings-body"></div>
       <div style="text-align:center;margin-top:20px;">
-        <button onclick="closeAccountSettings()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;">✕ Close</button>
+        <button onclick="closeAccountSettings()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Close</button>
       </div>
     </div>`;
   document.body.appendChild(m);
@@ -163,7 +163,7 @@ function openDataDisclaimer(){
             Projects you create locally are stored in <span style="color:var(--accent);font-family:var(--vt);">this browser's localStorage</span> only. They are tied to the account you are logged into <em>on this specific browser and machine</em>.
           </div>
           <div style="margin-top:8px;font-size:9px;color:rgba(240,200,74,.7);line-height:1.6;">
-            ⚠ Switching to a different browser, a different device, or logging into a new account will <strong style="color:rgba(240,200,74,.95);">not</strong> carry over your local projects. They stay on the machine and browser they were created on.
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Switching to a different browser, a different device, or logging into a new account will <strong style="color:rgba(240,200,74,.95);">not</strong> carry over your local projects. They stay on the machine and browser they were created on.
           </div>
         </div>
 
@@ -173,7 +173,7 @@ function openDataDisclaimer(){
             Server backups and timed snapshots are also stored <span style="color:var(--accent);font-family:var(--vt);">locally per browser</span>. A backup taken in Chrome will not appear in Firefox, and vice versa — even on the same account.
           </div>
           <div style="margin-top:8px;font-size:9px;color:rgba(240,200,74,.7);line-height:1.6;">
-            ⚠ Always use the same browser if you want your backup history to remain accessible.
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Always use the same browser if you want your backup history to remain accessible.
           </div>
         </div>
 
@@ -183,21 +183,21 @@ function openDataDisclaimer(){
             Your account, servers, and server projects are stored in the <span style="color:var(--accent2);font-family:var(--vt);">Supabase database</span> you have configured — these are accessible from any browser or device as long as you use the same DB credentials.
           </div>
           <div style="margin-top:8px;font-size:9px;color:rgba(240,74,74,.8);line-height:1.6;">
-            ⚠ When switching accounts, always ensure the correct Supabase URL and anon key are configured. Using the wrong database on a different account can create duplicate entries, cause data conflicts, or trigger unintended deletions.
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>When switching accounts, always ensure the correct Supabase URL and anon key are configured. Using the wrong database on a different account can create duplicate entries, cause data conflicts, or trigger unintended deletions.
           </div>
         </div>
 
         <div style="background:rgba(74,240,200,.04);border:1px solid rgba(74,240,200,.15);border-radius:2px;padding:10px 14px;">
           <div style="font-size:9px;color:var(--text3);line-height:1.7;letter-spacing:.04em;">
-            <span style="color:var(--accent2);">✓ Safe across browsers:</span> Account login, server data, server projects, member list<br>
-            <span style="color:rgba(240,200,74,.8);">⚠ Browser-local only:</span> Local projects, server backups, pass cache, settings
+            <span style="color:var(--accent2);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Safe across browsers:</span> Account login, server data, server projects, member list<br>
+            <span style="color:rgba(240,200,74,.8);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Browser-local only:</span> Local projects, server backups, pass cache, settings
           </div>
         </div>
 
       </div>
 
       <div style="text-align:center;margin-top:22px;">
-        <button onclick="document.getElementById('data-disclaimer-modal').style.display='none'" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;">✕ Got it, close</button>
+        <button onclick="document.getElementById('data-disclaimer-modal').style.display='none'" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.08em;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Got it, close</button>
       </div>
     </div>`;
   document.body.appendChild(m);
@@ -217,7 +217,7 @@ function renderAccountSettings(){
         <div>
           <div style="font-family:var(--vt);font-size:18px;color:var(--text);">${escHtml(currentUser.displayName||currentUser.username)}</div>
           <div style="font-size:9px;color:var(--text3);">@${escHtml(currentUser.username)}</div>
-          ${currentUser.email?`<div style="font-size:9px;color:var(--accent2);margin-top:2px;">✉ ${escHtml(currentUser.email)}</div>`:''}
+          ${currentUser.email?`<div style="font-size:9px;color:var(--accent2);margin-top:2px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg> ${escHtml(currentUser.email)}</div>`:''}
         </div>
       </div>
       <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">DISPLAY NAME</label>
@@ -225,7 +225,7 @@ function renderAccountSettings(){
         <input id="acct-dispname-inp" class="modal-inp" style="flex:1;margin:0;" value="${escHtml(currentUser.displayName||currentUser.username)}" placeholder="Display name">
         <button onclick="saveDisplayName()" class="btn accent" style="white-space:nowrap;">Save</button>
       </div>
-      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">EMAIL ${currentUser.email?'<span style="color:var(--accent);font-size:8px;">✓ LINKED</span>':'<span style="color:var(--text3);font-size:8px;">(not linked)</span>'} <span style="color:var(--text3);font-size:8px;">${emailRl.used}/${emailRl.max} changes in 25 days</span></label>
+      <label style="font-size:9px;color:var(--text3);letter-spacing:.12em;display:block;margin-bottom:4px;">EMAIL ${currentUser.email?'<span style="color:var(--accent);font-size:8px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>LINKED</span>':'<span style="color:var(--text3);font-size:8px;">(not linked)</span>'} <span style="color:var(--text3);font-size:8px;">${emailRl.used}/${emailRl.max} changes in 25 days</span></label>
       ${currentUser.email
         ? `<div style="font-size:10px;color:var(--text2);margin-bottom:8px;">${escHtml(currentUser.email)}</div>
            <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -253,12 +253,12 @@ function renderAccountSettings(){
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div style="min-width:0;flex:1;">
           <div style="font-size:11px;color:var(--text);margin-bottom:2px;">Supabase Database</div>
-          <div style="font-size:9px;color:var(--text3);word-break:break-all;margin-top:2px;">${getSrvDbUrl()?`<span style="color:var(--accent);">✓ Connected</span> <span style="color:var(--text3);">${escHtml(getSrvDbUrl())}</span>`:'<span style="color:var(--accent3);">⚠ Not configured</span>'}</div>
+          <div style="font-size:9px;color:var(--text3);word-break:break-all;margin-top:2px;"><span style="color:var(--accent);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Connected to shared database</span></div>
         </div>
-        <button onclick="closeAccountSettings();openSupabaseSetup();" style="background:none;border:1px solid var(--accent2);color:var(--accent2);font-family:var(--font);font-size:9px;padding:5px 12px;cursor:pointer;border-radius:1px;letter-spacing:.06em;white-space:nowrap;" onmouseover="this.style.background='rgba(74,240,200,.1)'" onmouseout="this.style.background='none'">⚙ Change DB</button>
+        
       </div>
             <div style="margin-top:10px;padding:8px 10px;background:rgba(240,200,74,.06);border:1px solid rgba(240,200,74,.18);border-radius:2px;font-size:8px;color:rgba(240,200,74,.75);line-height:1.7;letter-spacing:.04em;">
-        ⚠ Each account should use the same Supabase project URL and key across all browsers. Using a different DB on the same account will create duplicate entries and may cause unexpected deletions or data conflicts.
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Each account should use the same Supabase project URL and key across all browsers. Using a different DB on the same account will create duplicate entries and may cause unexpected deletions or data conflicts.
       </div>
     </div>
     <!-- Danger zone -->
@@ -307,11 +307,11 @@ function promptChangePassword(){
     <input id="pcp-new1" class="modal-inp" type="password" placeholder="New password" oninput="checkPwStrength(this.value)" style="margin-bottom:6px;">
     <div id="pcp-strength-bar" style="height:3px;border-radius:2px;background:var(--border);margin-bottom:4px;"><div id="pcp-strength-fill" style="height:3px;border-radius:2px;width:0%;transition:width .3s,background .3s;"></div></div>
     <div id="pcp-strength-hints" style="font-size:9px;color:var(--text3);margin-bottom:10px;line-height:1.8;">
-      <span id="ph-len" style="display:block;">○ At least 8 characters</span>
-      <span id="ph-upper" style="display:block;">○ Uppercase letter (A-Z)</span>
-      <span id="ph-lower" style="display:block;">○ Lowercase letter (a-z)</span>
-      <span id="ph-num" style="display:block;">○ Number (0-9)</span>
-      <span id="ph-special" style="display:block;">○ Special character (!@#$%^&*)</span>
+      <span id="ph-len" style="display:block;"><svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='var(--text3)' stroke-width='1.5' style='display:inline-block;vertical-align:middle;margin-right:3px;'><circle cx='12' cy='12' r='9'/></svg>At least 8 characters</span>
+      <span id="ph-upper" style="display:block;"><svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='var(--text3)' stroke-width='1.5' style='display:inline-block;vertical-align:middle;margin-right:3px;'><circle cx='12' cy='12' r='9'/></svg>Uppercase letter (A-Z)</span>
+      <span id="ph-lower" style="display:block;"><svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='var(--text3)' stroke-width='1.5' style='display:inline-block;vertical-align:middle;margin-right:3px;'><circle cx='12' cy='12' r='9'/></svg>Lowercase letter (a-z)</span>
+      <span id="ph-num" style="display:block;"><svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='var(--text3)' stroke-width='1.5' style='display:inline-block;vertical-align:middle;margin-right:3px;'><circle cx='12' cy='12' r='9'/></svg>Number (0-9)</span>
+      <span id="ph-special" style="display:block;"><svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='var(--text3)' stroke-width='1.5' style='display:inline-block;vertical-align:middle;margin-right:3px;'><circle cx='12' cy='12' r='9'/></svg>Special character (!@#$%^&*)</span>
     </div>
     <label class="modal-label">CONFIRM NEW PASSWORD</label>
     <input id="pcp-new2" class="modal-inp" type="password" placeholder="Confirm new password" style="margin-bottom:10px;">
@@ -333,7 +333,7 @@ function promptChangePassword(){
     bumpRateLimit('pass_'+currentUser.uid,3,25);
     const newHash=await hashPass(new1);
     await fbPatch('/accounts/'+currentUser.uid,{passHash:newHash});
-    closeModal();toast('✓ Password changed successfully!');openAccountSettings();
+    closeModal();toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Password changed successfully!');openAccountSettings();
   },accent:true}]);
 }
 
@@ -349,7 +349,7 @@ function checkPwStrength(pw){
   const colors=['#f04a4a','#f04a4a','#f0a04a','#f0c84a','#c8f04a','#4af0c8'];
   const fill=document.getElementById('pcp-strength-fill');
   if(fill){fill.style.width=pct+'%';fill.style.background=colors[score]||'#4af0c8';}
-  const mark=(ok)=>ok?'<span style="color:var(--accent);">✓</span>':'○';
+  const mark=(ok)=>ok?`<span style='color:var(--accent);'><svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round'><polyline points='20 6 9 17 4 12'/></svg></span>`:`<svg width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='var(--text3)' stroke-width='1.5'><circle cx='12' cy='12' r='9'/></svg>`;
   const hints=[
     ['ph-len',mark(checks.len)+' At least 8 characters'],
     ['ph-upper',mark(checks.upper)+' Uppercase letter (A-Z)'],
@@ -374,7 +374,7 @@ function checkCaPwStrength(pw){
   if(!checks.special)hints.push('special char');
   const el=document.getElementById('ca-pw-hint');
   if(el){
-    if(score>=4){el.textContent='✓ Strong password';el.style.color='var(--accent)';}
+    if(score>=4){el.textContent='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Strong password';el.style.color='var(--accent)';}
     else if(score>=2){el.textContent='Needs: '+hints.join(', ');el.style.color='var(--accent4)';}
     else{el.textContent='Weak — needs: '+hints.join(', ');el.style.color='var(--accent3)';}
   }
@@ -399,7 +399,7 @@ async function changePassword(){
   const newHash=await hashPass(new1);
   await fbPatch('/accounts/'+currentUser.uid,{passHash:newHash});
   errEl.style.display='none';
-  toast('✓ Password changed successfully!');
+  toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Password changed successfully!');
   renderAccountSettings();
 }
 
@@ -495,7 +495,7 @@ async function submitChangeEmailVerify(email){
   currentUser.email=email;
   localStorage.setItem('lms_session',JSON.stringify(currentUser));
   document.getElementById('change-email-verify-modal').style.display='none';
-  toast('✓ Email updated to '+email);
+  toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Email updated to '+email);
   openAccountSettings();
 }
 
@@ -572,9 +572,9 @@ async function unlinkEmail(){
 
 async function confirmDeleteAccount(){
   const code=Math.floor(100000+Math.random()*900000)+'';
-  openModal('⚠ Delete Account',`
+  openModal('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Delete Account',`
     <div style="background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:2px;padding:10px 12px;margin-bottom:14px;font-size:10px;color:var(--accent3);line-height:1.7;">
-      ⚠ This permanently deletes your account <strong>@${escHtml(currentUser.username)}</strong>. You will be signed out. All your account data will be removed. This cannot be undone.
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>This permanently deletes your account <strong>@${escHtml(currentUser.username)}</strong>. You will be signed out. All your account data will be removed. This cannot be undone.
     </div>
     <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">Type: <strong style="color:var(--accent3);letter-spacing:.1em;">delete ${escHtml(code)}</strong></p>
     <input class="modal-inp" id="del-acct-inp" placeholder="Type confirmation above..." autocomplete="off">
@@ -617,7 +617,7 @@ async function submitForgotPassword(){
   const email=(document.getElementById('fp-email-inp').value||'').trim().toLowerCase();
   const errEl=document.getElementById('fp-error');
   if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){errEl.textContent='Enter a valid email.';errEl.style.display='block';return;}
-  if(!getSrvDbUrl()){errEl.textContent='Database not configured.';errEl.style.display='block';return;}
+  
   // Check account exists with this email
   const accounts=await fbGet('/accounts')||{};
   const entry=Object.values(accounts).find(a=>a.email&&a.email.toLowerCase()===email);
@@ -690,7 +690,7 @@ function checkNpStrength(pw){
   const hint=document.getElementById('np-str-hint');
   const colors=['#f04a4a','#f04a4a','#f0a04a','#f0c84a','#c8f04a','#4af0c8'];
   if(fill){fill.style.width=(score/5*100)+'%';fill.style.background=colors[score];}
-  if(hint){if(score>=4){hint.textContent='✓ Strong';hint.style.color='var(--accent)';}else{hint.textContent='Add uppercase, number, special char...';hint.style.color='var(--accent4)';}}
+  if(hint){if(score>=4){hint.textContent='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Strong';hint.style.color='var(--accent)';}else{hint.textContent='Add uppercase, number, special char...';hint.style.color='var(--accent4)';}}
 }
 
 async function submitNewPassword(){
@@ -704,5 +704,5 @@ async function submitNewPassword(){
   await fbPatch('/accounts/'+pendingResetUid,{passHash});
   pendingResetUid=null;
   resetLoginScreen();
-  toast('✓ Password reset! Sign in with your new password.');
+  toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Password reset! Sign in with your new password.');
 }

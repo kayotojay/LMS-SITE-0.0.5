@@ -11,7 +11,7 @@ loadRoots();
       currentUser=JSON.parse(session);
       // Only verify against Firebase if we actually have a DB URL configured
       // If Firebase is unreachable, we trust the local session — don't log them out
-      if(getSrvDbUrl()&&currentUser?.uid){
+      if(currentUser?.uid){
         try{
           // Look up by username — uid in localStorage may be stale/wrong on new devices
           const allAccounts=await fbGet('/accounts')||{};
@@ -23,8 +23,10 @@ loadRoots();
             currentUser.username=acc.username||currentUser.username;
             localStorage.setItem('lms_session',JSON.stringify(currentUser));
           }
-          // If acc is null: Firebase returned null but was reachable.
-          // Could be a migration or data issue — still trust the local session.
+          // If acc is null: Firebase returned null but was reachable —
+          // the account genuinely does not exist in the database.
+          // Flag this so the Server Hub can warn the user.
+          if(!acc) window._accountMissingFromDb = true;
         }catch(fbErr){
           // Firebase fetch failed (network error, CORS, etc.) — trust local session
         }
@@ -36,16 +38,29 @@ loadRoots();
     document.getElementById('root-screen-wrap').style.display='block';
     // Attempt to restore server connection from previous session
     const savedSrv=localStorage.getItem('lms_active_server');
-    if(savedSrv&&getSrvDbUrl()){
+    if(savedSrv){
       try{
         const sv=JSON.parse(savedSrv);
-        // Verify server still exists
-        const meta=await fbGet('/servers/'+sv.serverKey+'/meta');
+        // Verify server still exists — MUST use the server's own DB credentials (sv.dbUrl),
+        // NOT the member's own getSrvDbUrl(). Using the wrong DB is why members see "not found" on refresh.
+        const _restoreUrl=(CFG_URL).replace(/\/+$/,'');
+        const _restoreKey=CFG_KEY;
+        const meta=await _withServerCreds(_restoreUrl,_restoreKey,()=>fbGet('/servers/'+sv.serverKey+'/meta'));
         if(meta){
           // Re-register presence
           const isHost=!!(meta.hostId&&meta.hostId===sv.myId);
-          await fbSet('/servers/'+sv.serverKey+'/members/'+sv.myId,{name:sv.username,lastSeen:Date.now(),isHost,uid:sv.myId});
-          srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:meta.name,username:sv.username,isHost,myId:sv.myId,activeProjId:null,shortId:sv.shortId||meta.shortId||'',_dbUrl:sv.dbUrl||null,_dbKey:sv.dbKey||null};
+          const username=sv.username||(currentUser?(currentUser.displayName||currentUser.username):'Member');
+          await _withServerCreds(CFG_URL,CFG_KEY,()=>
+            fbSet('/servers/'+sv.serverKey+'/members/'+sv.myId,{
+              uid:sv.myId,server_key:sv.serverKey,name:username,displayName:username,
+              username:currentUser?.username||username,lastSeen:Date.now(),
+              isHost,email:currentUser?.email||'',activity:null,inProject:null
+            })
+          );
+          // Restore multiServers slot so the member can re-enter projects
+          const restoredSv={serverKey:sv.serverKey,serverName:meta.name,username,isHost,myId:sv.myId,shortId:sv.shortId||meta.shortId||'',dbUrl:sv.dbUrl||null,dbKey:sv.dbKey||null};
+          if(!multiServers.find(s=>s.serverKey===sv.serverKey))addMultiServer(restoredSv);
+          srvState={...srvState,connected:true,serverKey:sv.serverKey,serverName:meta.name,username,isHost,myId:sv.myId,activeProjId:null,shortId:sv.shortId||meta.shortId||'',_dbUrl:sv.dbUrl||null,_dbKey:sv.dbKey||null};
           startSrvHeartbeat();
         } else {
           localStorage.removeItem('lms_active_server');
@@ -55,12 +70,16 @@ loadRoots();
     renderRootGrid();
     updateAccountChip();
     addLogoutBtn();
-    if(getSrvDbUrl()) renderRootMyServers();
+    renderRootMyServers();
+    // If account was not found in the database, warn the user immediately
+    if(window._accountMissingFromDb){
+      setTimeout(()=>toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Account not found in database — open Server Hub for details'),800);
+    }
     // Load multi-server connections
-    if(getSrvDbUrl()) loadMultiServers().then(()=>{if(multiServers.length>0)renderRootGrid();});
+    const _priorCount=multiServers.length;loadMultiServers().then(()=>{if(multiServers.length>_priorCount)renderRootGrid();});
   } else {
     document.getElementById('login-screen').style.display='flex';
-    if(!getSrvDbUrl()||!SRV_ANON_KEY){
+    if(false){
       document.getElementById('login-db-warning').style.display='block';
       const btn=document.getElementById('login-db-setup-btn');
       if(btn){btn.style.color='var(--accent2)';btn.style.borderColor='var(--accent2)';btn.style.boxShadow='0 0 10px rgba(74,240,200,.15)';}

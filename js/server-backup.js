@@ -14,7 +14,7 @@
 // Deleting a server FREEZES both layers — they stay in storage until
 // you manually delete them from the Backup Vault.
 //
-// UI entry: 🗄 Backups button in My Servers header → openBackupVault()
+// UI entry: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Backups button in My Servers header → openBackupVault()
 // ============================================================
 
 // ── KEYS ────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ function _bakDel(key) { localStorage.removeItem(key); }
 
 // ── SNAPSHOT BUILDER ─────────────────────────────────────────
 async function _bakFetch(serverKey, serverName) {
-  const _url = srvState._dbUrl || getSrvDbUrl();
+  const _url = CFG_URL;
   const _key = srvState._dbKey || SRV_ANON_KEY;
   if (!_url) return null;
   try {
@@ -128,7 +128,7 @@ function bakSetInterval(serverKey, serverName, ms) {
   cfg.interval = ms;
   _bakSaveCfg(serverKey, cfg);
   bakStartTimers(serverKey, serverName);
-  toast(ms > 0 ? '✓ Timed backup every ' + BAK_INTERVALS.find(i=>i.ms===ms)?.label : 'Timed backups off');
+  toast(ms > 0 ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Timed backup every ' + BAK_INTERVALS.find(i=>i.ms===ms)?.label : 'Timed backups off');
 }
 
 // ── FREEZE (server deleted) ───────────────────────────────────
@@ -244,10 +244,10 @@ function _vaultRender(o) {
   o.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
       <div style="display:flex;align-items:center;gap:14px;">
-        <div style="font-family:var(--vt);font-size:22px;color:var(--accent2);letter-spacing:.1em;">🗄 BACKUP VAULT</div>
+        <div style="font-family:var(--vt);font-size:22px;color:var(--accent2);letter-spacing:.1em;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>BACKUP VAULT</div>
         <div style="font-size:8px;color:var(--text3);letter-spacing:.18em;padding-top:2px;">${sks.length} SERVER${sks.length!==1?'S':''} · LOCAL ONLY · SUPABASE-INDEPENDENT</div>
       </div>
-      <button onclick="closeBackupVault()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">✕ CLOSE</button>
+      <button onclick="closeBackupVault()" style="background:none;border:none;color:var(--text3);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:.06em;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> CLOSE</button>
     </div>
 
     <div style="flex:1;overflow-y:auto;padding:16px 24px 40px;">
@@ -257,7 +257,7 @@ function _vaultRender(o) {
 
 function _vaultEmpty() {
   return `<div style="text-align:center;padding:80px 0;color:var(--text3);">
-    <div style="font-size:28px;margin-bottom:12px;opacity:.3;">🗄</div>
+    <div style="font-size:28px;margin-bottom:12px;opacity:.3;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;opacity:.3;"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></div>
     <div style="font-size:11px;letter-spacing:.1em;">NO BACKUPS YET</div>
     <div style="font-size:9px;margin-top:8px;opacity:.5;">Host a server and backups will appear here automatically.</div>
   </div>`;
@@ -298,9 +298,9 @@ function _vaultServerBlock(r, expanded) {
             ${frozenTag}
           </div>
           <div style="font-size:9px;color:var(--text3);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap;">
-            <span>🔄 Live: ${liveAgo} · ${liveUpdates} updates</span>
-            <span>📦 ${timedCount} timed snapshot${timedCount!==1?'s':''}</span>
-            <span>🗂 ${projCount} project${projCount!==1?'s':''}</span>
+            <span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Live: ${liveAgo} · ${liveUpdates} updates</span>
+            <span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>${timedCount} timed snapshot${timedCount!==1?'s':''}</span>
+            <span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>${projCount} project${projCount!==1?'s':''}</span>
           </div>
         </div>
         <span style="color:var(--text3);font-size:12px;transition:transform .2s;${expanded?'transform:rotate(90deg)':''}">▶</span>
@@ -333,7 +333,7 @@ function _vaultExpandedContent(r) {
           ${opt.label}
         </button>`;
       }).join('')}
-    </div>` : `<div style="font-size:9px;color:var(--text3);">${isFrozen ? '⚠ Server deleted — timed backups frozen.' : 'Connect to this server as host to configure timed backups.'}</div>`;
+    </div>` : `<div style="font-size:9px;color:var(--text3);">${isFrozen ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Server deleted — timed backups frozen.' : 'Connect to this server as host to configure timed backups.'}</div>`;
 
   // ── LIVE BACKUP PANEL ──
   const livePanel = _vaultLivePanel(sk, live, isConnected, isFrozen, name);
@@ -343,7 +343,7 @@ function _vaultExpandedContent(r) {
 
   // ── DELETE ALL ──
   const deleteAll = `
-    <button onclick="bakDeleteAllForServer('${escHtml(sk)}')" style="background:none;border:1px solid rgba(240,74,74,.35);color:var(--accent3);font-family:var(--font);font-size:8px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.borderColor='var(--accent3)'" onmouseout="this.style.borderColor='rgba(240,74,74,.35)'">🗑 Delete All Backups for This Server</button>`;
+    <button onclick="bakDeleteAllForServer('${escHtml(sk)}')" style="background:none;border:1px solid rgba(240,74,74,.35);color:var(--accent3);font-family:var(--font);font-size:8px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;" onmouseover="this.style.borderColor='var(--accent3)'" onmouseout="this.style.borderColor='rgba(240,74,74,.35)'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>Delete All Backups for This Server</button>`;
 
   return `
     <div style="padding:14px 16px;display:flex;flex-direction:column;gap:16px;">
@@ -368,7 +368,7 @@ function _vaultLivePanel(sk, live, isConnected, isFrozen, name) {
     <div style="background:var(--bg3);border:1px solid ${isFrozen?'rgba(240,74,74,.2)':'rgba(74,240,200,.15)'};border-radius:2px;padding:14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
         <div>
-          <span style="font-size:8px;color:${isFrozen?'var(--accent3)':'var(--accent2)'};letter-spacing:.2em;">⚡ LIVE BACKUP</span>
+          <span style="font-size:8px;color:${isFrozen?'var(--accent3)':'var(--accent2)'};letter-spacing:.2em;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>LIVE BACKUP</span>
           <span style="font-size:8px;color:var(--text3);margin-left:10px;">Last updated: ${_fmtTs(live.ts)} · ${live.updateCount||1} total saves</span>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -397,7 +397,7 @@ function _vaultTimedPanel(sk, timed, isConnected, name) {
   return `
     <div style="background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <span style="font-size:8px;color:var(--accent);letter-spacing:.2em;">📦 TIMED SNAPSHOTS (${timed.length}/${BAK_MAX_SLOTS})</span>
+        <span style="font-size:8px;color:var(--accent);letter-spacing:.2em;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>TIMED SNAPSHOTS (${timed.length}/${BAK_MAX_SLOTS})</span>
         ${isConnected && !isFrozen ? `<button onclick="bakManualTimedSnapshot('${escHtml(sk)}','${escHtml(name)}')" style="background:none;border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:8px;padding:3px 10px;cursor:pointer;border-radius:1px;letter-spacing:.06em;">+ Take Snapshot Now</button>` : ''}
       </div>
 
@@ -421,7 +421,7 @@ function _vaultTimedRow(sk, snap, idx) {
       </div>
       <div style="display:flex;gap:5px;flex-shrink:0;">
         <button onclick="bakExportSnap('timed','${escHtml(sk)}',${idx})" style="background:none;border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">⬇ Export</button>
-        <button onclick="bakDeleteTimedSlot('${escHtml(sk)}',${idx})" style="background:none;border:1px solid rgba(240,74,74,.3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;" onmouseover="this.style.borderColor='var(--accent3)'" onmouseout="this.style.borderColor='rgba(240,74,74,.3)'">✕</button>
+        <button onclick="bakDeleteTimedSlot('${escHtml(sk)}',${idx})" style="background:none;border:1px solid rgba(240,74,74,.3);color:var(--accent3);font-family:var(--font);font-size:8px;padding:2px 8px;cursor:pointer;border-radius:1px;" onmouseover="this.style.borderColor='var(--accent3)'" onmouseout="this.style.borderColor='rgba(240,74,74,.3)'"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
     </div>`;
 }
@@ -431,7 +431,7 @@ function _vaultTimedRow(sk, snap, idx) {
 async function bakManualLiveSnapshot(sk, name) {
   toast('Refreshing live backup…');
   await bakUpdateLive(sk, name);
-  toast('✓ Live backup refreshed');
+  toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Live backup refreshed');
   _vaultCurrentServer = sk;
   _vaultRefresh();
 }
@@ -439,7 +439,7 @@ async function bakManualLiveSnapshot(sk, name) {
 async function bakManualTimedSnapshot(sk, name) {
   toast('Taking snapshot…');
   await bakTakeTimedSnapshot(sk, name, _fmtTs(Date.now()) + ' (manual)');
-  toast('✓ Snapshot saved');
+  toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Snapshot saved');
   _vaultCurrentServer = sk;
   _vaultRefresh();
 }
@@ -460,7 +460,7 @@ function bakExportSnap(type, sk, idx) {
   const ts = new Date(data.ts).toISOString().slice(0, 16).replace('T', '-').replace(':', '');
   a.href = url; a.download = `lms-${type}-backup-${safeName}-${ts}.json`; a.click();
   URL.revokeObjectURL(url);
-  toast('✓ Exported');
+  toast('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Exported');
 }
 
 function bakDeleteTimedSlot(sk, idx) {
@@ -477,7 +477,7 @@ function bakDeleteTimedSlot(sk, idx) {
 }
 
 function bakDeleteAllForServer(sk) {
-  openModal('⚠ Delete All Backups', `
+  openModal('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Delete All Backups', `
     <div style="background:rgba(240,74,74,.08);border:1px solid var(--accent3);border-radius:2px;padding:10px 12px;margin-bottom:12px;font-size:10px;color:var(--accent3);line-height:1.7;">
       This deletes ALL backup data for this server — live and all timed snapshots. Cannot be undone.
     </div>`, [

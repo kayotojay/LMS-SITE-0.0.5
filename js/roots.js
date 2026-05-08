@@ -534,7 +534,8 @@ function save(){
       activity:D.activity||[],
       survivors:D.survivors||[],
       phases:D.customPhases||{main:[],sub:[]},
-      phaseData:D.mainTasks||{}
+      phaseData:D.mainTasks||{},
+      taskAssignments:D.taskAssignments||[]
     };
     // Convert arrays to objects for Firebase (versions, bugs)
     const versions={};(D.versions||[]).forEach(v=>{versions[v.id||'v_'+Date.now()]=v;});

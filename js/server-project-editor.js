@@ -39,7 +39,8 @@ async function openSrvProject(projId){
     scenes:proj.scenes||[],sceneFolders:proj.sceneFolders||[],
     gddSections:proj.gddSections||[],assets:proj.assets||[],
     bugs:Object.values(proj.bugs||{}),
-    chat:proj.chat||{}
+    chat:proj.chat||{},
+    taskAssignments:proj.taskAssignments||[]
   };
 
   // Show solo app-shell with server branding
@@ -65,6 +66,8 @@ async function openSrvProject(projId){
       D.versions=Object.values(remote.versions||{});
       D.notes=Object.values(remote.notes||{}).map(n=>({title:n.title||'Note',content:n.content||''}));
       D.chat=remote.chat||{};
+      D.taskAssignments=remote.taskAssignments||D.taskAssignments||[];
+      if(typeof renderDashAssignments==='function')renderDashAssignments();
     }
     updateSoloPresenceBar();
     if(document.getElementById('page-chat').classList.contains('active'))renderSoloChat();
@@ -162,6 +165,9 @@ async function syncProjData(fullRender=false){
 
   // Activity feed — pull member activities and recent changes
   renderSpeActivityFeed(online,proj);
+
+  // Re-render assignments panel so "My Tasks" uses the now-resolved srvState.username
+  if(typeof renderDashAssignments==='function')renderDashAssignments();
 
   if(fullRender)speRenderCurrentPage();
 }
@@ -271,38 +277,107 @@ function renderSpeDash(){
 }
 
 // ---- TASKS ----
+function _buildSrvTaskRow(id,task){
+  const isDone=task.status==='done';
+  const isWip=task.status==='inprogress';
+  const borderCol=isDone?'var(--accent)':isWip?'var(--accent4)':'var(--border2)';
+  const bgCol=isDone?'var(--accent)':isWip?'rgba(240,160,74,.2)':'transparent';
+  const textStyle=isDone?'text-decoration:line-through;color:var(--text3);':'';
+  const statusCol=isDone?'var(--accent)':isWip?'var(--accent4)':'var(--text3)';
+  // Assignee pill — highlight if assigned to me
+  const me=srvState.username;
+  const assignee=task.assignee||'—';
+  const isMe=assignee===me;
+  const assigneePill=`<div style="font-size:8px;padding:1px 7px;border-radius:8px;border:1px solid ${isMe?'var(--accent)':'var(--border2)'};color:${isMe?'var(--accent)':'var(--text3)'};background:${isMe?'rgba(74,240,200,.08)':'transparent'};white-space:nowrap;">${escHtml(assignee)}</div>`;
+  return`<div class="srv-task-row">
+    <div style="width:10px;height:10px;border-radius:2px;border:1px solid ${borderCol};background:${bgCol};cursor:pointer;flex-shrink:0;" onclick="cycleSrvTaskStatus('${id}')"></div>
+    <div style="flex:1;">
+      <div style="font-size:11px;color:var(--text);${textStyle}">${escHtml(task.title)}</div>
+      ${task.desc?`<div style="font-size:9px;color:var(--text3);margin-top:2px;">${escHtml(task.desc)}</div>`:''}
+    </div>
+    ${assigneePill}
+    <div style="font-size:8px;padding:1px 6px;border-radius:1px;border:1px solid ${borderCol};color:${statusCol};">${task.status||'todo'}</div>
+    <button onclick="deleteSrvTask('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:11px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>
+  </div>`;
+}
+
 function renderSpeTasks(){
   const el=document.getElementById('spe-tasks-content');
   const tasks=Object.entries(speProjData.tasks||{});
-  el.innerHTML=`<div id="spe-tasks-list"></div>`;
-  const listEl=document.getElementById('spe-tasks-list');
-  if(!tasks.length){listEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No tasks yet. Add the first one!</div>';return;}
-  
+  const me=srvState.username;
+
   const statusOrder={todo:0,inprogress:1,done:2};
   tasks.sort((a,b)=>(statusOrder[a[1].status]||0)-(statusOrder[b[1].status]||0));
-  
-  listEl.innerHTML=tasks.map(([id,task])=>`
-    <div class="srv-task-row">
-      <div style="width:10px;height:10px;border-radius:2px;border:1px solid ${task.status==='done'?'var(--accent)':task.status==='inprogress'?'var(--accent4)':'var(--border2)'};background:${task.status==='done'?'var(--accent)':task.status==='inprogress'?'rgba(240,160,74,.2)':'transparent'};cursor:pointer;flex-shrink:0;" onclick="cycleSrvTaskStatus('${id}')"></div>
-      <div style="flex:1;">
-        <div style="font-size:11px;color:var(--text);${task.status==='done'?'text-decoration:line-through;color:var(--text3);':''}">${escHtml(task.title)}</div>
-        ${task.desc?`<div style="font-size:9px;color:var(--text3);margin-top:2px;">${escHtml(task.desc)}</div>`:''}
-      </div>
-      <div class="srv-task-assignee">${escHtml(task.assignee||'—')}</div>
-      <div style="font-size:8px;padding:1px 6px;border-radius:1px;border:1px solid ${task.status==='done'?'var(--accent)':task.status==='inprogress'?'var(--accent4)':'var(--border2)'};color:${task.status==='done'?'var(--accent)':task.status==='inprogress'?'var(--accent4)':'var(--text3)'};">${task.status||'todo'}</div>
-      <button onclick="deleteSrvTask('${id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:11px;" onmouseover="this.style.color='var(--accent3)'" onmouseout="this.style.color='var(--text3)'">×</button>
-    </div>
-  `).join('');
+
+  const myTasks=tasks.filter(([,t])=>t.assignee===me&&t.status!=='done');
+  const allTasks=tasks;
+
+  let html='';
+
+  // ── MY TASKS section ──
+  html+=`<div style="margin-bottom:14px;">
+    <div style="font-size:9px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+      <ion-icon name="person-sharp" style="font-size:11px;pointer-events:none;"></ion-icon> My Tasks
+      <span style="font-size:8px;padding:1px 5px;border-radius:8px;background:rgba(74,240,200,.1);border:1px solid rgba(74,240,200,.25);color:var(--accent);">${myTasks.length}</span>
+    </div>`;
+  if(!myTasks.length){
+    html+=`<div style="font-size:10px;color:var(--text3);padding:8px 10px;border:1px dashed var(--border2);border-radius:2px;text-align:center;">No tasks assigned to you yet.</div>`;
+  } else {
+    html+=myTasks.map(([id,task])=>_buildSrvTaskRow(id,task)).join('');
+  }
+  html+=`</div>`;
+
+  // ── ALL TASKS section ──
+  html+=`<div>
+    <div style="font-size:9px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+      <ion-icon name="list-sharp" style="font-size:11px;pointer-events:none;"></ion-icon> All Tasks
+      <span style="font-size:8px;padding:1px 5px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text3);">${allTasks.length}</span>
+    </div>`;
+  if(!allTasks.length){
+    html+=`<div style="font-size:11px;color:var(--text3);padding:20px 0;text-align:center;">No tasks yet. Add the first one!</div>`;
+  } else {
+    html+=allTasks.map(([id,task])=>_buildSrvTaskRow(id,task)).join('');
+  }
+  html+=`</div>`;
+
+  el.innerHTML=html;
 }
 
-function openAddSrvTask(){
+async function openAddSrvTask(){
+  // Fetch current members to build the tag picker
+  let memberNames=[];
+  try{
+    const members=await fbGet('/servers/'+srvState.serverKey+'/members')||{};
+    memberNames=Object.values(members)
+      .filter(m=>m&&(m.name||m.displayName))
+      .map(m=>m.name||m.displayName||'Member')
+      .filter((n,i,arr)=>arr.indexOf(n)===i);
+  }catch(e){}
+
+  // Ensure current user is always in the list
+  if(srvState.username&&!memberNames.includes(srvState.username))memberNames.unshift(srvState.username);
+
+  const pillsHtml=memberNames.map(name=>`
+    <button type="button" class="st-member-pill" data-name="${escHtml(name)}"
+      onclick="(function(btn){
+        document.querySelectorAll('.st-member-pill').forEach(p=>{p.style.background='transparent';p.style.color='var(--text3)';p.style.borderColor='var(--border2)';});
+        btn.style.background='rgba(74,240,200,.12)';btn.style.color='var(--accent)';btn.style.borderColor='var(--accent)';
+        document.getElementById('st-assign-val').value=btn.dataset.name;
+        document.getElementById('st-assign-custom').value='';
+      })(this)"
+      style="font-size:9px;padding:3px 10px;border-radius:10px;border:1px solid ${name===srvState.username?'var(--accent)':'var(--border2)'};color:${name===srvState.username?'var(--accent)':'var(--text3)'};background:${name===srvState.username?'rgba(74,240,200,.12)':'transparent'};cursor:pointer;font-family:var(--font);transition:all .15s;">
+      ${escHtml(name)}${name===srvState.username?' ✓':''}
+    </button>`).join('');
+
   openModal('Add Task',`
     <label class="modal-label">Task Title</label>
     <input class="modal-inp" id="st-title" placeholder="e.g. Set up auth, Fix login bug">
     <label class="modal-label">Description (optional)</label>
     <input class="modal-inp" id="st-desc" placeholder="More details…">
     <label class="modal-label">Assign To</label>
-    <input class="modal-inp" id="st-assign" placeholder="e.g. Slash" value="${escHtml(srvState.username)}">
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">${pillsHtml}</div>
+    <input class="modal-inp" id="st-assign-custom" placeholder="Or type a name…" oninput="document.getElementById('st-assign-val').value=this.value;document.querySelectorAll('.st-member-pill').forEach(p=>{p.style.background='transparent';p.style.color='var(--text3)';p.style.borderColor='var(--border2)';});" style="margin-top:0;">
+    <input type="hidden" id="st-assign-val" value="${escHtml(srvState.username)}">
     <label class="modal-label">Status</label>
     <select class="modal-select" id="st-status"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
   `,[{label:'Cancel',action:closeModal},{label:'Add Task',action:addSrvTask,accent:true}]);
@@ -310,10 +385,11 @@ function openAddSrvTask(){
 
 async function addSrvTask(){
   const title=document.getElementById('st-title').value.trim();if(!title)return;
-  const task={id:'t_'+Date.now(),title,desc:document.getElementById('st-desc').value.trim(),assignee:document.getElementById('st-assign').value.trim(),status:document.getElementById('st-status').value,createdBy:srvState.username,createdAt:Date.now()};
+  if(!(await _requirePerm('canManageTasks','You don\'t have permission to add tasks')))return;
+  const assignee=(document.getElementById('st-assign-val')||{}).value||(document.getElementById('st-assign-custom')||{}).value||srvState.username;
+  const task={id:'t_'+Date.now(),title,desc:document.getElementById('st-desc').value.trim(),assignee:assignee.trim()||srvState.username,status:document.getElementById('st-status').value,createdBy:srvState.username,createdAt:Date.now()};
   await fbSet('/servers/'+srvState.serverKey+'/projects/'+srvState.activeProjId+'/tasks/'+task.id,task);
   await srvBroadcastActivity('added task: '+title.substring(0,30));
-  if(!(await _requirePerm('canManageTasks','You don\'t have permission to add tasks')))return;
   closeModal();await syncProjData(true);toast('Task added');
 }
 

@@ -305,6 +305,7 @@
     <div class="nav-section" id="solo-server-nav" style="display:none;">
       <div class="nav-label" style="color:var(--accent2);"><span class="nav-label-text">Server</span></div>
       <div class="nav-item" onclick="if(srvState.connected){nav('chat');}else{toast('Connect to a server to use Team Chat');}"><ion-icon name="chatbubbles-outline" class="nav-icon" style="color:var(--accent2);animation:glowPulse 2s infinite;"></ion-icon><span class="nav-text">Team Chat</span></div>
+      <div class="nav-item" onclick="if(srvState.connected){nav('whiteboard');}else{toast('Connect to a server to use the Whiteboard');}"><ion-icon name="brush-outline" class="nav-icon" style="color:var(--accent2);"></ion-icon><span class="nav-text">Whiteboard</span></div>
     </div>
     <div class="sidebar-footer">
       <span id="sidebar-footer">solo dev</span>
@@ -883,6 +884,9 @@
         </div>
       </div>
 
+      <!-- WHITEBOARD PAGE -->
+      <div class="page" id="page-whiteboard" style="display:none;flex-direction:column;height:calc(100vh - 90px);"></div>
+
       <!-- CUSTOM PAGES injected dynamically -->
 
     </div>
@@ -1285,5 +1289,6 @@
 <script src="js/canvas.js"></script>
 <script src="js/init.js"></script>
 
+  <script src="js/whiteboard.js"></script>
 </body>
 </html>

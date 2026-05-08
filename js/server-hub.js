@@ -58,11 +58,13 @@ let _lastTypingTs=0;
 let _typingIndicatorShown={};  // uid -> name of who's typing
 
 async function _setTyping(isTyping){
-  if(!srvState.connected||!srvState.activeProjId||!srvState.myId)return;
+  if(!srvState.connected||!srvState.activeProjId)return;
+  const uid=srvState.myId||(srvState.myId='anon_'+Math.random().toString(36).slice(2,8));
+  if(!uid)return;
   try{
     await _withServerCreds(CFG_URL,CFG_KEY,()=>fbSet(
-      '/servers/'+srvState.serverKey+'/typing/'+srvState.activeProjId+'/'+srvState.myId,
-      isTyping?{name:srvState.username,ts:Date.now()}:null
+      '/servers/'+srvState.serverKey+'/typing/'+srvState.activeProjId+'/'+uid,
+      isTyping?{name:srvState.username||'Someone',ts:Date.now()}:null
     ));
   }catch(e){}
 }
@@ -1279,7 +1281,11 @@ async function renderSoloChat(){
   const latestTs=msgs.length?msgs[msgs.length-1].ts:0;
   const hadNew=latestTs>_lastKnownChatTs&&_lastKnownChatTs>0;
   const newFromOther=msgs.filter(m=>m.ts>_lastKnownChatTs&&m.uid!==srvState.myId);
-  if(hadNew&&newFromOther.length){playChatSound('incoming');}
+  if(hadNew&&newFromOther.length){
+    playChatSound('incoming');
+    const newest=newFromOther[newFromOther.length-1];
+    showChatNotifBanner(newest.name||'Someone',newest.text||'');
+  }
   _lastKnownChatTs=latestTs||_lastKnownChatTs;
   const wasAtBottom=el.scrollTop>=el.scrollHeight-el.clientHeight-30;
   el.innerHTML=msgs.map(m=>{

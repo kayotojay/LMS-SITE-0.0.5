@@ -277,6 +277,7 @@
       <div class="nav-item" onclick="nav('sub-tasks')"><ion-icon name="git-merge-outline" class="nav-icon"></ion-icon><span class="nav-text">Sub Phases</span></div>
       <div class="nav-item" id="navitem-canvas" onclick="nav('canvas');if(typeof initCanvas==='function')initCanvas(typeof _canvasType!=='undefined'?_canvasType:'main');" style="color:var(--accent2);"><ion-icon name="color-wand-outline" class="nav-icon"></ion-icon><span class="nav-text">Canvas Mode</span></div>
       <div class="nav-item" onclick="nav('vault')"><ion-icon name="code-slash-outline" class="nav-icon"></ion-icon><span class="nav-text">Script Vault</span></div>
+      <div class="nav-item" onclick="nav('workspace')" id="navitem-workspace"><ion-icon name="grid-outline" class="nav-icon"></ion-icon><span class="nav-text">Workspace</span></div>
       <div class="nav-item" onclick="nav('versions')"><ion-icon name="git-commit-outline" class="nav-icon"></ion-icon><span class="nav-text">Versions</span></div>
     </div>
     <div class="nav-section">
@@ -395,14 +396,32 @@
       <!-- SCRIPT VAULT -->
       <div class="page" id="page-vault">
         <div class="section-hdr"><span class="section-title">SCRIPT VAULT</span><span class="section-sub">your project scripts</span></div>
-        <div class="toolbar">
-          <input class="add-inp" id="new-folder-inp" placeholder="New folder name..." style="max-width:180px;">
-          <button class="add-btn" onclick="createFolder()">Add Folder</button>
-          <button class="add-btn" style="margin-left:auto;" onclick="openNewScript()">New Script</button>
+        <div class="vault-layout">
+          <div class="vault-sidebar" id="vault-sidebar"></div>
+          <div class="vault-main"   id="vault-main"></div>
         </div>
-        <div class="folder-list" id="folder-list"></div>
-        <div class="divider"></div>
-        <div id="script-content"><div style="font-size:11px;color:var(--text3);">Select a folder to view scripts</div></div>
+      </div>
+
+      <!-- WORKSPACE -->
+      <div class="page" id="page-workspace" style="overflow:hidden;padding:0;display:flex;flex-direction:column;">
+        <div class="section-hdr" style="padding:14px 16px 0;margin-bottom:10px;"><span class="section-title">WORKSPACE</span><span class="section-sub">filesystem · scenes · nodes</span></div>
+        <div class="ws2-layout" style="flex:1;min-height:0;">
+          <div class="ws2-fs" id="ws2-fs">
+            <div class="ws2-fs-toolbar" id="ws2-fs-toolbar"></div>
+            <div class="ws2-fs-tree" id="ws2-fs-tree"></div>
+          </div>
+          <div class="ws2-scene-col">
+            <div class="ws2-scene-hdr" id="ws2-scene-hdr">
+              <span style="font-size:9px;color:var(--text3);letter-spacing:.1em;">NO SCENE OPEN</span>
+            </div>
+            <div class="ws2-node-tree" id="ws2-node-tree">
+              <div style="padding:16px;font-size:10px;color:var(--text3);">Double-click a scene to open it</div>
+            </div>
+          </div>
+          <div class="ws2-inspector" id="ws2-inspector">
+            <div style="padding:12px;font-size:10px;color:var(--text3);">Select a node or file</div>
+          </div>
+        </div>
       </div>
 
       <!-- VERSIONS -->
@@ -1271,6 +1290,8 @@
 <script src="js/export.js"></script>
 <script src="js/phases.js"></script>
 <script src="js/nav.js"></script>
+<script src="js/vault-nested.js"></script>
+<script src="js/workspace.js"></script>
 <script src="js/analytics.js"></script>
 <script src="js/scene.js"></script>
 <script src="js/scene-canvas.js"></script>

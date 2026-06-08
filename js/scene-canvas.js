@@ -295,7 +295,7 @@
 
       save();
       renderAllNodes(scene, world, svgEl);
-      if (typeof renderNodeTree === 'function') renderNodeTree();
+      if (typeof renderNodeTree === 'function') renderNodeTree(); if(typeof wsRefresh==='function')wsRefresh();
       toast('Added ' + type);
     });
   }
@@ -401,7 +401,7 @@
           deleteNodeRecursiveCanvas(node.id, scene);
           save();
           renderAllNodes(scene, world, svgEl);
-          if (typeof renderNodeTree === 'function') renderNodeTree();
+          if (typeof renderNodeTree === 'function') renderNodeTree(); if(typeof wsRefresh==='function')wsRefresh();
         }}
       ]);
     });
@@ -973,7 +973,7 @@
 
     save();
     renderAllNodes(scene, world, svgEl);
-    if (typeof renderNodeTree === 'function') renderNodeTree();
+    if (typeof renderNodeTree === 'function') renderNodeTree(); if(typeof wsRefresh==='function')wsRefresh();
     toast('Connected → ' + child.name + ' is now child of ' + parent.name);
   }
 
@@ -985,7 +985,7 @@
     child.parentId = null;
     save();
     redrawConnections(scene, svgEl, pos);
-    if (typeof renderNodeTree === 'function') renderNodeTree();
+    if (typeof renderNodeTree === 'function') renderNodeTree(); if(typeof wsRefresh==='function')wsRefresh();
     toast('Disconnected');
   }
 
@@ -1063,7 +1063,7 @@
       _drag = null;
       document.body.style.userSelect = '';
       // keep list view in sync
-      if (typeof renderNodeTree === 'function') renderNodeTree();
+      if (typeof renderNodeTree === 'function') renderNodeTree(); if(typeof wsRefresh==='function')wsRefresh();
       if (typeof renderSceneFileTree === 'function') renderSceneFileTree();
     }
     if (_pan) {
@@ -1074,6 +1074,17 @@
   });
 
   // ── public API ───────────────────────────────────
+  // Refresh canvas if currently open (called when scene data changes externally)
+  window.refreshSceneCanvas = function() {
+    const world = document.getElementById('sc-canvas-world');
+    const svgEl = document.getElementById('sc-canvas-svg');
+    if(!world || !svgEl || !_sceneId) return;
+    const scene = (D.scenes||[]).find(s=>s.id===_sceneId);
+    if(!scene) return;
+    autoLayoutNewNodes(scene);
+    renderAllNodes(scene, world, svgEl);
+  };
+
   window.openSceneCanvas = function (sceneId) {
     // Switch to canvas page and init
     const container = document.getElementById('canvas-container');
@@ -1126,7 +1137,7 @@
     const world = document.getElementById('sc-canvas-world');
     const svgEl = document.getElementById('sc-canvas-svg');
     if (world && svgEl) renderAllNodes(scene, world, svgEl);
-    if (typeof renderNodeTree === 'function') renderNodeTree();
+    if (typeof renderNodeTree === 'function') renderNodeTree(); if(typeof wsRefresh==='function')wsRefresh();
     toast('Auto-arranged tree layout');
   };
 

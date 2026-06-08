@@ -64,17 +64,10 @@ function openNewSceneModal(){
     <input class="modal-inp" id="ns-name" placeholder="e.g. GameWorld, PlayerScene, HUD">
     <label class="modal-label">Root Node Type</label>
     <select class="modal-select" id="ns-root-type">${typeOpts}</select>
-    <label class="modal-label">Save in Folder (optional)</label>
-    <select class="modal-select" id="ns-folder">
-      <option value="">Root (no folder)</option>
-      ${(D.sceneFolders||[]).map(f=>`<option value="${f.id}">${escHtml(f.name)}</option>`).join('')}
-    </select>
   `,[{label:'Cancel',action:closeModal},{label:'Create',action:()=>{
     const name=document.getElementById('ns-name').value.trim();if(!name)return;
     const rootType=document.getElementById('ns-root-type').value;
-    const folderId=document.getElementById('ns-folder').value||null;
     const scene=makeScene(name,rootType);
-    scene.folderId=folderId;
     if(!D.scenes)D.scenes=[];
     D.scenes.push(scene);
     save();closeModal();
@@ -85,17 +78,13 @@ function openNewSceneModal(){
 }
 
 function openNewFolderModal(){
-  const parentOpts=`<option value="">Root</option>`+(D.sceneFolders||[]).map(f=>`<option value="${f.id}">${escHtml(f.name)}</option>`).join('');
   openModal('New Scene Folder',`
     <label class="modal-label">Folder Name</label>
     <input class="modal-inp" id="nf-name" placeholder="e.g. Levels, UI, Characters">
-    <label class="modal-label">Parent Folder</label>
-    <select class="modal-select" id="nf-parent">${parentOpts}</select>
   `,[{label:'Cancel',action:closeModal},{label:'Create',action:()=>{
     const name=document.getElementById('nf-name').value.trim();if(!name)return;
-    const parentId=document.getElementById('nf-parent').value||null;
     if(!D.sceneFolders)D.sceneFolders=[];
-    D.sceneFolders.push({id:'sf_'+Date.now(),name,parentId,collapsed:false});
+    D.sceneFolders.push({id:'sf_'+Date.now(),name,parentId:null,collapsed:false});
     save();closeModal();renderSceneFileTree();toast('Folder created: '+name);
   },accent:true}]);
 }
@@ -121,6 +110,12 @@ function renderSceneFileTree(){
       hdr.appendChild(arr);hdr.appendChild(icon);hdr.appendChild(name);hdr.appendChild(del);
       const children=document.createElement('div');children.className='sft-folder-children'+(folder.collapsed?'':' open');
       hdr.onclick=()=>{folder.collapsed=!folder.collapsed;arr.classList.toggle('open',!folder.collapsed);children.classList.toggle('open',!folder.collapsed);save();};
+      // right-click folder
+      hdr.oncontextmenu=e=>{e.preventDefault();e.stopPropagation();openFolderCtxMenu(e,folder);};
+      // drop target for scene drag
+      hdr.ondragover=e=>{e.preventDefault();hdr.classList.add('sft-drag-over');};
+      hdr.ondragleave=()=>hdr.classList.remove('sft-drag-over');
+      hdr.ondrop=e=>{e.preventDefault();hdr.classList.remove('sft-drag-over');try{const d=JSON.parse(e.dataTransfer.getData('text/plain'));if(d.type==='scene'){sftMoveScene(d.id,folder.id);}}catch(err){}};
       el.appendChild(div);div.appendChild(hdr);div.appendChild(children);
       // Fill children container
       const subFolders=(D.sceneFolders||[]).filter(f=>(f.parentId||null)===folder.id);
@@ -145,6 +140,10 @@ function buildFolderItem(folder,depth,container){
   hdr.appendChild(arr);hdr.appendChild(icon);hdr.appendChild(name);hdr.appendChild(del);
   const children=document.createElement('div');children.className='sft-folder-children'+(folder.collapsed?'':' open');
   hdr.onclick=()=>{folder.collapsed=!folder.collapsed;arr.classList.toggle('open',!folder.collapsed);children.classList.toggle('open',!folder.collapsed);save();};
+  hdr.oncontextmenu=e=>{e.preventDefault();e.stopPropagation();openFolderCtxMenu(e,folder);};
+  hdr.ondragover=e=>{e.preventDefault();hdr.classList.add('sft-drag-over');};
+  hdr.ondragleave=()=>hdr.classList.remove('sft-drag-over');
+  hdr.ondrop=e=>{e.preventDefault();hdr.classList.remove('sft-drag-over');try{const d=JSON.parse(e.dataTransfer.getData('text/plain'));if(d.type==='scene'){sftMoveScene(d.id,folder.id);}}catch(err){}};
   div.appendChild(hdr);div.appendChild(children);
   const subFolders=(D.sceneFolders||[]).filter(f=>(f.parentId||null)===folder.id);
   const subScenes=(D.scenes||[]).filter(s=>(s.folderId||null)===folder.id);
@@ -161,7 +160,48 @@ function buildSceneItem(scene,depth){
   const svgIco=getNodeSVGIcon(rootNode?rootNode.type:'Node',13);
   item.innerHTML=`<span class="sft-scene-icon ${def.cls}">${svgIco}</span><span style="flex:1;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(scene.name)}</span><button class="nav-tiny-btn" title="Open in Canvas" onclick="event.stopPropagation();openSceneCanvas('${scene.id}')" style="color:var(--accent2);">${lmsIcon('node2d','var(--accent2)',9)}</button><button class="nav-tiny-btn" onclick="event.stopPropagation();renameScene('${scene.id}')" title="Rename">${lmsIcon('pen','var(--icon-dim)',9)}</button><button class="nav-tiny-btn" onclick="event.stopPropagation();deleteScene('${scene.id}')" title="Delete">${lmsIcon('cross','var(--icon-dim)',9)}</button>`;
   item.onclick=()=>setActiveScene(scene.id);
+  // Right-click context menu
+  item.oncontextmenu=e=>{
+    e.preventDefault(); e.stopPropagation();
+    openSceneCtxMenu(e, scene);
+  };
+  // Drag to move into folder
+  item.draggable=true;
+  item.ondragstart=e=>{e.dataTransfer.setData('text/plain',JSON.stringify({type:'scene',id:scene.id}));e.dataTransfer.effectAllowed='move';};
   return item;
+}
+
+function openSceneCtxMenu(e, scene){
+  document.querySelectorAll('.sft-ctx').forEach(el=>el.remove());
+  const folderOpts=(D.sceneFolders||[]).map(f=>`<div class="sft-ctx-sub-item" onclick="sftMoveScene('${scene.id}','${f.id}');document.querySelectorAll('.sft-ctx').forEach(el=>el.remove());">${escHtml(f.name)}</div>`).join('');
+  const menu=document.createElement('div');
+  menu.className='sft-ctx';
+  menu.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;`;
+  menu.innerHTML=`
+    <div class="sft-ctx-item" onclick="setActiveScene('${scene.id}');this.closest('.sft-ctx').remove();">Open</div>
+    <div class="sft-ctx-item" onclick="if(typeof openSceneCanvas==='function')openSceneCanvas('${scene.id}');this.closest('.sft-ctx').remove();">⬡ Canvas Mode</div>
+    <div class="sft-ctx-sep"></div>
+    <div class="sft-ctx-item" onclick="renameScene('${scene.id}');this.closest('.sft-ctx').remove();">Rename</div>
+    <div class="sft-ctx-item${folderOpts?' sft-ctx-has-sub':''}">
+      Move to folder ▶
+      ${folderOpts?`<div class="sft-ctx-submenu"><div class="sft-ctx-sub-item" onclick="sftMoveScene('${scene.id}',null);document.querySelectorAll('.sft-ctx').forEach(el=>el.remove());">Root (no folder)</div>${folderOpts}</div>`:''}
+    </div>
+    <div class="sft-ctx-sep"></div>
+    <div class="sft-ctx-item danger" onclick="deleteScene('${scene.id}');this.closest('.sft-ctx').remove();">Delete</div>`;
+  document.body.appendChild(menu);
+  // close on outside click
+  setTimeout(()=>document.addEventListener('click',function h(){menu.remove();document.removeEventListener('click',h);},true),10);
+  // flip if offscreen
+  requestAnimationFrame(()=>{
+    const r=menu.getBoundingClientRect();
+    if(r.right>window.innerWidth) menu.style.left=(e.clientX-r.width)+'px';
+    if(r.bottom>window.innerHeight) menu.style.top=(e.clientY-r.height)+'px';
+  });
+}
+
+function sftMoveScene(sceneId, folderId){
+  const sc=(D.scenes||[]).find(s=>s.id===sceneId);
+  if(sc){sc.folderId=folderId||null;save();renderSceneFileTree();}
 }
 
 function deleteSceneFolder(id){
@@ -259,7 +299,7 @@ function renderNodeTree(){
 
 function selectNode(nodeId){
   selectedNodeId=nodeId;
-  renderNodeTree();renderInspector();
+  renderNodeTree();renderInspector();if(typeof wsRefresh==='function')wsRefresh();
   const delBtn=document.getElementById('st-del-node-btn');
   const scene=getActiveScene();
   if(delBtn){const isRoot=scene&&nodeId===scene.rootId;delBtn.disabled=!!isRoot;delBtn.style.opacity=isRoot?'.4':'1';}
@@ -346,7 +386,7 @@ function setNodeProp(keyPath,value){
   let obj=node.props;
   for(let i=0;i<keys.length-1;i++){if(!obj[keys[i]])obj[keys[i]]={};obj=obj[keys[i]];}
   obj[keys[keys.length-1]]=value;
-  save();renderNodeTree();
+  save();renderNodeTree();if(typeof wsRefresh==="function")wsRefresh();
 }
 
 function toggleNodeProp(keyPath,el){
@@ -362,7 +402,7 @@ function toggleNodeProp(keyPath,el){
 function setNodeName(val){
   const scene=getActiveScene();if(!scene||!selectedNodeId)return;
   const node=scene.nodes[selectedNodeId];if(!node)return;
-  node.name=val||node.name;save();renderNodeTree();
+  node.name=val||node.name;save();renderNodeTree();if(typeof wsRefresh==="function")wsRefresh();
 }
 
 function addGroup(){
@@ -447,7 +487,7 @@ function attachScript(nodeId){
     const name=document.getElementById('scr-name').value.trim()||node.name+'.gd';
     const code=document.getElementById('scr-code').value;
     node.script={name,code,created:new Date().toLocaleDateString()};
-    save();closeModal();renderInspector();renderNodeTree();toast('Script attached: '+name);
+    save();closeModal();renderInspector();renderNodeTree();if(typeof wsRefresh==="function")wsRefresh();toast('Script attached: '+name);
   },accent:true}]);
 }
 
@@ -455,7 +495,7 @@ function detachScript(nodeId){
   const scene=getActiveScene();if(!scene)return;
   const node=scene.nodes[nodeId];if(!node)return;
   openModal('Detach Script',`<p style="font-size:11px;color:var(--text2);">Detach and remove script from ${escHtml(node.name)}?</p>`,[
-    {label:'Cancel',action:closeModal},{label:'Detach',action:()=>{node.script=null;save();closeModal();renderInspector();renderNodeTree();toast('Script detached');},danger:true}
+    {label:'Cancel',action:closeModal},{label:'Detach',action:()=>{node.script=null;save();closeModal();renderInspector();renderNodeTree();if(typeof wsRefresh==="function")wsRefresh();toast('Script detached');},danger:true}
   ]);
 }
 
@@ -469,8 +509,46 @@ function openNodeScript(nodeId){
     node.script.name=document.getElementById('scr-edit-name').value.trim()||node.script.name;
     node.script.code=document.getElementById('scr-edit-code').value;
     node.script.modified=new Date().toLocaleDateString();
-    save();closeModal();renderInspector();toast('Script saved');
+    save();closeModal();renderInspector();if(typeof wsRefresh==="function")wsRefresh();toast('Script saved');
   },accent:true}]);
+}
+
+
+function openFolderCtxMenu(e, folder){
+  document.querySelectorAll('.sft-ctx').forEach(el=>el.remove());
+  const menu=document.createElement('div');
+  menu.className='sft-ctx';
+  menu.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;`;
+  menu.innerHTML=`
+    <div class="sft-ctx-item" onclick="sfRenameFolder('${folder.id}');this.closest('.sft-ctx').remove();">Rename</div>
+    <div class="sft-ctx-item" onclick="sfNewSubfolder('${folder.id}');this.closest('.sft-ctx').remove();">New Subfolder</div>
+    <div class="sft-ctx-sep"></div>
+    <div class="sft-ctx-item danger" onclick="deleteSceneFolder('${folder.id}');this.closest('.sft-ctx').remove();">Delete folder</div>`;
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',function h(){menu.remove();document.removeEventListener('click',h);},true),10);
+  requestAnimationFrame(()=>{
+    const r=menu.getBoundingClientRect();
+    if(r.right>window.innerWidth) menu.style.left=(e.clientX-r.width)+'px';
+    if(r.bottom>window.innerHeight) menu.style.top=(e.clientY-r.height)+'px';
+  });
+}
+function sfRenameFolder(id){
+  const f=(D.sceneFolders||[]).find(x=>x.id===id);if(!f)return;
+  openModal('Rename Folder',`<input class="modal-inp" id="sfrf-name" value="${escHtml(f.name)}">`,[
+    {label:'Cancel',action:closeModal},
+    {label:'Rename',action:()=>{f.name=document.getElementById('sfrf-name').value.trim()||f.name;save();closeModal();renderSceneFileTree();},accent:true}
+  ]);
+}
+function sfNewSubfolder(parentId){
+  openModal('New Subfolder',`<input class="modal-inp" id="sfns-name" placeholder="Subfolder name">`,[
+    {label:'Cancel',action:closeModal},
+    {label:'Create',action:()=>{
+      const name=document.getElementById('sfns-name').value.trim();if(!name)return;
+      if(!D.sceneFolders)D.sceneFolders=[];
+      D.sceneFolders.push({id:'sf_'+Date.now(),name,parentId,collapsed:false});
+      save();closeModal();renderSceneFileTree();
+    },accent:true}
+  ]);
 }
 
 function exportSceneTree(){

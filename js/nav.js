@@ -17,12 +17,12 @@ function nav(page){
     if(secId&&subId)pageEl=getOrCreateCustomPage(page,secId,subId);
   }
   if(pageEl){
-    if(page==='chat'||page==='canvas'||page==='whiteboard'){pageEl.style.display='flex';pageEl.classList.add('active');}
+    if(page==='chat'||page==='canvas'||page==='whiteboard'||page==='workspace'){pageEl.style.display='flex';pageEl.classList.add('active');}
     else{pageEl.style.display='block';pageEl.classList.add('active');}
   }
   const navEl=document.querySelector(`[onclick="nav('${page}')"]`)||document.getElementById('navitem-'+page);
   if(navEl)navEl.classList.add('active');
-  const titleMap={'dash':'Dashboard','main-tasks':'Main Phases','sub-tasks':'Sub Phases','canvas':'Canvas Mode','vault':'Script Vault','versions':'Versions','settings':'Settings','analytics':'Dev Time Tracker','scene-tree':'Scene Tree','gdd':'Game Design Doc','assets':'Asset Tracker','bugs':'Bug Tracker','custom-nodes':'Custom Nodes'};
+  const titleMap={'dash':'Dashboard','main-tasks':'Main Phases','sub-tasks':'Sub Phases','canvas':'Canvas Mode','vault':'Script Vault','versions':'Versions','settings':'Settings','analytics':'Dev Time Tracker','scene-tree':'Scene Tree','gdd':'Game Design Doc','assets':'Asset Tracker','bugs':'Bug Tracker','custom-nodes':'Custom Nodes','workspace':'Workspace'};
   let title=titleMap[page]||'';
   if(!title&&page.startsWith('custom_')){
     const pfx2='custom_';const rest2=page.slice(pfx2.length);const subMk2=rest2.lastIndexOf('_sub_');const _secId2=subMk2>=0?rest2.slice(0,subMk2):rest2;const _subId2=subMk2>=0?rest2.slice(subMk2+1):null;const sec=D?.customSections?.find(s=>s.id===_secId2);const sub=sec?.subsections?.find(s=>s.id===_subId2);
@@ -32,17 +32,8 @@ function nav(page){
   if(page==='canvas'){if(typeof initCanvas==='function')initCanvas();}
   if(page==='settings'){renderCustomSectionsList();updateGDriveUI();renderThemeGrid();syncCustomThemePickers();renderSavedThemes();syncInAppBehaviourToggles();}
   if(page==='analytics')renderAnalytics();
-  if(page==='vault'){
-    const vaultPage=document.getElementById('page-vault');
-    if(vaultPage&&!vaultPage._vaultClickBound){
-      vaultPage._vaultClickBound=true;
-      vaultPage.addEventListener('click',function(e){
-        const tag=e.target.tagName;
-        if(tag==='INPUT'||tag==='TEXTAREA'||tag==='BUTTON'||e.target.closest('.script-item')||e.target.closest('.editor-area')||e.target.closest('.folder-card')||e.target.closest('.toolbar')||e.target.closest('.script-list'))return;
-        if(activeScript){closeScriptEditor();}
-      });
-    }
-  }
+  if(page==='vault'){renderVault();}
+  if(page==='workspace'){renderWorkspace();}
   if(page==='scene-tree'){renderSceneFileTree();renderNodeTree();renderInspector();}
   if(page==='custom-nodes'){if(typeof renderCustomNodesPage==='function')renderCustomNodesPage();}
   if(page==='gdd')renderGDD();
@@ -64,39 +55,8 @@ function nav(page){
 }
 
 // =====================================================
-// SCRIPT VAULT
+// SCRIPT VAULT — replaced by vault-nested.js
 // =====================================================
-let activeFolder=null,activeScript=null;
-function renderFolders(){
-  const el=document.getElementById('folder-list');
-  if(!D.folders.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);">No folders yet</div>';return;}
-  el.innerHTML='';
-  D.folders.forEach((f,fi)=>{const count=D.scripts.filter(s=>s.folder===f.id).length;const card=document.createElement('div');card.className='folder-card'+(activeFolder===f.id?' active-folder':'');card.innerHTML=`<div class="folder-icon"></div><div class="folder-name" style="flex:1;">${escHtml(f.name)}</div><div class="folder-count">${count} script${count!==1?'s':''}</div><button class="xbtn" title="Delete folder" style="margin-left:6px;flex-shrink:0;" onclick="deleteFolder('${f.id}',event)">×</button>`;card.addEventListener('click',()=>{activeFolder=f.id;activeScript=null;renderFolders();renderScripts();});el.appendChild(card);});
-}
-function createFolder(){const inp=document.getElementById('new-folder-inp');const name=inp.value.trim();if(!name)return;D.folders.push({id:'f'+Date.now(),name});inp.value='';save();renderFolders();logActivity('Folder: '+name,'#f0a04a');}
-function deleteFolder(id,e){if(e)e.stopPropagation();const f=D.folders.find(x=>x.id===id);if(!f)return;openModal('Delete Folder',`<p style="font-size:11px;color:var(--text2);line-height:1.7;">Delete folder <strong style="color:var(--accent3);">${escHtml(f.name)}</strong>?<br><span style="color:var(--accent3);">This will also delete all ${D.scripts.filter(s=>s.folder===id).length} scripts inside it.</span></p>`,[{label:'Cancel',action:closeModal},{label:'Delete',action:()=>{D.scripts=D.scripts.filter(s=>s.folder!==id);D.folders=D.folders.filter(x=>x.id!==id);if(activeFolder===id){activeFolder=null;activeScript=null;}save();closeModal();renderFolders();renderScripts();updateGlobal();toast('Folder deleted');},danger:true}]);}
-function closeScriptEditor(){activeScript=null;renderScripts();}
-function renderScripts(){
-  const el=document.getElementById('script-content');if(!activeFolder){el.innerHTML='<div style="font-size:11px;color:var(--text3);">Select a folder</div>';return;}
-  const scripts=D.scripts.filter(s=>s.folder===activeFolder);el.innerHTML='';
-  const list=document.createElement('div');list.className='script-list';
-  if(!scripts.length)list.innerHTML='<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">No scripts in this folder</div>';
-  scripts.forEach(s=>{const item=document.createElement('div');item.className='script-item'+(activeScript===s.id?' active-script':'');item.innerHTML=`<span class="script-ver">${escHtml(s.version||'v?')}</span><span class="script-name">${escHtml(s.name)}</span><span class="script-date">${s.date||''}</span><button class="xbtn" onclick="deleteScript('${s.id}',event)">×</button>`;item.addEventListener('click',()=>{activeScript=s.id;renderScripts();});list.appendChild(item);});
-  el.appendChild(list);
-  const editorWrap=activeScript?buildEditor(D.scripts.find(x=>x.id===activeScript)):buildNewScriptForm();
-  el.appendChild(editorWrap);
-  /* Click-outside: clicking the script-content area (not an input/button/textarea) closes the editor */
-  el.onclick=function(e){
-    if(e.target===el&&activeScript){closeScriptEditor();}
-  };
-}
-function buildNewScriptForm(){const w=document.createElement('div');w.className='editor-area';w.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span style="font-size:9px;color:var(--accent);letter-spacing:.15em;">New Script</span><button class="xbtn" title="Close" onclick="closeScriptEditor()" style="font-size:13px;opacity:.6;">×</button></div><input class="editor-inp" id="ns-name" placeholder="Script name"><input class="editor-inp editor-ver" id="ns-ver" placeholder="Version (v1.0)"><textarea class="code-area" id="ns-code" placeholder="# GDScript / code here..."></textarea><div class="btn-row"><button class="btn accent" onclick="saveNewScript()">Save Script</button></div>`;return w;}
-function buildEditor(s){if(!s)return buildNewScriptForm();const w=document.createElement('div');w.className='editor-area';w.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span style="font-size:9px;color:var(--accent2);letter-spacing:.15em;">Editing: ${escHtml(s.name)} ${escHtml(s.version||'')}</span><button class="xbtn" title="Close editor" onclick="closeScriptEditor()" style="font-size:13px;opacity:.6;">×</button></div><input class="editor-inp" id="es-name" value="${escHtml(s.name||'')}"><input class="editor-inp editor-ver" id="es-ver" value="${escHtml(s.version||'')}"><textarea class="code-area" id="es-code">${escHtml(s.code||'')}</textarea><div class="btn-row"><button class="btn accent" onclick="updateScript('${s.id}')">Save</button><button class="btn" onclick="duplicateScript('${s.id}')">Duplicate as New Version</button><button class="btn danger" onclick="deleteScript('${s.id}')">Delete</button></div>`;return w;}
-function saveNewScript(){const name=document.getElementById('ns-name').value.trim();const ver=document.getElementById('ns-ver').value.trim()||'v1.0';const code=document.getElementById('ns-code').value;if(!name||!activeFolder)return;const s={id:'s'+Date.now(),folder:activeFolder,name,version:ver,code,date:new Date().toLocaleDateString()};D.scripts.push(s);activeScript=s.id;save();renderScripts();updateGlobal();logActivity('Script: '+name,'#a04af0');toast('Saved');}
-function updateScript(id){const s=D.scripts.find(x=>x.id===id);if(!s)return;s.name=document.getElementById('es-name').value.trim()||s.name;s.version=document.getElementById('es-ver').value.trim()||s.version;s.code=document.getElementById('es-code').value;s.date=new Date().toLocaleDateString();save();toast('Saved');}
-function duplicateScript(id){const s=D.scripts.find(x=>x.id===id);if(!s)return;const code=document.getElementById('es-code').value;const ver=document.getElementById('es-ver').value.trim();const parts=ver.match(/v(\d+)\.(\d+)/);let nv=ver;if(parts)nv='v'+parts[1]+'.'+(parseInt(parts[2])+1);const ns={id:'s'+Date.now(),folder:s.folder,name:s.name,version:nv,code,date:new Date().toLocaleDateString()};D.scripts.push(ns);activeScript=ns.id;save();renderScripts();updateGlobal();toast('Duplicated as '+nv);}
-function deleteScript(id,e){if(e)e.stopPropagation();D.scripts=D.scripts.filter(s=>s.id!==id);if(activeScript===id)activeScript=null;save();renderScripts();updateGlobal();}
-function openNewScript(){activeScript=null;if(!activeFolder&&D.folders.length)activeFolder=D.folders[0].id;renderFolders();renderScripts();}
 
 // =====================================================
 // VERSIONS
@@ -436,7 +396,7 @@ function initProject(){
   document.querySelectorAll('[data-cpage]').forEach(p=>p.remove());
   nav('dash');
   buildPhaseGrids();updateGlobal();renderActivity();renderDashAssignments();
-  renderFolders();renderScripts();renderVersions();
+  renderVault();renderVersions();
   renderSurvivors();renderNotes();renderLore();
   // Ensure new data keys exist
   if(!D.sessions)D.sessions=[];

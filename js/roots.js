@@ -22,7 +22,7 @@ function getRootData(id){
 function saveRootData(id,data){const sk='lms_proj_'+id;try{localStorage.setItem(sk,JSON.stringify(data));}catch(e){}}
 
 function newProjectData(){
-  return{mainTasks:{},subTasks:{},customPhases:{main:[],sub:[]},folders:[],scripts:[],versions:[],survivors:[],notes:[],lore:[],activity:[],customSections:[],sessions:[],scenes:[],sceneFolders:[],gddSections:[],assets:[],bugs:[],customNodes:[],taskAssignments:[]};
+  return{mainTasks:{},subTasks:{},customPhases:{main:[],sub:[]},folders:[],scripts:[],versions:[],survivors:[],notes:[],lore:[],activity:[],customSections:[],sessions:[],scenes:[],sceneFolders:[],gddSections:[],assets:[],bugs:[],customNodes:[],taskAssignments:[],wsVersions:[],wsActiveVersion:null};
 }
 
 function calcProgress(data,phases){
@@ -523,6 +523,8 @@ function save(){
     // Server mode — serialize D to Firebase format
     const fbData={
       folders:D.folders||[],
+      wsVersions:D.wsVersions||[],
+      wsActiveVersion:D.wsActiveVersion||null,
       scripts:D.scripts||[],
       sessions:D.sessions||[],
       scenes:D.scenes||[],
